@@ -1,45 +1,71 @@
-class MovableObject {
-    x = 120;
-    y = 130;
-    img;
-    height = 150;
-    width = 100;
-    imageCache = {};
-    currentImage = 0;
+class MovableObject extends DrawableObject {
+
     speed = 0.15;
     otherDirection = false;
+    speedY = 0;
+    acceleratiom = 2.5;
+    energy = 100;
+    lastHit = 0;
 
-
-    // loadImage('img/test.png');
-    loadImage(path) {
-        this.img = new Image(); // this.img = document.getElementById('image') <img id="image" scr>
-        this.img.src = path;
+    applyGravity() {
+        setInterval(() => {
+            if (this.isAboveGround() || this.speedY > 0) {
+                this.y -= this.speedY;
+                this.speedY -= this.acceleratiom;
+            }
+        }, 1000 / 25);
     }
 
-
-    loadImages(array) {
-        array.forEach((path) => {
-            let img = new Image();
-            img.src = path;
-            this.imageCache[path] = img;
-        });
+    isAboveGround() {
+        if (this instanceof ThrowableObject) {
+            return true;
+        } else {
+            return this.y < 130;
+        }
     }
 
-    playAnimation(images){
-        let i = this.currentImage % this.IMAGES_WALKING.length;
-                let path = images[i];
-                this.img = this.imageCache[path];
-                this.currentImage++;
+    isColliding(movableObject) {
+        return this.x + this.width > movableObject.x &&
+            this.y + this.height > movableObject.y &&
+            this.x < movableObject.x &&
+            this.y < movableObject.y + movableObject.height
+    }
+
+    hit() {
+        this.energy -= 20;
+        if (this.energy < 0) {
+            this.energy = 0;
+        } else {
+            this.lastHit = new Date().getTime();
+        }
+    }
+
+    isHurt() {
+        let timepassed = new Date().getTime() - this.lastHit;
+        timepassed = timepassed / 1000;
+        return timepassed < 1;
+    }
+
+    isDead() {
+        return this.energy == 0;
+    }
+
+    playAnimation(images) {
+        let i = this.currentImage % images.length;
+        let path = images[i];
+        this.img = this.imageCache[path];
+        this.currentImage++;
     }
 
     moveRight() {
-        console.log('Moving right');
+        this.x += this.speed;
     }
 
     moveLeft() {
-        setInterval(() => {
-            this.x -= this.speed;
-        }, 1000 / 60);
+        this.x -= this.speed;
+    }
 
+    jump() {
+        this.speedY = 30;
     }
 }
