@@ -5,25 +5,12 @@ let keyboard = new Keyboard();
 function init() {
     canvas = document.getElementById('canvas');
     world = new World(canvas, keyboard);
-
-    console.log('My Character is', world.character);
-
-
 }
 
 document.addEventListener("keydown", (event) => {
-console.log(event.keyCode);
-
-    if(event.keyCode == 87) {
-        keyboard.UP = true;
-    }
 
     if(event.keyCode == 65) {
         keyboard.LEFT = true;
-    }
-
-    if(event.keyCode == 83) {
-        keyboard.DOWN = true;
     }
 
     if(event.keyCode == 68) {
@@ -34,24 +21,20 @@ console.log(event.keyCode);
         keyboard.SPACE = true;
     }
 
-    if(event.keyCode == 69) {
+    if(event.keyCode == 83) {
         keyboard.THROW = true;
+    }
+
+    if(event.keyCode == 82) {
+        keyboard.RESTART = true;
     }
     
 });
 
 document.addEventListener("keyup", (event) => {
 
-    if(event.keyCode == 87) {
-        keyboard.UP = false;
-    }
-
     if(event.keyCode == 65) {
         keyboard.LEFT = false;
-    }
-
-    if(event.keyCode == 83) {
-        keyboard.DOWN = false;
     }
 
     if(event.keyCode == 68) {
@@ -62,8 +45,12 @@ document.addEventListener("keyup", (event) => {
         keyboard.SPACE = false;
     }
 
-    if(event.keyCode == 69) {
+    if(event.keyCode == 83) {
         keyboard.THROW = false;
+    }
+
+    if(event.keyCode == 82) {
+        keyboard.RESTART = false;
     }
     
 });
