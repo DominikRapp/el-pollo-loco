@@ -76,6 +76,12 @@ class Character extends MovableObject {
     IDLE_FULL = [];
     wasInAir = false;
     world;
+    groundTopY = 130;
+    canControl = true;
+    deathStarted = false;
+    deadLocked = false;
+    deathAnimIndex = 0;
+    deathAnimInterval = null;
 
     constructor() {
         super().loadImage('img/2_character_pepe/2_walk/W-21.png');
@@ -97,24 +103,26 @@ class Character extends MovableObject {
     }
 
     animate() {
+
         setInterval(() => {
             if (!this.world) return;
+            if (this.deadLocked || this.deathStarted) {
+                this.world.camera_x = -this.x + 100;
+                return;
+            }
             let input = false;
-            if (this.world.keyboard.RIGHT && this.x < this.world.level.level_end_x) {
+            if (this.canControl && this.world.keyboard.RIGHT && this.x < this.world.level.level_end_x) {
                 this.moveRight();
                 this.otherDirection = false;
                 input = true;
             }
-            if (this.world.keyboard.LEFT && this.x > 0) {
+            if (this.canControl && this.world.keyboard.LEFT && this.x > 0) {
                 this.moveLeft();
                 this.otherDirection = true;
                 input = true;
             }
-            if (this.world.keyboard.SPACE && !this.isAboveGround()) {
+            if (this.canControl && this.world.keyboard.SPACE && !this.isAboveGround()) {
                 this.jump();
-                input = true;
-            }
-            if (this.world.keyboard.THROW) {
                 input = true;
             }
             if (input) {
@@ -139,8 +147,11 @@ class Character extends MovableObject {
 
         setInterval(() => {
             if (!this.world) return;
-            if (this.isDead()) {
-                this.playAnimation(this.IMAGES_DEAD);
+            if (this.isDead() && !this.deathStarted) {
+                this.startDeath();
+                return;
+            }
+            if (this.deathStarted || this.deadLocked) {
                 return;
             }
             if (this.isHurt()) {
@@ -166,7 +177,31 @@ class Character extends MovableObject {
     }
 
     jump() {
-        this.speedY = 30;
+        if (!this.canControl) return; this.speedY = 30;
+    }
+
+    startDeath() {
+        this.deathStarted = true;
+        this.canControl = false;
+        this.speed = 0;
+        this.speedY = 0;
+        const seq = this.IMAGES_DEAD;
+        this.deathAnimIndex = 0;
+        if (this.deathAnimInterval) {
+            clearInterval(this.deathAnimInterval);
+            this.deathAnimInterval = null;
+        }
+        this.deathAnimInterval = setInterval(() => {
+            if (this.deathAnimIndex < seq.length) {
+                const path = seq[this.deathAnimIndex];
+                this.img = this.imageCache[path];
+                this.deathAnimIndex++;
+            } else {
+                clearInterval(this.deathAnimInterval);
+                this.deathAnimInterval = null;
+                this.deadLocked = true;
+            }
+        }, 120);
     }
 
     playIdleAnimation() {
@@ -204,11 +239,11 @@ class Character extends MovableObject {
     }
 
     isStomping(enemy) {
-        const charBottom = this.y + this.height;
-        const enemyTop = enemy.y;
+        const charBottom = this.y + this.height - (this.offset?.bottom || 0);
+        const enemyTop = enemy.y + (enemy.offset?.top || 0);
         const isFalling = this.speedY < 0;
-        const closeToEnemyTop = (charBottom - enemyTop) < 30;
-        return isFalling && closeToEnemyTop;
+        const closeToTop = (charBottom - enemyTop) < 30;
+        return isFalling && closeToTop;
     }
 
     playThrowFrame() {

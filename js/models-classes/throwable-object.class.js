@@ -85,4 +85,21 @@ class ThrowableObject extends MovableObject {
             }
         }, 60);
     }
+
+    freeze() {
+        if (this.moveInterval) {
+            clearInterval(this.moveInterval);
+            this.moveInterval = null;
+        }
+        if (this.rotationInterval) {
+            clearInterval(this.rotationInterval);
+            this.rotationInterval = null;
+        }
+        if (this.splashInterval) {
+            clearInterval(this.splashInterval);
+            this.splashInterval = null;
+        }
+        this.speedY = 0;
+        this.acceleration = 0;
+    }
 }
