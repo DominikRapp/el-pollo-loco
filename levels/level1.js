@@ -52,13 +52,16 @@ for (let i = 0; i < backgroundObjects_level1.length; i++) {
 }
 const LEVEL_END_PADDING = 100;
 const computedLevelEndX = lastChunkX + LEVEL_END_PADDING;
+
 const boss = new Endboss();
 boss.x = computedLevelEndX - 450;
+
 const enemies_level1 = [
     new Chicken(600, { patrol: [560, 820] }),
     new ChickenSmall(950, { patrol: [900, 1100] }),
     boss
 ];
+
 const CLOUD_IMAGES = [
     'img/5_background/layers/4_clouds/1.png',
     'img/5_background/layers/4_clouds/2.png'
@@ -73,9 +76,15 @@ const clouds_level1 = chunkXs.map(chunkX => {
     const xCentered = chunkX + (CHUNK_WIDTH - CLOUD_WIDTH) / 2;
     return new Cloud(xCentered, img);
 });
+
+const platforms_level1 = [
+    new Platform(1200, 520, 216, 80)
+];
+
 const level1 = new Level(
     enemies_level1,
     clouds_level1,
-    backgroundObjects_level1
+    backgroundObjects_level1,
+    platforms_level1
 );
 level1.level_end_x = computedLevelEndX;

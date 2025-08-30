@@ -1,10 +1,11 @@
 class World {
-    
+
     character = new Character();
-    level = level1;
-    enemies = level1.enemies;
-    clouds = level1.clouds;
-    backgroundObjects = level1.backgroundObjects;
+    level = null;
+    enemies = [];
+    clouds = [];
+    backgroundObjects = [];
+    platforms = [];
     ctx;
     keyboard;
     camera_x = 0;
@@ -25,11 +26,17 @@ class World {
     coinPickups = [];
     coinCount = 0;
     coinMax = 5;
+    baseGroundTopY = 335;
 
-    constructor(canvas, keyboard) {
+    constructor(canvas, keyboard, level) {
         this.ctx = canvas.getContext('2d');
         this.canvas = canvas;
         this.keyboard = keyboard;
+        this.level = level;
+        this.enemies = level.enemies;
+        this.clouds = level.clouds;
+        this.backgroundObjects = level.backgroundObjects;
+        this.platforms = level.platforms || [];
         this.coinBar = new CoinBar();
         this.coinBar.x = 10;
         this.coinBar.y = 45;
@@ -41,6 +48,7 @@ class World {
         if (this.boss) {
             this.bossBar.setPercentage(this.boss.energy);
         }
+        this.baseGroundTopY = this.character.groundTopY;
         this.spawnGroundBottles();
         this.spawnCoins();
         this.draw();
@@ -58,15 +66,14 @@ class World {
                 this.freezeAll();
                 this.gameOver = true;
             }
-            if (this.gameOver) {
-                return;
-            }
+            if (this.gameOver) return;
+            this.updateCharacterGround();
             if (this.boss) {
                 if (this.bossAlertShown === true) {
                     this.boss.updateAI(this);
                 } else {
-                    var dist = Math.abs(this.character.x - this.boss.x);
-                    var alertDist = this.boss.alertDistance || 450;
+                    let dist = Math.abs(this.character.x - this.boss.x);
+                    let alertDist = this.boss.alertDistance || 450;
                     if (dist <= alertDist) {
                         if (typeof this.boss.goAlert === 'function') {
                             this.boss.goAlert();
@@ -129,6 +136,27 @@ class World {
                 }
             });
         });
+    }
+
+    updateCharacterGround() {
+        let ground = this.baseGroundTopY;
+        const c = this.character;
+        const cLeft = c.x + (c.offset?.left || 0);
+        const cRight = c.x + c.width - (c.offset?.right || 0);
+        const cBottom = c.y + c.height - (c.offset?.bottom || 0);
+        for (const p of this.level.platforms) {
+            const pLeft = p.x + (p.offset?.left || 0);
+            const pRight = p.x + p.width - (p.offset?.right || 0);
+            const pTop = p.y + (p.offset?.top || 0);
+            const overlapsX = cRight > pLeft && cLeft < pRight;
+            const aboveTop = cBottom <= pTop + 10;
+            const falling = c.speedY <= 0;
+            if (overlapsX && aboveTop && falling) {
+                const candidate = pTop - c.height + (c.offset?.bottom || 0);
+                if (candidate < ground) ground = candidate;
+            }
+        }
+        c.groundTopY = ground;
     }
 
     cleanupProjectiles() {
@@ -282,6 +310,7 @@ class World {
         this.ctx.translate(this.camera_x, 0);
         this.addObjectsToMap(this.level.backgroundObjects);
         this.addObjectsToMap(this.level.clouds);
+        this.addObjectsToMap(this.level.platforms); // das ist neu
         this.addObjectsToMap(this.groundBottles);
         this.addObjectsToMap(this.coinPickups);
         this.addToMap(this.character);
@@ -298,6 +327,7 @@ class World {
         this.ctx.restore();
         requestAnimationFrame(() => this.draw());
     }
+
 
     addObjectsToMap(objects) {
         objects.forEach(object => {
