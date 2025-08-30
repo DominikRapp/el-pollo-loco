@@ -1,6 +1,6 @@
 class BaseChicken extends MovableObject {
 
-    groundBottomY = 430;
+    groundBottomY = 630;
     IMAGES_WALKING = [];
     IMAGE_DEAD = '';
     isDead = false;
@@ -75,8 +75,8 @@ class BaseChicken extends MovableObject {
             typeof config.patrol[0] === 'number' &&
             typeof config.patrol[1] === 'number'
         ) {
-            var a = config.patrol[0];
-            var b = config.patrol[1];
+            let a = config.patrol[0];
+            let b = config.patrol[1];
             if (a < b) {
                 this.patrolMinX = a;
                 this.patrolMaxX = b;

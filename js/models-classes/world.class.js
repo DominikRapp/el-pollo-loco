@@ -1,4 +1,5 @@
 class World {
+    
     character = new Character();
     level = level1;
     enemies = level1.enemies;
@@ -95,14 +96,14 @@ class World {
             this.bottleCount > 0 &&
             this.character.canControl) {
             let direction = 1;
-            let offsetX = 100;
+            let offsetX = Math.round(this.character.width * 0.66);
             if (this.character.otherDirection) {
                 direction = -1;
-                offsetX = -20;
+                offsetX = Math.round(-this.character.width * 0.13);
             }
-            let startX = this.character.x + offsetX;
-            let startY = this.character.y + 100;
-            let bottle = new ThrowableObject(startX, startY, direction);
+            const startX = this.character.x + offsetX;
+            const startY = Math.round(this.character.y + this.character.height * 0.45);
+            const bottle = new ThrowableObject(startX, startY, direction);
             this.throwableObjects.push(bottle);
             this.bottleCount = Math.max(0, this.bottleCount - 1);
             const percent = (this.bottleCount / this.bottleMax) * 100;

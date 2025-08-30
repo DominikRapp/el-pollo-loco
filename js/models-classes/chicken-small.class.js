@@ -1,4 +1,5 @@
 class ChickenSmall extends BaseChicken {
+
     constructor(x, options = {}) {
         super({
             x,

@@ -1,15 +1,11 @@
 class BottlePickup extends DrawableObject {
+
     constructor(imagePath, x) {
         super().loadImage(imagePath);
         this.width = 60;
         this.height = 60;
-        this.offset = {
-            top: 5,
-            left: 15,
-            right: 8,
-            bottom: 5
-        };
-        const groundBottomY = 430;
+        this.offset = { top: 5, left: 15, right: 8, bottom: 5 };
+        const groundBottomY = 630;
         this.x = x;
         this.baseY = groundBottomY - this.height;
         this.y = this.baseY;
@@ -23,8 +19,7 @@ class BottlePickup extends DrawableObject {
 
     freeze() {
         if (this.bobInterval) {
-            clearInterval(this.bobInterval);
-            this.bobInterval = null;
+            clearInterval(this.bobInterval); this.bobInterval = null;
         }
     }
 }

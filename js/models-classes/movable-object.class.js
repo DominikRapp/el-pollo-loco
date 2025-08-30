@@ -6,19 +6,13 @@ class MovableObject extends DrawableObject {
     acceleration = 2.5;
     energy = 100;
     lastHit = 0;
-    damageProtectionTime = 1000;
-    offset =
-        {
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0
-        };
+    damageProtectionTime = 500;
+    offset = { top: 0, left: 0, right: 0, bottom: 0 };
     canCollide = true;
-    groundTopY = 130;
+    groundTopY = 370;
 
     applyGravity() {
-        
+
         setInterval(() => {
             if (this instanceof ThrowableObject) {
                 if (this.isAboveGround() || this.speedY > 0) {
