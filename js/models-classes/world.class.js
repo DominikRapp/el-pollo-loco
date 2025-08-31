@@ -6,6 +6,7 @@ class World {
     clouds = [];
     backgroundObjects = [];
     platforms = [];
+    barrels = [];
     ctx;
     keyboard;
     camera_x = 0;
@@ -37,6 +38,11 @@ class World {
         this.clouds = level.clouds;
         this.backgroundObjects = level.backgroundObjects;
         this.platforms = level.platforms || [];
+        this.barrels = level.barrels || [];
+        this.groundBottles = level.bottles || [];
+        this.coinPickups = level.coins || [];
+        this.rules = level.rules || {};
+        if (level.start && typeof level.start.characterX === 'number') { this.character.x = level.start.characterX; }
         this.coinBar = new CoinBar();
         this.coinBar.x = 10;
         this.coinBar.y = 45;
@@ -45,12 +51,8 @@ class World {
         this.bossBar.x = this.canvas.width - this.bossBar.width - 10;
         this.bossBar.y = 0;
         this.boss = this.level.enemies.find(e => e instanceof Endboss) || null;
-        if (this.boss) {
-            this.bossBar.setPercentage(this.boss.energy);
-        }
+        if (this.boss) { this.bossBar.setPercentage(this.boss.energy); }
         this.baseGroundTopY = this.character.groundTopY;
-        this.spawnGroundBottles();
-        this.spawnCoins();
         this.draw();
         this.setWorld();
         this.run();
@@ -86,6 +88,7 @@ class World {
                     }
                 }
             }
+            this.blockCharacterByBarrels();
             this.checkCollisions();
             this.checkThrowableObjects();
             this.checkBottlePickups();
@@ -95,9 +98,36 @@ class World {
         }, 1000 / 60);
     }
 
+    blockCharacterByBarrels() {
+        const c = this.character;
+        const cLeft = c.x + (c.offset?.left || 0);
+        const cRight = c.x + c.width - (c.offset?.right || 0);
+        const cTop = c.y + (c.offset?.top || 0);
+        const cBottom = c.y + c.height - (c.offset?.bottom || 0);
+
+        for (const b of this.level.barrels) {
+            const bLeft = b.x + (b.offset?.left || 0);
+            const bRight = b.x + b.width - (b.offset?.right || 0);
+            const bTop = b.y + (b.offset?.top || 0);
+            const bBottom = b.y + b.height - (b.offset?.bottom || 0);
+            const overlapX = cRight > bLeft && cLeft < bRight;
+            const overlapY = cBottom > bTop && cTop < bBottom;
+            if (overlapX && overlapY) {
+                const fromLeft = (c.x + c.width / 2) < (b.x + b.width / 2);
+                if (fromLeft) {
+                    const desiredRight = bLeft - 1;
+                    c.x = desiredRight - (c.width - (c.offset?.right || 0));
+                } else {
+                    const desiredLeft = bRight + 1;
+                    c.x = desiredLeft - (c.offset?.left || 0);
+                }
+            }
+        }
+    }
+
     checkThrowableObjects() {
         const now = Date.now();
-        const bossBottleDamage = 100;
+        const bossBottleDamage = this.rules.bossBottleDamage ?? 100;
         if (this.keyboard.THROW &&
             (now - this.lastThrowTime) >= this.throwCooldown &&
             this.bottleCount > 0 &&
@@ -144,6 +174,7 @@ class World {
         const cLeft = c.x + (c.offset?.left || 0);
         const cRight = c.x + c.width - (c.offset?.right || 0);
         const cBottom = c.y + c.height - (c.offset?.bottom || 0);
+
         for (const p of this.level.platforms) {
             const pLeft = p.x + (p.offset?.left || 0);
             const pRight = p.x + p.width - (p.offset?.right || 0);
@@ -153,6 +184,18 @@ class World {
             const falling = c.speedY <= 0;
             if (overlapsX && aboveTop && falling) {
                 const candidate = pTop - c.height + (c.offset?.bottom || 0);
+                if (candidate < ground) ground = candidate;
+            }
+        }
+        for (const b of this.level.barrels) {
+            const bLeft = b.x + (b.offset?.left || 0);
+            const bRight = b.x + b.width - (b.offset?.right || 0);
+            const bTop = b.y + (b.offset?.top || 0);
+            const overlapsX = cRight > bLeft && cLeft < bRight;
+            const aboveTop = cBottom <= bTop + 10;
+            const falling = c.speedY <= 0;
+            if (overlapsX && aboveTop && falling) {
+                const candidate = bTop - c.height + (c.offset?.bottom || 0);
                 if (candidate < ground) ground = candidate;
             }
         }
@@ -219,6 +262,25 @@ class World {
 
     checkCollisions() {
         this.level.enemies.forEach((enemy) => {
+            if (!(enemy instanceof Chicken || enemy instanceof ChickenSmall)) return;
+            this.level.barrels.forEach((b) => {
+                const collides =
+                    (enemy.x + enemy.width - (enemy.offset?.right || 0)) > (b.x + (b.offset?.left || 0)) &&
+                    (enemy.y + enemy.height - (enemy.offset?.bottom || 0)) > (b.y + (b.offset?.top || 0)) &&
+                    (enemy.x + (enemy.offset?.left || 0)) < (b.x + b.width - (b.offset?.right || 0)) &&
+                    (enemy.y + (enemy.offset?.top || 0)) < (b.y + b.height - (b.offset?.bottom || 0));
+                if (collides) {
+                    enemy.direction *= -1;
+                    if (enemy.direction === 1) {
+                        enemy.x = b.x - enemy.width - 1;
+                    } else {
+                        enemy.x = b.x + b.width + 1;
+                    }
+                }
+            });
+        });
+
+        this.level.enemies.forEach((enemy) => {
             if (!enemy.canCollide) return;
             if (this.character.isColliding(enemy)) {
                 const isChicken = (enemy instanceof Chicken) || (enemy instanceof ChickenSmall);
@@ -238,7 +300,10 @@ class World {
                     return;
                 }
                 if (!this.character.isHurt() && !this.character.isDead()) {
-                    this.character.hit();
+                    const contactDamage = (enemy instanceof Endboss)
+                        ? (this.rules.bossContactDamage ?? 30)
+                        : (this.rules.enemyContactDamage ?? 20);
+                    this.character.applyDamage(contactDamage);
                     this.statusBar.setPercentage(this.character.energy);
                     const push = 40;
                     if (this.character.x < enemy.x) {
@@ -310,7 +375,8 @@ class World {
         this.ctx.translate(this.camera_x, 0);
         this.addObjectsToMap(this.level.backgroundObjects);
         this.addObjectsToMap(this.level.clouds);
-        this.addObjectsToMap(this.level.platforms); // das ist neu
+        this.addObjectsToMap(this.level.platforms);
+        this.addObjectsToMap(this.level.barrels);
         this.addObjectsToMap(this.groundBottles);
         this.addObjectsToMap(this.coinPickups);
         this.addToMap(this.character);

@@ -4,7 +4,7 @@ let keyboard = new Keyboard();
 
 function init() {
     canvas = document.getElementById('canvas');
-    world = new World(canvas, keyboard, level1);
+    world = new World(canvas, keyboard, level1); // level1 kann durch 2 - 5 ersetzt werden um momentan die level durchzusehen und anzupassen
 }
 
 document.addEventListener("keydown", (event) => {

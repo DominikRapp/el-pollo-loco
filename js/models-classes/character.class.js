@@ -180,6 +180,18 @@ class Character extends MovableObject {
         }
     }
 
+    applyDamage(amount) {
+        if (typeof amount !== 'number') amount = 20;
+        if (this.isDead()) return;
+        this.energy -= amount;
+        if (this.energy < 0) this.energy = 0;
+        this.lastHit = Date.now();
+        this.canControl = false;
+        setTimeout(() => {
+            if (!this.deathStarted && !this.deadLocked) this.canControl = true;
+        }, this.damageProtectionTime);
+    }
+
     jump() {
         if (!this.canControl) return; this.speedY = 30;
     }

@@ -1,5 +1,5 @@
 const CHUNK_WIDTH = 1080;
-const backgroundObjects_level1 = [
+const backgroundObjects_level2 = [
     new BackgroundObject('img/5_background/layers/air.png', -CHUNK_WIDTH),
     new BackgroundObject('img/5_background/layers/3_third_layer/2.png', -CHUNK_WIDTH),
     new BackgroundObject('img/5_background/layers/2_second_layer/2.png', -CHUNK_WIDTH),
@@ -46,14 +46,14 @@ const backgroundObjects_level1 = [
     new BackgroundObject('img/5_background/layers/1_first_layer/2.png', CHUNK_WIDTH * 7)
 ];
 
-const barrels_level1 = [
+const barrels_level2 = [
     new Barrel(1450)
 ];
 
 let lastChunkX = 0;
 
-for (let i = 0; i < backgroundObjects_level1.length; i++) {
-    const obj = backgroundObjects_level1[i];
+for (let i = 0; i < backgroundObjects_level2.length; i++) {
+    const obj = backgroundObjects_level2[i];
     if (obj.x > lastChunkX) lastChunkX = obj.x;
 }
 
@@ -68,7 +68,7 @@ boss.attackSpeed = 1.5;
 boss.alertDistance = 520;
 boss.attackDistance = 260;
 
-const enemies_level1 = [
+const enemies_level2 = [
     new Chicken(600, { patrol: [560, 820] }),
     new ChickenSmall(950, { patrol: [900, 1100] }),
     boss
@@ -80,43 +80,44 @@ const CLOUD_IMAGES = [
 ];
 
 const CLOUD_WIDTH = 450;
+
 const chunkXs = [];
 
-for (let i = 0; i < backgroundObjects_level1.length; i += 4) {
-    chunkXs.push(backgroundObjects_level1[i].x);
+for (let i = 0; i < backgroundObjects_level2.length; i += 4) {
+    chunkXs.push(backgroundObjects_level2[i].x);
 }
 
-const clouds_level1 = chunkXs.map(chunkX => {
+const clouds_level2 = chunkXs.map(chunkX => {
     const img = CLOUD_IMAGES[Math.floor(Math.random() * CLOUD_IMAGES.length)];
     const xCentered = chunkX + (CHUNK_WIDTH - CLOUD_WIDTH) / 2;
     return new Cloud(xCentered, img);
 });
 
-const platforms_level1 = [
+const platforms_level2 = [
     new Platform(1200, 520, 216, 80)
 ];
 
-const bottles_level1 = [
+const bottles_level2 = [
     new BottlePickup('img/6_salsa_bottle/1_salsa_bottle_on_ground.png', 450),
     new BottlePickup('img/6_salsa_bottle/1_salsa_bottle_on_ground.png', 900)
 ];
 
-const coins_level1 = [
+const coins_level2 = [
     new CoinPickup(520),
     new CoinPickup(780)
 ];
 
-const start_level1 = { characterX: 100 };
+const start_level2 = { characterX: 100 };
 
-const level1 = new Level(
-    enemies_level1,
-    clouds_level1,
-    backgroundObjects_level1,
-    platforms_level1,
-    barrels_level1,
-    bottles_level1,
-    coins_level1,
-    start_level1
+const level2 = new Level(
+    enemies_level2,
+    clouds_level2,
+    backgroundObjects_level2,
+    platforms_level2,
+    barrels_level2,
+    bottles_level2,
+    coins_level2,
+    start_level2
 );
 
-level1.level_end_x = computedLevelEndX;
+level2.level_end_x = computedLevelEndX;
