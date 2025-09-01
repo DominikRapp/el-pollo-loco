@@ -97,6 +97,7 @@ class Character extends MovableObject {
 
         setInterval(() => {
             if (!this.world) return;
+            if (this.world?.frozen) return;
             if (this.deadLocked || this.deathStarted) {
                 this.world.camera_x = -this.x + 100;
                 return;
@@ -138,6 +139,7 @@ class Character extends MovableObject {
 
         setInterval(() => {
             if (!this.world) return;
+            if (this.world?.frozen) return;
             if (this.isDead() && !this.deathStarted) {
                 this.startDeath();
                 return;

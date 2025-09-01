@@ -28,6 +28,7 @@ class World {
     coinCount = 0;
     coinMax = 5;
     baseGroundTopY = 335;
+    frozen = false;
 
     constructor(canvas, keyboard, level) {
         this.ctx = canvas.getContext('2d');
@@ -322,51 +323,30 @@ class World {
     }
 
     freezeAll() {
+        this.frozen = true;
+        this.character.canControl = false;
         this.character.speed = 0;
         this.character.speedY = 0;
+        this.keyboard.LEFT = false;
+        this.keyboard.RIGHT = false;
+        this.keyboard.SPACE = false;
+        this.keyboard.THROW = false;
+        this.keyboard.RESTART = false;
         if (this.boss) {
-            if (typeof this.boss.freeze === 'function') {
-                this.boss.freeze();
-            } else {
-                if (this.boss.animationInterval) {
-                    clearInterval(this.boss.animationInterval);
-                    this.boss.animationInterval = null;
-                }
-                this.boss.walkSpeed = 0;
-                this.boss.alertSpeed = 0;
-                this.boss.attackSpeed = 0;
+            if (typeof this.boss.freeze === 'function') this.boss.freeze();
+            else {
+                if (this.boss.animationInterval) { clearInterval(this.boss.animationInterval); this.boss.animationInterval = null; }
+                this.boss.walkSpeed = 0; this.boss.alertSpeed = 0; this.boss.attackSpeed = 0;
             }
         }
-        this.level.enemies.forEach((e) => {
-            if (typeof e.freeze === 'function') {
-                e.freeze();
-            } else {
-                e.speed = 0;
-            }
+        this.level.enemies.forEach(e => typeof e.freeze === 'function' ? e.freeze() : (e.speed = 0));
+        this.level.clouds.forEach(c => typeof c.freeze === 'function' ? c.freeze() : (c.speed = 0));
+        this.throwableObjects.forEach(b => {
+            if (typeof b.freeze === 'function') b.freeze();
+            else { if (b.moveInterval) clearInterval(b.moveInterval); if (b.rotationInterval) clearInterval(b.rotationInterval); if (b.splashInterval) clearInterval(b.splashInterval); b.speedY = 0; }
         });
-        this.level.clouds.forEach((c) => {
-            if (typeof c.freeze === 'function') {
-                c.freeze();
-            } else {
-                c.speed = 0;
-            }
-        });
-        this.throwableObjects.forEach((b) => {
-            if (typeof b.freeze === 'function') {
-                b.freeze();
-            } else {
-                if (b.moveInterval) clearInterval(b.moveInterval);
-                if (b.rotationInterval) clearInterval(b.rotationInterval);
-                if (b.splashInterval) clearInterval(b.splashInterval);
-                b.speedY = 0;
-            }
-        });
-        this.groundBottles.forEach((p) => {
-            if (typeof p.freeze === 'function') p.freeze();
-        });
-        this.coinPickups.forEach((c) => {
-            if (typeof c.freeze === 'function') c.freeze();
-        });
+        this.groundBottles.forEach(p => typeof p.freeze === 'function' && p.freeze());
+        this.coinPickups.forEach(c => typeof c.freeze === 'function' && c.freeze());
     }
 
     draw() {

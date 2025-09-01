@@ -54,6 +54,7 @@ class Endboss extends MovableObject {
     hurtDurationMs = 400;
     hurtUntil = 0;
     alertPlayed = false;
+    deathAnimFinished = false;
 
     constructor() {
         super().loadImage('img/4_enemie_boss_chicken/1_walk/G1.png');
@@ -79,11 +80,11 @@ class Endboss extends MovableObject {
         if (state === 'alert') { seq = this.IMAGES_ALERT; delay = 120; }
         if (state === 'attack') { seq = this.IMAGES_ATTACK; delay = 90; }
         if (state === 'hurt') { seq = this.IMAGES_HURT; delay = 120; }
-        if (state === 'dead') { seq = this.IMAGES_DEAD; delay = 150; }
+        if (state === 'dead') { seq = this.IMAGES_DEAD; delay = 150; this.deathAnimFinished = false; }
         if (seq.length > 0) {
             this.img = this.imageCache[seq[0]];
         }
-        let self = this;
+        const self = this;
         this.animationInterval = setInterval(function () {
             if (self.currentState === 'dead') {
                 if (self.currentFrame < seq.length) {
@@ -93,6 +94,7 @@ class Endboss extends MovableObject {
                     clearInterval(self.animationInterval);
                     self.animationInterval = null;
                     self.canCollide = false;
+                    self.deathAnimFinished = true;
                 }
                 return;
             }
@@ -109,9 +111,7 @@ class Endboss extends MovableObject {
                 return;
             }
             if (seq.length === 0) return;
-            if (self.currentFrame >= seq.length) {
-                self.currentFrame = 0;
-            }
+            if (self.currentFrame >= seq.length) self.currentFrame = 0;
             self.img = self.imageCache[seq[self.currentFrame]];
             self.currentFrame += 1;
         }, delay);
@@ -131,64 +131,52 @@ class Endboss extends MovableObject {
         if (this.currentState === 'dead') return;
         if (world && world.gameOver) return;
         if (!world || !world.character) return;
+
         let player = world.character;
-        let dirToPlayer = -1;
-        if (player.x >= this.x) {
-            dirToPlayer = 1;
-        }
+        let dirToPlayer = (player.x >= this.x) ? 1 : -1;
         this.otherDirection = (dirToPlayer === 1);
         let now = Date.now();
+
         if (now < this.hurtUntil) {
-            if (this.currentState !== 'hurt') {
-                this.setAnimation('hurt');
-            }
+            if (this.currentState !== 'hurt') this.setAnimation('hurt');
             this.x += -dirToPlayer * 0.4;
             return;
         }
+
         if (this.isDead()) {
-            this.setAnimation('dead');
+            if (this.currentState !== 'dead') this.setAnimation('dead');
             return;
         }
+
         let dist = Math.abs(player.x - this.x);
         if (this.alertPlayed === false && dist <= this.alertDistance) {
-            if (this.currentState !== 'alert') {
-                this.setAnimation('alert');
-            }
+            if (this.currentState !== 'alert') this.setAnimation('alert');
             return;
         }
         if (dist <= this.attackDistance) {
-            if (this.currentState !== 'attack') {
-                this.setAnimation('attack');
-            }
+            if (this.currentState !== 'attack') this.setAnimation('attack');
             this.x += dirToPlayer * this.attackSpeed;
             return;
         }
         if (dist <= this.alertDistance) {
-            if (this.currentState !== 'walk') {
-                this.setAnimation('walk');
-            }
+            if (this.currentState !== 'walk') this.setAnimation('walk');
             this.x += dirToPlayer * this.alertSpeed;
             return;
         }
-        if (this.currentState !== 'walk') {
-            this.setAnimation('walk');
-        }
+        if (this.currentState !== 'walk') this.setAnimation('walk');
         this.x -= this.walkSpeed;
     }
 
     hit(damage) {
-        if (typeof damage !== 'number') {
-            damage = 20;
-        }
+        if (typeof damage !== 'number') damage = 20;
         if (this.currentState === 'dead') return;
         this.energy -= damage;
-        if (this.energy < 0) {
-            this.energy = 0;
+        if (this.energy < 0) this.energy = 0;
+        if (this.isDead()) {
+            this.setAnimation('dead');
+            return;
         }
         this.hurtUntil = Date.now() + this.hurtDurationMs;
         this.setAnimation('hurt');
-        if (this.isDead()) {
-            this.setAnimation('dead');
-        }
     }
 }
