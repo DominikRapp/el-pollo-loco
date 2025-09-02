@@ -1,5 +1,5 @@
 class ThrowableObject extends MovableObject {
-    
+
     IMAGES_ROTATION = [
         'img/6_salsa_bottle/bottle_rotation/1_bottle_rotation.png',
         'img/6_salsa_bottle/bottle_rotation/2_bottle_rotation.png',
@@ -81,25 +81,19 @@ class ThrowableObject extends MovableObject {
                 this.splashFrame++;
             } else {
                 clearInterval(this.splashInterval);
+                this.freeze();
                 this.markForRemoval = true;
             }
         }, 60);
     }
 
+
     freeze() {
-        if (this.moveInterval) {
-            clearInterval(this.moveInterval);
-            this.moveInterval = null;
-        }
-        if (this.rotationInterval) {
-            clearInterval(this.rotationInterval);
-            this.rotationInterval = null;
-        }
-        if (this.splashInterval) {
-            clearInterval(this.splashInterval);
-            this.splashInterval = null;
-        }
+        if (this.moveInterval) { clearInterval(this.moveInterval); this.moveInterval = null; }
+        if (this.rotationInterval) { clearInterval(this.rotationInterval); this.rotationInterval = null; }
+        if (this.splashInterval) { clearInterval(this.splashInterval); this.splashInterval = null; }
         this.speedY = 0;
         this.acceleration = 0;
+        super.freeze();
     }
 }

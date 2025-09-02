@@ -21,56 +21,84 @@
 
         <img id="splash-start" src="img/9_intro_outro_screens/start/startscreen_2.png">
 
-        <div id="hud-timer">00:00</div>
+        <div id="hud-timer" class="hidden">00:00</div>
 
-        <img id="overlay-gameover" src="img/You won, you lost/Game over A.png">
-        <div id="gameover-actions" class="hidden">
-            <button id="btn-restart">Restart</button>
-            <button id="btn-instructions-go">Anleitung</button>
-            <button id="btn-scoreboard-go">Scoreboard</button>
-            <button id="btn-settings-go">Einstellungen</button>
-            <button id="btn-fullscreen-go">Fullscreen</button>
+        <div id="hud-level" class="hidden">Level 1</div>
+
+        <div id="instructions-overlay" class="hidden">
+            <div class="overlay-box instructions-box">
+                <button id="instructions-close" class="instructions-close" aria-label="Close">
+                    <span class="xbar one"></span>
+                    <span class="xbar two"></span>
+                </button>
+
+                <button id="instructions-prev" class="circle-nav left" aria-label="Previous">
+                    <span class="chev left"></span>
+                </button>
+
+                <div id="instructions-content" class="instructions-content"></div>
+
+                <button id="instructions-next" class="circle-nav right" aria-label="Next">
+                    <span class="chev right"></span>
+                </button>
+
+                <div class="instructions-footer">
+                    <span id="instructions-page-indicator">Page 1 of 10</span>
+                </div>
+            </div>
         </div>
 
-        <img id="overlay-youwin" src="img/You won, you lost/You Win A.png">
+        <div id="hamburger-root" class="hidden">
+            <button id="hamburger-button" aria-label="Menu" aria-expanded="false">
+                <span class="hamburger-bar top"></span>
+                <span class="hamburger-bar middle"></span>
+                <span class="hamburger-bar bottom"></span>
+            </button>
+
+            <nav id="hamburger-menu" class="hidden" aria-label="Quick Menu">
+                <a href="#" id="menu-settings">Settings</a>
+                <a href="#" id="menu-instructions">Instructions</a>
+                <a href="legal/terms.html" target="_blank" rel="noopener" id="menu-terms">Terms of Service</a>
+                <a href="legal/impressum.html" target="_blank" rel="noopener" id="menu-imprint">Imprint</a>
+            </nav>
+        </div>
+
+        <img id="overlay-gameover" class="hidden" src="img/You won, you lost/Game over A.png" alt="Game Over">
+
+        <div id="gameover-actions" class="hidden">
+            <div class="overlay-box">
+                <h2>Game Over</h2>
+                <button id="btn-restart">Restart</button>
+                <button id="btn-instructions-go">Instructions</button>
+                <button id="btn-scoreboard-go">Scoreboard</button>
+                <button id="btn-settings-go">Settings</button>
+                <button id="btn-fullscreen-go">Fullscreen</button>
+            </div>
+        </div>
+
+        <img id="overlay-youwin" class="hidden" src="img/You won, you lost/You Win A.png" alt="You Win">
+
         <div id="victory-actions" class="hidden">
-            <button id="btn-restart-win">Restart</button>
-            <button id="btn-next">Next Level</button>
-            <button id="btn-home" class="hidden">Home</button>
-            <button id="btn-instructions-victory">Anleitung</button>
-            <button id="btn-scoreboard-victory">Scoreboard</button>
-            <button id="btn-settings-victory">Einstellungen</button>
-            <button id="btn-fullscreen-victory">Fullscreen</button>
+            <div class="overlay-box">
+                <h2>You Win!</h2>
+                <button id="btn-restart-win">Restart</button>
+                <button id="btn-next">Next Level</button>
+                <button id="btn-home" class="hidden">Home</button>
+                <button id="btn-instructions-victory">Instructions</button>
+                <button id="btn-scoreboard-victory">Scoreboard</button>
+                <button id="btn-settings-victory">Settings</button>
+                <button id="btn-fullscreen-victory">Fullscreen</button>
+            </div>
         </div>
     </div>
 
-    <div id="countdown">3</div>
+    <div id="countdown" class="hidden">3</div>
 
-    <div id="start-screen" class="hidden">
-
-        <button id="btn-dev-start">DEV: Quick Start</button>
-
-        <div id="lang-select">
-            <button data-lang="de">Deutsch</button>
-            <button data-lang="en">English</button>
-        </div>
-
-        <div id="legal-step" class="hidden">
-            <div id="legal-links">
-                <a id="link-tos" href="legal/terms.html" target="_blank" rel="noopener">Nutzungsbedingungen</a>
-                <a id="link-privacy" href="legal/privacy.html" target="_blank" rel="noopener">Datenschutzerklärung</a>
-                <a id="link-imprint" href="legal/impressum.html" target="_blank" rel="noopener">Impressum</a>
-            </div>
-            <label class="check">
-                <input type="checkbox" id="accept-legal" disabled>
-                <span>Ich akzeptiere die Nutzungsbedingungen und habe die Datenschutzerklärung gelesen.</span>
-            </label>
-        </div>
-
-        <div id="name-step" class="hidden">
-            <input id="player-name" placeholder="Name" disabled />
+    <div id="start-screen">
+        <div id="name-step">
+            <input id="player-name" placeholder="Name" />
             <div id="name-error" class="hidden"></div>
-            <button id="btn-start" disabled>Start</button>
+            <button id="btn-start" disabled>Start Game</button>
         </div>
     </div>
 
@@ -93,6 +121,7 @@
     <script src="js/models-classes/platform.class.js"></script>
     <script src="js/models-classes/barrel.class.js"></script>
     <script src="js/models-classes/keyboard.class.js"></script>
+    <script src="js/models-classes/interval-tracker.class.js"></script>
     <script src="js/models-classes/level.class.js"></script>
     <script src="levels/level1.js"></script>
     <script src="levels/level2.js"></script>

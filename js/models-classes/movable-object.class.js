@@ -10,10 +10,11 @@ class MovableObject extends DrawableObject {
     offset = { top: 0, left: 0, right: 0, bottom: 0 };
     canCollide = true;
     groundTopY = 370;
+    gravityInterval = null;
 
     applyGravity() {
-
-        setInterval(() => {
+        if (this.gravityInterval) return;
+        this.gravityInterval = setInterval(() => {
             if (this instanceof ThrowableObject) {
                 if (this.isAboveGround() || this.speedY > 0) {
                     this.y -= this.speedY;
@@ -30,6 +31,13 @@ class MovableObject extends DrawableObject {
                 }
             }
         }, 1000 / 60);
+    }
+
+    freeze() {
+        if (this.gravityInterval) {
+            clearInterval(this.gravityInterval);
+            this.gravityInterval = null;
+        }
     }
 
     isAboveGround() {

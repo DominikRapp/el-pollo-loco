@@ -1,13 +1,13 @@
 class BottleBar extends DrawableObject {
     IMAGES = [
-            'img/7_statusbars/1_statusbar/3_statusbar_bottle/blue/0.png',
-            'img/7_statusbars/1_statusbar/3_statusbar_bottle/orange/20.png',
-            'img/7_statusbars/1_statusbar/3_statusbar_bottle/blue/40.png',
-            'img/7_statusbars/1_statusbar/3_statusbar_bottle/blue/60.png',
-            'img/7_statusbars/1_statusbar/3_statusbar_bottle/blue/80.png',
-            'img/7_statusbars/1_statusbar/3_statusbar_bottle/blue/100.png'
-        ];
-        
+        'img/7_statusbars/1_statusbar/3_statusbar_bottle/blue/0.png',
+        'img/7_statusbars/1_statusbar/3_statusbar_bottle/orange/20.png',
+        'img/7_statusbars/1_statusbar/3_statusbar_bottle/blue/40.png',
+        'img/7_statusbars/1_statusbar/3_statusbar_bottle/blue/60.png',
+        'img/7_statusbars/1_statusbar/3_statusbar_bottle/blue/80.png',
+        'img/7_statusbars/1_statusbar/3_statusbar_bottle/blue/100.png'
+    ];
+
     percentage = 0;
 
     constructor() {
@@ -21,12 +21,14 @@ class BottleBar extends DrawableObject {
     }
 
     setPercentage(percentage) {
-        if (percentage < 0) percentage = 0;
-        if (percentage > 100) percentage = 100;
         this.percentage = percentage;
-        const idx = this.resolveImageIndex();
-        const path = this.IMAGES[idx];
-        this.img = this.imageCache[path];
+        const imageIndex = this.resolveImageIndex();
+        if (this.lastRenderedIndex === imageIndex) {
+            return;
+        }
+        this.lastRenderedIndex = imageIndex;
+        const imagePath = this.IMAGES[imageIndex];
+        this.img = this.imageCache[imagePath];
     }
 
     resolveImageIndex() {

@@ -1,5 +1,7 @@
 class World {
 
+    canFreezeNow = false;
+    allowFreezeAfterDeathImage = false;
     character = new Character();
     level = null;
     enemies = [];
@@ -29,6 +31,10 @@ class World {
     coinMax = 5;
     baseGroundTopY = 335;
     frozen = false;
+    lastBossHitTime = 0;
+    bossHitCooldownMs = 1000;
+    drawRafId = null;
+    disposed = false;
 
     constructor(canvas, keyboard, level) {
         this.ctx = canvas.getContext('2d');
@@ -42,6 +48,7 @@ class World {
         this.barrels = level.barrels || [];
         this.groundBottles = level.bottles || [];
         this.coinPickups = level.coins || [];
+        this.throwableObjects = [];
         this.rules = level.rules || {};
         if (level.start && typeof level.start.characterX === 'number') { this.character.x = level.start.characterX; }
         this.coinBar = new CoinBar();
@@ -59,25 +66,52 @@ class World {
         this.run();
     }
 
+    cleanupRemoved() {
+        const keepOnlyActive = (array) => {
+            if (!Array.isArray(array)) return array;
+            return array.filter((entry) => {
+                if (entry && entry.markForRemoval) {
+                    if (entry.freeze) entry.freeze();
+                    return false;
+                }
+                return true;
+            });
+        };
+
+        this.throwableObjects = keepOnlyActive(this.throwableObjects);
+        this.enemies = keepOnlyActive(this.enemies);
+        this.clouds = keepOnlyActive(this.clouds);
+        this.platforms = keepOnlyActive(this.platforms);
+        this.barrels = keepOnlyActive(this.barrels);
+        this.groundBottles = keepOnlyActive(this.groundBottles);
+        this.coinPickups = keepOnlyActive(this.coinPickups);
+    }
+
     setWorld() {
         this.character.world = this;
     }
 
     run() {
         setInterval(() => {
-            if (!this.gameOver && this.character.deadLocked) {
-                this.freezeAll();
+            if (!this.gameOver && this.character && this.character.deadLocked === true) {
                 this.gameOver = true;
+                if (this.character) this.character.canControl = false;
             }
-            if (this.gameOver) return;
+
+            if (this.gameOver) {
+                this.updateCharacterGround();
+                return;
+            }
+
             this.updateCharacterGround();
+
             if (this.boss) {
                 if (this.bossAlertShown === true) {
                     this.boss.updateAI(this);
                 } else {
-                    let dist = Math.abs(this.character.x - this.boss.x);
-                    let alertDist = this.boss.alertDistance || 450;
-                    if (dist <= alertDist) {
+                    const distance = Math.abs(this.character.x - this.boss.x);
+                    const alertDistance = this.boss.alertDistance || 450;
+                    if (distance <= alertDistance) {
                         if (typeof this.boss.goAlert === 'function') {
                             this.boss.goAlert();
                         } else if (typeof this.boss.setAnimation === 'function') {
@@ -89,6 +123,7 @@ class World {
                     }
                 }
             }
+
             this.blockCharacterByBarrels();
             this.checkCollisions();
             this.checkThrowableObjects();
@@ -245,16 +280,23 @@ class World {
     }
 
     checkCoinPickups() {
-        var self = this;
-        this.coinPickups = this.coinPickups.filter(function (coin) {
-            var collides = self.character.isColliding(coin);
+        const healPerCoin = (this.rules && typeof this.rules.coinHeal === 'number') ? this.rules.coinHeal : 20;
+        const self = this;
+        this.coinPickups = this.coinPickups.filter(function (coinPickup) {
+            const collides = self.character.isColliding(coinPickup);
             if (!collides) {
                 return true;
             }
             if (self.coinCount < self.coinMax) {
                 self.coinCount++;
-                var percent = (self.coinCount / self.coinMax) * 100;
+                const percent = (self.coinCount / self.coinMax) * 100;
                 self.coinBar.setPercentage(percent);
+                const currentEnergy = self.character.energy;
+                const newEnergy = Math.min(100, currentEnergy + healPerCoin);
+                if (newEnergy !== currentEnergy) {
+                    self.character.energy = newEnergy;
+                    self.statusBar.setPercentage(self.character.energy);
+                }
                 return false;
             }
             return true;
@@ -281,10 +323,13 @@ class World {
             });
         });
 
+        const now = Date.now();
+
         this.level.enemies.forEach((enemy) => {
             if (!enemy.canCollide) return;
             if (this.character.isColliding(enemy)) {
                 const isChicken = (enemy instanceof Chicken) || (enemy instanceof ChickenSmall);
+
                 if (isChicken && this.character.isStomping(enemy)) {
                     let enemyTopOffset = 0;
                     if (enemy.offset && typeof enemy.offset.top === 'number') {
@@ -300,12 +345,28 @@ class World {
                     enemy.die();
                     return;
                 }
-                if (!this.character.isHurt() && !this.character.isDead()) {
+
+                let canApplyDamage = !this.character.isHurt() && !this.character.isDead();
+
+                if (enemy instanceof Endboss) {
+                    const timeSinceBossHit = now - this.lastBossHitTime;
+                    if (timeSinceBossHit < this.bossHitCooldownMs) {
+                        canApplyDamage = false;
+                    }
+                }
+
+                if (canApplyDamage) {
                     const contactDamage = (enemy instanceof Endboss)
-                        ? (this.rules.bossContactDamage ?? 30)
+                        ? (this.rules.bossContactDamage ?? 20)
                         : (this.rules.enemyContactDamage ?? 20);
+
                     this.character.applyDamage(contactDamage);
                     this.statusBar.setPercentage(this.character.energy);
+
+                    if (enemy instanceof Endboss) {
+                        this.lastBossHitTime = now;
+                    }
+
                     const push = 40;
                     if (this.character.x < enemy.x) {
                         this.character.x -= push;
@@ -313,6 +374,11 @@ class World {
                         this.character.x += push;
                     }
                     this.character.speedY = 15;
+
+                    if (typeof this.character.energy === 'number' && this.character.energy <= 0) {
+                        this.gameOver = true;
+                        this.freezeAll();
+                    }
                 }
             }
         });
@@ -323,33 +389,57 @@ class World {
     }
 
     freezeAll() {
+        if (this.canFreezeNow !== true) {
+            return;
+        }
+
+        IntervalTracker.clearAll();
         this.frozen = true;
-        this.character.canControl = false;
-        this.character.speed = 0;
-        this.character.speedY = 0;
+
+        if (this.character) {
+            this.character.canControl = false;
+            this.character.speed = 0;
+            this.character.speedY = 0;
+        }
+
         this.keyboard.LEFT = false;
         this.keyboard.RIGHT = false;
         this.keyboard.SPACE = false;
         this.keyboard.THROW = false;
         this.keyboard.RESTART = false;
+
         if (this.boss) {
             if (typeof this.boss.freeze === 'function') this.boss.freeze();
             else {
                 if (this.boss.animationInterval) { clearInterval(this.boss.animationInterval); this.boss.animationInterval = null; }
-                this.boss.walkSpeed = 0; this.boss.alertSpeed = 0; this.boss.attackSpeed = 0;
+                this.boss.walkSpeed = 0;
+                this.boss.alertSpeed = 0;
+                this.boss.attackSpeed = 0;
             }
         }
+
         this.level.enemies.forEach(e => typeof e.freeze === 'function' ? e.freeze() : (e.speed = 0));
         this.level.clouds.forEach(c => typeof c.freeze === 'function' ? c.freeze() : (c.speed = 0));
+
         this.throwableObjects.forEach(b => {
-            if (typeof b.freeze === 'function') b.freeze();
-            else { if (b.moveInterval) clearInterval(b.moveInterval); if (b.rotationInterval) clearInterval(b.rotationInterval); if (b.splashInterval) clearInterval(b.splashInterval); b.speedY = 0; }
+            if (typeof b.freeze === 'function') {
+                b.freeze();
+            } else {
+                if (b.moveInterval) clearInterval(b.moveInterval);
+                if (b.rotationInterval) clearInterval(b.rotationInterval);
+                if (b.splashInterval) clearInterval(b.splashInterval);
+                b.speedY = 0;
+            }
         });
+
         this.groundBottles.forEach(p => typeof p.freeze === 'function' && p.freeze());
         this.coinPickups.forEach(c => typeof c.freeze === 'function' && c.freeze());
     }
 
     draw() {
+        if (this.disposed) {
+            return;
+        }
         this.ctx.clearRect(0, 0, canvas.width, canvas.height);
         this.ctx.save();
         this.ctx.translate(this.camera_x, 0);
@@ -371,7 +461,17 @@ class World {
         }
         this.addToMap(this.coinBar);
         this.ctx.restore();
-        requestAnimationFrame(() => this.draw());
+
+        this.drawRafId = requestAnimationFrame(() => this.draw());
+    }
+
+    dispose() {
+        this.disposed = true;
+        if (this.drawRafId) {
+            cancelAnimationFrame(this.drawRafId);
+            this.drawRafId = null;
+        }
+        IntervalTracker.clearAll();
     }
 
 

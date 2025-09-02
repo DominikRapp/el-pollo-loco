@@ -200,15 +200,19 @@ class Character extends MovableObject {
 
     startDeath() {
         this.deathStarted = true;
+        this.deathAnimFinished = false;
         this.canControl = false;
         this.speed = 0;
         this.speedY = 0;
+
         const seq = this.IMAGES_DEAD;
         this.deathAnimIndex = 0;
+
         if (this.deathAnimInterval) {
             clearInterval(this.deathAnimInterval);
             this.deathAnimInterval = null;
         }
+
         this.deathAnimInterval = setInterval(() => {
             if (this.deathAnimIndex < seq.length) {
                 const path = seq[this.deathAnimIndex];
@@ -217,6 +221,7 @@ class Character extends MovableObject {
             } else {
                 clearInterval(this.deathAnimInterval);
                 this.deathAnimInterval = null;
+                this.deathAnimFinished = true;
                 this.deadLocked = true;
             }
         }, 120);

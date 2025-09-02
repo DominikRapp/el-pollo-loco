@@ -7,7 +7,7 @@ class CoinBar extends DrawableObject {
         'img/7_statusbars/1_statusbar/1_statusbar_coin/blue/80.png',
         'img/7_statusbars/1_statusbar/1_statusbar_coin/blue/100.png'
     ];
-    
+
     percentage = 0;
 
     constructor() {
@@ -21,12 +21,17 @@ class CoinBar extends DrawableObject {
     }
 
     setPercentage(percentage) {
-        if (percentage < 0) percentage = 0;
-        if (percentage > 100) percentage = 100;
-        this.percentage = percentage;
-        const idx = this.resolveImageIndex();
-        const path = this.IMAGES[idx];
-        this.img = this.imageCache[path];
+        let clamped = percentage;
+        if (clamped < 0) clamped = 0;
+        if (clamped > 100) clamped = 100;
+        this.percentage = clamped;
+        const imageIndex = this.resolveImageIndex();
+        if (this.lastRenderedIndex === imageIndex) {
+            return;
+        }
+        this.lastRenderedIndex = imageIndex;
+        const imagePath = this.IMAGES[imageIndex];
+        this.img = this.imageCache[imagePath];
     }
 
     resolveImageIndex() {

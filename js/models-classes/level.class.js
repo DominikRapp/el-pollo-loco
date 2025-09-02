@@ -9,7 +9,7 @@ class Level {
     start = { characterX: 0 };
     rules = {
         enemyContactDamage: 20,
-        bossContactDamage: 30,
+        bossContactDamage: 20,
         bossBottleDamage: 100
     };
     level_end_x = 2250;
