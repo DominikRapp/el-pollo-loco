@@ -263,6 +263,10 @@ button:disabled {
     z-index: 1000;
 }
 
+#hamburger-root.hidden {
+    display: none;
+}
+
 #hamburger-button {
     all: unset;
     cursor: pointer;

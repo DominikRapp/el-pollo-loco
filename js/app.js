@@ -568,6 +568,16 @@ class App {
         this.stopTimer();
         if (this.world && this.world.character) this.world.character.canControl = false;
 
+        const hamburgerRoot = document.getElementById('hamburger-root');
+        const hamburgerButton = document.getElementById('hamburger-button');
+        const hamburgerMenu = document.getElementById('hamburger-menu');
+        if (hamburgerRoot) hamburgerRoot.classList.add('hidden');
+        if (hamburgerMenu) hamburgerMenu.classList.add('hidden');
+        if (hamburgerButton) {
+            hamburgerButton.classList.remove('open');
+            hamburgerButton.setAttribute('aria-expanded', 'false');
+        }
+
         const image = document.getElementById('overlay-gameover');
         const actions = document.getElementById('gameover-actions');
         if (!image || !actions) return;
