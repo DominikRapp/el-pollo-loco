@@ -27,7 +27,7 @@
 
         <div id="instructions-overlay" class="hidden">
             <div class="overlay-box instructions-box">
-                <button id="instructions-close" class="instructions-close" aria-label="Close">
+                <button id="instructions-close" class="overlay-closebutton" aria-label="Close">
                     <span class="xbar one"></span>
                     <span class="xbar two"></span>
                 </button>
@@ -36,14 +36,51 @@
                     <span class="chev left"></span>
                 </button>
 
-                <div id="instructions-content" class="instructions-content"></div>
+                <div id="instructions-content" class="overlay-content"></div>
 
                 <button id="instructions-next" class="circle-nav right" aria-label="Next">
                     <span class="chev right"></span>
                 </button>
 
-                <div class="instructions-footer">
+                <div class="overlay-footer">
                     <span id="instructions-page-indicator">Page 1 of 10</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="scoreboard-overlay" class="hidden">
+            <div class="overlay-box">
+                <button id="scoreboard-close" class="overlay-closebutton" aria-label="Close">
+                    <span class="xbar one"></span>
+                    <span class="xbar two"></span>
+                </button>
+
+                <button id="scoreboard-prev" class="circle-nav left" aria-label="Previous">
+                    <span class="chev left"></span>
+                </button>
+
+                <div id="scoreboard-content" class="overlay-content"></div>
+
+                <button id="scoreboard-next" class="circle-nav right" aria-label="Next">
+                    <span class="chev right"></span>
+                </button>
+
+                <div class="overlay-footer">
+                    <span id="scoreboard-page-indicator">Page 1 of 6</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="settings-overlay" class="hidden">
+            <div class="overlay-box">
+                <button id="settings-close" class="overlay-closebutton" aria-label="Close">
+                    <span class="xbar one"></span>
+                    <span class="xbar two"></span>
+                </button>
+
+                <div id="settings-content" class="overlay-content">
+                    <h3>Einstellungen</h3>
+                    <p>Hier kannst du deine Spiel-Einstellungen anpassen (Platzhalter).</p>
                 </div>
             </div>
         </div>
@@ -56,6 +93,7 @@
             </button>
 
             <nav id="hamburger-menu" class="hidden" aria-label="Quick Menu">
+                <a href="#" id="menu-home">Home</a>
                 <a href="#" id="menu-settings">Settings</a>
                 <a href="#" id="menu-instructions">Instructions</a>
                 <a href="legal/terms.html" target="_blank" rel="noopener" id="menu-terms">Terms of Service</a>
@@ -69,6 +107,7 @@
             <div class="overlay-box">
                 <h2>Game Over</h2>
                 <button id="btn-restart">Restart</button>
+                <button id="btn-home-go">Home</button>
                 <button id="btn-instructions-go">Instructions</button>
                 <button id="btn-scoreboard-go">Scoreboard</button>
                 <button id="btn-settings-go">Settings</button>
@@ -83,22 +122,39 @@
                 <h2>You Win!</h2>
                 <button id="btn-restart-win">Restart</button>
                 <button id="btn-next">Next Level</button>
-                <button id="btn-home" class="hidden">Home</button>
+                <button id="btn-home">Home</button>
                 <button id="btn-instructions-victory">Instructions</button>
                 <button id="btn-scoreboard-victory">Scoreboard</button>
                 <button id="btn-settings-victory">Settings</button>
                 <button id="btn-fullscreen-victory">Fullscreen</button>
             </div>
         </div>
-    </div>
 
-    <div id="countdown" class="hidden">3</div>
+        <div id="countdown" class="hidden">3</div>
 
-    <div id="start-screen">
-        <div id="name-step">
-            <input id="player-name" placeholder="Name" />
-            <div id="name-error" class="hidden"></div>
-            <button id="btn-start" disabled>Start Game</button>
+        <div id="start-screen" class="hidden">
+            <div class="overlay-box home-box">
+                <h2 class="home-title">El Pollo Loco</h2>
+
+                <div id="name-step">
+                    <input id="player-name" placeholder="Name" />
+                    <div id="name-error" class="hidden"></div>
+                    <button id="btn-start" disabled>Start Game</button>
+                </div>
+
+                <div class="home-actions">
+                    <button id="btn-instructions-home">Instructions</button>
+                    <button id="btn-scoreboard-home">Scoreboard</button>
+                    <button id="btn-settings-home">Settings</button>
+                    <button id="btn-fullscreen-home">Fullscreen</button>
+                </div>
+
+                <div class="home-legal">
+                    <a href="legal/terms.html" target="_blank" rel="noopener">Terms</a>
+                    <span>•</span>
+                    <a href="legal/impressum.html" target="_blank" rel="noopener">Imprint</a>
+                </div>
+            </div>
         </div>
     </div>
 

@@ -23,6 +23,7 @@ class IntroPepe extends DrawableObject {
     idx = 0;
     tick = 0;
     done = false;
+    suppressWinLoseOverlay = false;
 
     constructor(canvasHeight) {
         super().loadImage(this.frames[0]);
@@ -66,12 +67,23 @@ class App {
 
     levels = [];
     currentLevelIndex = 0;
-    levelFactories = [createLevel1, createLevel2, createLevel3, createLevel4, createLevel5];
+    levelFactories = [
+        createLevel1,
+        createLevel2,
+        createLevel3,
+        createLevel4,
+        createLevel5
+    ];
 
     carryOverEnergy = 100;
 
-    show(el) { if (el) el.classList.remove('hidden'); }
-    hide(el) { if (el) el.classList.add('hidden'); }
+    show(el) {
+        if (el) el.classList.remove('hidden');
+    }
+
+    hide(el) {
+        if (el) el.classList.add('hidden');
+    }
 
     init(canvas, keyboard) {
         this.canvas = canvas;
@@ -82,9 +94,13 @@ class App {
         this.currentLevelIndex = 0;
 
         this.wireStartScreenControls();
+        this.wireInstructionsOverlay();
+        this.wireScoreboardOverlay();
+        this.wireSettingsOverlay();
         this.startSequence();
         this.wireHamburgerMenu();
-        this.wireInstructionsOverlay();
+        this.wireHomeActions();
+        this.wireFullscreenToggle();
     }
 
     wireStartScreenControls() {
@@ -204,6 +220,137 @@ class App {
         }
     }
 
+    wireSettingsOverlay() {
+        const overlay = document.getElementById('settings-overlay');
+        const content = document.getElementById('settings-content');
+        const closeBtn = document.getElementById('settings-close');
+
+        if (!overlay || !content || !closeBtn) {
+            return;
+        }
+
+        const ensureExclusiveOpen = () => {
+            this.hideWinLoseOverlays();
+            const others = [
+                document.getElementById('instructions-overlay'),
+                document.getElementById('scoreboard-overlay'),
+                document.getElementById('start-screen')
+            ];
+            for (const el of others) { if (el) el.classList.add('hidden'); }
+        };
+
+        const openOverlay = () => {
+            ensureExclusiveOpen();
+            this.suppressWinLose();
+            if (typeof this.closeHamburgerMenu === 'function') this.closeHamburgerMenu();
+            overlay.classList.remove('hidden');
+        };
+
+        const closeOverlay = () => {
+            overlay.classList.add('hidden');
+            this.restoreWinLoseActionsOnly();
+            if (this.state === GameState.MENU) {
+                const start = document.getElementById('start-screen');
+                if (start) start.classList.remove('hidden');
+            }
+        };
+
+        const openLinks = [
+            document.getElementById('btn-settings-go'),
+            document.getElementById('btn-settings-victory'),
+            document.getElementById('menu-settings'),
+            document.getElementById('btn-settings-home')
+        ];
+        openLinks.forEach(link => {
+            if (link) {
+                link.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    openOverlay();
+                });
+            }
+        });
+
+        closeBtn.addEventListener('click', closeOverlay);
+
+        overlay.addEventListener('click', function (event) {
+            if (event.target === overlay) closeOverlay();
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !overlay.classList.contains('hidden')) closeOverlay();
+        });
+    }
+
+    wireFullscreenToggle() {
+        const root = document.getElementById('game-root');
+        const btnHome = document.getElementById('btn-fullscreen-home');
+        const btnGo = document.getElementById('btn-fullscreen-go');
+        const btnVictory = document.getElementById('btn-fullscreen-victory');
+
+        if (!root) return;
+
+        const isFs = () => {
+            return document.fullscreenElement === root
+                || document.webkitFullscreenElement === root
+                || document.msFullscreenElement === root;
+        };
+
+        const canFs = () => {
+            return !!(root.requestFullscreen || root.webkitRequestFullscreen || root.msRequestFullscreen);
+        };
+
+        const enter = () => {
+            if (root.requestFullscreen) return root.requestFullscreen();
+            if (root.webkitRequestFullscreen) return root.webkitRequestFullscreen();
+            if (root.msRequestFullscreen) return root.msRequestFullscreen();
+        };
+
+        const exit = () => {
+            if (document.exitFullscreen) return document.exitFullscreen();
+            if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
+            if (document.msExitFullscreen) return document.msExitFullscreen();
+        };
+
+        const update = () => {
+            const on = isFs();
+            const labelOn = 'Fullscreen';
+            const labelOff = 'Fullscreen';
+            const set = (btn) => {
+                if (!btn) return;
+                btn.textContent = on ? labelOn : labelOff;
+                btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+            };
+            set(btnHome);
+            set(btnGo);
+            set(btnVictory);
+        };
+
+        const toggle = (ev) => {
+            if (ev) ev.preventDefault();
+            if (!canFs()) return;
+            if (isFs()) {
+                const p = exit();
+                if (p && typeof p.finally === 'function') p.finally(update); else setTimeout(update, 0);
+            } else {
+                const p = enter();
+                if (p && typeof p.finally === 'function') p.finally(update); else setTimeout(update, 0);
+            }
+        };
+
+        if (btnHome) btnHome.addEventListener('click', toggle);
+        if (btnGo) btnGo.addEventListener('click', toggle);
+        if (btnVictory) btnVictory.addEventListener('click', toggle);
+
+        document.addEventListener('fullscreenchange', () => update());
+        document.addEventListener('webkitfullscreenchange', () => update());
+        document.addEventListener('msfullscreenchange', () => update());
+
+        update();
+    }
+
+
+
+
     getHamburgerElements() {
         const root = document.getElementById('hamburger-root');
         const button = document.getElementById('hamburger-button');
@@ -236,7 +383,7 @@ class App {
         this.currentInstructionsPage = 0;
 
         const overlay = document.getElementById('instructions-overlay');
-        const box = overlay ? overlay.querySelector('.instructions-box') : null;
+        const box = overlay ? overlay.querySelector('.overlay-box') : null;
         const content = document.getElementById('instructions-content');
         const prevBtn = document.getElementById('instructions-prev');
         const nextBtn = document.getElementById('instructions-next');
@@ -249,37 +396,55 @@ class App {
 
         const renderPage = (index) => {
             const total = this.instructionsPages.length;
-            let target = Math.max(0, Math.min(index, total - 1));
+            const target = Math.max(0, Math.min(index, total - 1));
             this.currentInstructionsPage = target;
             content.innerHTML = this.instructionsPages[target];
             pageIndicator.textContent = 'Page ' + (target + 1) + ' of ' + total;
+            prevBtn.disabled = target === 0;
+            nextBtn.disabled = target === total - 1;
+            overlay.scrollTop = 0;
+        };
+
+        const ensureExclusiveOpen = () => {
+            this.hideWinLoseOverlays();
+            const others = [
+                document.getElementById('scoreboard-overlay'),
+                document.getElementById('settings-overlay'),
+                document.getElementById('start-screen')
+            ];
+            for (const el of others) { if (el) el.classList.add('hidden'); }
         };
 
         const openOverlay = () => {
+            ensureExclusiveOpen();
+            this.suppressWinLose();
+            if (typeof this.closeHamburgerMenu === 'function') this.closeHamburgerMenu();
             overlay.classList.remove('hidden');
             renderPage(0);
         };
 
         const closeOverlay = () => {
             overlay.classList.add('hidden');
+            this.restoreWinLoseActionsOnly();
+            if (this.state === GameState.MENU) {
+                const start = document.getElementById('start-screen');
+                if (start) start.classList.remove('hidden');
+            }
         };
 
         const goPrev = () => {
-            if (this.currentInstructionsPage > 0) {
-                renderPage(this.currentInstructionsPage - 1);
-            }
+            if (this.currentInstructionsPage > 0) renderPage(this.currentInstructionsPage - 1);
         };
 
         const goNext = () => {
-            if (this.currentInstructionsPage < this.instructionsPages.length - 1) {
-                renderPage(this.currentInstructionsPage + 1);
-            }
+            if (this.currentInstructionsPage < this.instructionsPages.length - 1) renderPage(this.currentInstructionsPage + 1);
         };
 
         const openLinks = [
-            document.getElementById('menu-instructions'),
             document.getElementById('btn-instructions-go'),
-            document.getElementById('btn-instructions-victory')
+            document.getElementById('btn-instructions-victory'),
+            document.getElementById('menu-instructions'),
+            document.getElementById('btn-instructions-home')
         ];
         openLinks.forEach(link => {
             if (link) {
@@ -292,7 +457,6 @@ class App {
 
         prevBtn.addEventListener('click', goPrev);
         nextBtn.addEventListener('click', goNext);
-
         closeBtn.addEventListener('click', closeOverlay);
 
         overlay.addEventListener('click', function (event) {
@@ -300,10 +464,150 @@ class App {
         });
 
         document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape' && !overlay.classList.contains('hidden')) {
-                closeOverlay();
+            if (event.key === 'Escape' && !overlay.classList.contains('hidden')) closeOverlay();
+        });
+    }
+
+    wireScoreboardOverlay() {
+        this.scoreboardPages = this.buildScoreboardPages();
+        this.currentScoreboardPage = 0;
+
+        const overlay = document.getElementById('scoreboard-overlay');
+        const box = overlay ? overlay.querySelector('.overlay-box') : null;
+        const content = document.getElementById('scoreboard-content');
+        const prevBtn = document.getElementById('scoreboard-prev');
+        const nextBtn = document.getElementById('scoreboard-next');
+        const pageIndicator = document.getElementById('scoreboard-page-indicator');
+        const closeBtn = document.getElementById('scoreboard-close');
+
+        if (!overlay || !box || !content || !prevBtn || !nextBtn || !pageIndicator || !closeBtn) {
+            return;
+        }
+
+        const renderPage = (index) => {
+            const total = this.scoreboardPages.length;
+            const target = Math.max(0, Math.min(index, total - 1));
+            this.currentScoreboardPage = target;
+            content.innerHTML = this.scoreboardPages[target];
+            pageIndicator.textContent = 'Page ' + (target + 1) + ' of ' + total;
+            prevBtn.disabled = target === 0;
+            nextBtn.disabled = target === total - 1;
+            overlay.scrollTop = 0;
+        };
+
+        const ensureExclusiveOpen = () => {
+            this.hideWinLoseOverlays();
+            const others = [
+                document.getElementById('instructions-overlay'),
+                document.getElementById('settings-overlay'),
+                document.getElementById('start-screen')
+            ];
+            for (const el of others) { if (el) el.classList.add('hidden'); }
+        };
+
+        const openOverlay = () => {
+            ensureExclusiveOpen();
+            this.suppressWinLose();
+            if (typeof this.closeHamburgerMenu === 'function') this.closeHamburgerMenu();
+            overlay.classList.remove('hidden');
+            renderPage(0);
+        };
+
+        const closeOverlay = () => {
+            overlay.classList.add('hidden');
+            this.restoreWinLoseActionsOnly();
+            if (this.state === GameState.MENU) {
+                const start = document.getElementById('start-screen');
+                if (start) start.classList.remove('hidden');
+            }
+        };
+
+        const goPrev = () => {
+            if (this.currentScoreboardPage > 0) renderPage(this.currentScoreboardPage - 1);
+        };
+
+        const goNext = () => {
+            if (this.currentScoreboardPage < this.scoreboardPages.length - 1) renderPage(this.currentScoreboardPage + 1);
+        };
+
+        const openLinks = [
+            document.getElementById('btn-scoreboard-go'),
+            document.getElementById('btn-scoreboard-victory'),
+            document.getElementById('btn-scoreboard-home')
+        ];
+        openLinks.forEach(link => {
+            if (link) {
+                link.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    openOverlay();
+                });
             }
         });
+
+        prevBtn.addEventListener('click', goPrev);
+        nextBtn.addEventListener('click', goNext);
+        closeBtn.addEventListener('click', closeOverlay);
+
+        overlay.addEventListener('click', function (event) {
+            if (event.target === overlay) closeOverlay();
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !overlay.classList.contains('hidden')) closeOverlay();
+        });
+    }
+
+
+    wireHomeActions() {
+        const btnHomeGo = document.getElementById('btn-home-go');
+        const btnHomeWin = document.getElementById('btn-home');
+        const menuHome = document.getElementById('menu-home');
+
+        const goHome = (ev) => {
+            if (ev) ev.preventDefault();
+            this.resetOverlays();
+            this.hideWinLoseOverlays();
+            this.showMenu();
+        };
+
+        if (btnHomeGo) btnHomeGo.addEventListener('click', goHome);
+        if (menuHome) menuHome.addEventListener('click', goHome);
+
+        if (btnHomeWin) {
+            btnHomeWin.addEventListener('click', goHome);
+        }
+    }
+
+
+    hideWinLoseOverlays() {
+        const goImg = document.getElementById('overlay-gameover');
+        const viImg = document.getElementById('overlay-youwin');
+        const goAct = document.getElementById('gameover-actions');
+        const viAct = document.getElementById('victory-actions');
+
+        const hideEl = (el) => { if (el) { el.classList.add('hidden'); el.style.display = 'none'; el.classList.remove('pop-in'); } };
+
+        hideEl(goImg);
+        hideEl(viImg);
+        hideEl(goAct);
+        hideEl(viAct);
+    }
+
+    suppressWinLose() {
+        this.suppressWinLoseOverlay = true;
+        this.hideWinLoseOverlays();
+    }
+
+    restoreWinLoseActionsOnly() {
+        if (!this.suppressWinLoseOverlay) return;
+        this.suppressWinLoseOverlay = false;
+        if (this.state === GameState.GAMEOVER) {
+            const actions = document.getElementById('gameover-actions');
+            if (actions) { actions.classList.remove('hidden'); actions.style.display = ''; }
+        } else if (this.state === GameState.VICTORY) {
+            const actions = document.getElementById('victory-actions');
+            if (actions) { actions.classList.remove('hidden'); actions.style.display = ''; }
+        }
     }
 
     buildInstructionsPages() {
@@ -319,6 +623,149 @@ class App {
             '<h3>Timer</h3><p>The timer runs only during gameplay. It stops on Game Over and Victory.</p>',
             '<h3>Good luck!</h3><p>Have fun and try to clear all levels!</p>'
         ];
+    }
+
+    buildScoreboardPages() {
+        const raw = localStorage.getItem('scoreboard_rankings') || '{}';
+        let data = {};
+        try { data = JSON.parse(raw) || {}; } catch { data = {}; }
+
+        const ensureArr = (x) => Array.isArray(x) ? x.slice(0, 10) : [];
+        const total = ensureArr(data.total);
+        const levels = {
+            1: ensureArr(data.levels && data.levels['1']),
+            2: ensureArr(data.levels && data.levels['2']),
+            3: ensureArr(data.levels && data.levels['3']),
+            4: ensureArr(data.levels && data.levels['4']),
+            5: ensureArr(data.levels && data.levels['5'])
+        };
+
+        const fmt = (n) => typeof n === 'number' ? String(n) : '–';
+        const mmss = (ms) => {
+            if (typeof ms !== 'number' || ms < 0) return '–';
+            const totalSeconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            const mm = String(minutes).padStart(2, '0');
+            const ss = String(seconds).padStart(2, '0');
+            return mm + ':' + ss;
+        };
+
+        const pts = (c) => {
+            const b = c && c.boss ? c.boss : 0;
+            const ch = c && c.chicken ? c.chicken : 0;
+            const cs = c && c.chickenSmall ? c.chickenSmall : 0;
+            const bo = c && c.bottle ? c.bottle : 0;
+            const co = c && c.coin ? c.coin : 0;
+            return b * 10 + ch * 5 + cs * 3 + bo * 2 + co * 1;
+        };
+
+        const sortByPointsThenTime = (arr) => {
+            return arr.slice().sort((a, b) => {
+                const pa = pts(a.counts || {});
+                const pb = pts(b.counts || {});
+                if (pb !== pa) return pb - pa;
+                const ta = typeof a.timeMs === 'number' ? a.timeMs : Number.MAX_SAFE_INTEGER;
+                const tb = typeof b.timeMs === 'number' ? b.timeMs : Number.MAX_SAFE_INTEGER;
+                return ta - tb;
+            }).slice(0, 10);
+        };
+
+        const rankRowsTotal = (arr) => {
+            const rows = [];
+            const sorted = sortByPointsThenTime(arr);
+            sorted.forEach((e, i) => {
+                const name = e && e.name ? e.name : 'Player';
+                const highest = e && typeof e.highestLevel === 'number' ? e.highestLevel : 0;
+                const time = mmss(e && typeof e.totalTimeMs === 'number' ? e.totalTimeMs : null);
+                const c = e && e.counts ? e.counts : {};
+                const score = pts(c);
+                const b = c.boss || 0;
+                const ch = c.chicken || 0;
+                const cs = c.chickenSmall || 0;
+                const bo = c.bottle || 0;
+                const co = c.coin || 0;
+                rows.push(
+                    '<tr>'
+                    + '<td>' + (i + 1) + '.</td>'
+                    + '<td>' + name + '</td>'
+                    + '<td>' + fmt(highest) + '</td>'
+                    + '<td>' + time + '</td>'
+                    + '<td>' + fmt(score) + '</td>'
+                    + '<td>' + fmt(b) + '</td>'
+                    + '<td>' + fmt(ch) + '</td>'
+                    + '<td>' + fmt(cs) + '</td>'
+                    + '<td>' + fmt(bo) + '</td>'
+                    + '<td>' + fmt(co) + '</td>'
+                    + '</tr>'
+                );
+            });
+            return rows.join('');
+        };
+
+        const rankRowsLevel = (arr) => {
+            const rows = [];
+            const sorted = sortByPointsThenTime(arr);
+            sorted.forEach((e, i) => {
+                const name = e && e.name ? e.name : 'Player';
+                const time = mmss(e && typeof e.timeMs === 'number' ? e.timeMs : null);
+                const c = e && e.counts ? e.counts : {};
+                const score = pts(c);
+                const b = c.boss || 0;
+                const ch = c.chicken || 0;
+                const cs = c.chickenSmall || 0;
+                const bo = c.bottle || 0;
+                const co = c.coin || 0;
+                rows.push(
+                    '<tr>'
+                    + '<td>' + (i + 1) + '.</td>'
+                    + '<td>' + name + '</td>'
+                    + '<td>' + time + '</td>'
+                    + '<td>' + fmt(score) + '</td>'
+                    + '<td>' + fmt(b) + '</td>'
+                    + '<td>' + fmt(ch) + '</td>'
+                    + '<td>' + fmt(cs) + '</td>'
+                    + '<td>' + fmt(bo) + '</td>'
+                    + '<td>' + fmt(co) + '</td>'
+                    + '</tr>'
+                );
+            });
+            return rows.join('');
+        };
+
+        const tableTotal =
+            '<table class="scoreboard-table">'
+            + '<thead>'
+            + '<tr>'
+            + '<th>#</th><th>Name</th><th>Höchstes Level</th><th>Gesamtzeit</th><th>Punkte</th>'
+            + '<th>Boss</th><th>Chicken</th><th>Chicken Small</th><th>Bottles</th><th>Coins</th>'
+            + '</tr>'
+            + '</thead>'
+            + '<tbody>' + rankRowsTotal(total) + '</tbody>'
+            + '</table>';
+
+        const buildLevelTable = (lvl) => {
+            return (
+                '<table class="scoreboard-table">'
+                + '<thead>'
+                + '<tr>'
+                + '<th>#</th><th>Name</th><th>Zeit</th><th>Punkte</th>'
+                + '<th>Boss</th><th>Chicken</th><th>Chicken Small</th><th>Bottles</th><th>Coins</th>'
+                + '</tr>'
+                + '</thead>'
+                + '<tbody>' + rankRowsLevel(levels[lvl]) + '</tbody>'
+                + '</table>'
+            );
+        };
+
+        const pages = [];
+        pages.push('<h3>Gesamt</h3>' + tableTotal);
+        pages.push('<h3>Level 1</h3>' + buildLevelTable(1));
+        pages.push('<h3>Level 2</h3>' + buildLevelTable(2));
+        pages.push('<h3>Level 3</h3>' + buildLevelTable(3));
+        pages.push('<h3>Level 4</h3>' + buildLevelTable(4));
+        pages.push('<h3>Level 5</h3>' + buildLevelTable(5));
+        return pages;
     }
 
     persistName(name) {
@@ -437,6 +884,8 @@ class App {
     }
 
     startLevel(index) {
+        this.suppressWinLoseOverlay = false;
+        this.hideWinLoseOverlays();
         IntervalTracker.clearAll();
 
         if (this.world && typeof this.world.dispose === 'function') {
@@ -510,6 +959,8 @@ class App {
             el.style.display = 'none';
         }
     }
+
+
 
     formatMs(ms) {
         const totalSeconds = Math.floor(ms / 1000);
@@ -604,6 +1055,8 @@ class App {
                 }
 
                 actions.classList.remove('hidden');
+                actions.style.display = '';
+
 
                 const btnRestart = document.getElementById('btn-restart');
                 if (btnRestart) {
@@ -658,14 +1111,15 @@ class App {
         waitUntilCalm(() => {
             if (this.world && typeof this.world.freezeAll === 'function') this.world.freezeAll();
 
-            if (btnNext && btnHome) {
+            if (btnNext) {
                 if (this.currentLevelIndex < this.levelFactories.length - 1) {
                     btnNext.classList.remove('hidden');
-                    btnHome.classList.add('hidden');
                 } else {
                     btnNext.classList.add('hidden');
-                    btnHome.classList.remove('hidden');
                 }
+            }
+            if (btnHome) {
+                btnHome.classList.remove('hidden');
             }
 
             actions.classList.add('hidden');
@@ -685,6 +1139,7 @@ class App {
                     image.style.transform = 'scale(0.6)';
 
                     actions.classList.remove('hidden');
+                    actions.style.display = '';
 
                     if (btnRestart) {
                         btnRestart.onclick = () => {

@@ -42,7 +42,7 @@ class BossBar extends DrawableObject {
         ctx.save();
         ctx.translate(this.x + this.width, this.y);
         ctx.scale(-1, 1);
-        ctx.drawImage(this.img, 100, 0, this.width, this.height);
+        ctx.drawImage(this.img, 50, 0, this.width, this.height);
         ctx.restore();
     }
 }

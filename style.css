@@ -57,6 +57,8 @@ button:disabled {
     width: 1080px;
     height: 720px;
     margin: 0 auto;
+    display: flex;
+    justify-content: center;
 }
 
 #canvas {
@@ -86,12 +88,15 @@ button:disabled {
     text-shadow: 0 2px 4px rgba(0, 0, 0, .6);
     display: none;
     z-index: 250;
+    background: rgba(0, 0, 0, .6);
+    border-radius: 999px;
+    padding: 6px 10px;
 }
 
 #hud-level {
     position: absolute;
-    top: 12px;
-    left: 400px;
+    bottom: 12px;
+    left: 50%;
     padding: 6px 10px;
     font: 700 18px system-ui, sans-serif;
     color: #fff;
@@ -134,20 +139,40 @@ button:disabled {
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-direction: column;
-    z-index: 200;
-    gap: 16px;
+    z-index: 1300;
+    background: #fbbf24;
+}
+
+#start-screen .home-title {
+    margin: 0 0 12px 0;
+    text-align: center;
+}
+
+#start-screen #name-step {
+    display: grid;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+#start-screen .home-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 16px;
+}
+
+#start-screen .home-legal {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.8;
+    margin-top: 12px;
+    font-size: 14px;
 }
 
 #start-screen.hidden {
     display: none;
-}
-
-#name-step {
-    display: grid;
-    grid-auto-flow: row;
-    gap: 10px;
-    place-items: center;
 }
 
 #start-screen input,
@@ -356,47 +381,13 @@ button:disabled {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1100;
+    z-index: 1300;
 }
 
 .instructions-box {
     position: relative;
     width: 960px;
     height: 640px;
-}
-
-.instructions-content {
-    position: absolute;
-    left: 80px;
-    right: 80px;
-    top: 72px;
-    bottom: 64px;
-    overflow: auto;
-    background: rgba(255, 255, 255, 0.92);
-    border-radius: 12px;
-    padding: 18px;
-    color: #333;
-    font: 400 16px system-ui, sans-serif;
-    line-height: 1.45;
-}
-
-.instructions-content::-webkit-scrollbar {
-    width: 12px;
-}
-
-.instructions-content::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.25);
-    border-radius: 999px;
-}
-
-.instructions-content::-webkit-scrollbar-thumb {
-    background: #111;
-    border-radius: 999px;
-}
-
-.instructions-content {
-    scrollbar-width: thin;
-    scrollbar-color: #111 rgba(0, 0, 0, 0.25);
 }
 
 .circle-nav {
@@ -446,19 +437,37 @@ button:disabled {
     transform: rotate(45deg);
 }
 
-.instructions-footer {
-    position: absolute;
-    left: 20px;
-    bottom: 14px;
-    color: #fff;
-    font: 700 14px system-ui, sans-serif;
-}
-
 #instructions-overlay.hidden {
     display: none;
 }
 
-.instructions-close {
+#scoreboard-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1300;
+}
+
+#scoreboard-overlay.hidden {
+    display: none;
+}
+
+#settings-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1300;
+}
+
+#settings-overlay.hidden {
+    display: none;
+}
+
+.overlay-closebutton {
     all: unset;
     cursor: pointer;
     position: absolute;
@@ -473,7 +482,7 @@ button:disabled {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
 }
 
-.instructions-close .xbar {
+.overlay-closebutton .xbar {
     position: absolute;
     width: 24px;
     height: 3px;
@@ -481,14 +490,65 @@ button:disabled {
     border-radius: 2px;
 }
 
-.instructions-close .xbar.one {
+.overlay-closebutton .xbar.one {
     transform: rotate(45deg);
 }
 
-.instructions-close .xbar.two {
+.overlay-closebutton .xbar.two {
     transform: rotate(-45deg);
 }
 
-.instructions-close:hover {
+.overlay-closebutton:hover {
     filter: brightness(0.97);
+}
+
+.overlay-footer {
+    position: absolute;
+    left: 20px;
+    bottom: 14px;
+    color: #fff;
+    font: 700 14px system-ui, sans-serif;
+}
+
+.overlay-content {
+    position: absolute;
+    left: 80px;
+    right: 80px;
+    top: 72px;
+    bottom: 64px;
+    overflow: auto;
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 12px;
+    padding: 18px;
+    color: #333;
+    font: 400 16px system-ui, sans-serif;
+    line-height: 1.45;
+    scrollbar-width: thin;
+    scrollbar-color: #111 rgba(0, 0, 0, 0.25);
+}
+
+.overlay-content::-webkit-scrollbar {
+    width: 12px;
+}
+
+.overlay-content::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 999px;
+}
+
+.overlay-content::-webkit-scrollbar-thumb {
+    background: #111;
+    border-radius: 999px;
+}
+
+#instructions-overlay,
+#scoreboard-overlay,
+#settings-overlay {
+    background: #fbbf24;
+}
+
+#instructions-overlay.home-context,
+#scoreboard-overlay.home-context,
+#settings-overlay.home-context {
+    background: #fbbf24;
 }
