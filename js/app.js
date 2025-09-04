@@ -86,13 +86,12 @@ class App {
     }
 
     init(canvas, keyboard) {
+        setMuted(isMuted());
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.keyboard = keyboard;
-
         this.levels = [createLevel1, createLevel2, createLevel3, createLevel4, createLevel5];
         this.currentLevelIndex = 0;
-
         this.wireStartScreenControls();
         this.wireInstructionsOverlay();
         this.wireScoreboardOverlay();
@@ -793,6 +792,8 @@ class App {
         this.show(startScreen);
 
         this.hideHudLevel();
+
+        if (window.sfx) window.sfx.musicTo('music.menu.loop', 500);
     }
 
     resetOverlays() {
@@ -918,6 +919,10 @@ class App {
 
         if (this.world && this.world.character) this.world.character.canControl = false;
 
+        const lastIndex = this.levelFactories.length - 1;
+        const musicId = (this.currentLevelIndex === lastIndex) ? 'music.boss.loop' : 'music.level.loop';
+        if (window.sfx) window.sfx.musicTo(musicId, 400);
+
         this.runCountdown(3, () => {
             if (this.world && this.world.character) this.world.character.canControl = true;
             this.timerStart = Date.now();
@@ -928,6 +933,7 @@ class App {
             this.loopWinLoseWatch();
         });
     }
+
 
     restartToLevel1() {
         this.carryOverEnergy = 100;
@@ -1033,10 +1039,12 @@ class App {
         const actions = document.getElementById('gameover-actions');
         if (!image || !actions) return;
 
+        if (window.sfx) window.sfx.play('sys.gameover.sting');
+
         image.classList.remove('hidden');
         image.style.display = 'block';
         image.style.opacity = '1';
-        image.style.transform = 'scale(1)';
+        image.style.transform = 'translate(-50%, -50%) scale(1)';
 
         actions.classList.add('hidden');
 
@@ -1047,7 +1055,7 @@ class App {
                 image.classList.add('hidden');
                 image.style.display = 'none';
                 image.style.opacity = '0';
-                image.style.transform = 'scale(0.6)';
+                image.style.transform = 'translate(-50%, -50%) scale(0.6)';
 
                 if (this.world) {
                     this.world.canFreezeNow = true;
@@ -1056,7 +1064,6 @@ class App {
 
                 actions.classList.remove('hidden');
                 actions.style.display = '';
-
 
                 const btnRestart = document.getElementById('btn-restart');
                 if (btnRestart) {
@@ -1111,23 +1118,24 @@ class App {
         waitUntilCalm(() => {
             if (this.world && typeof this.world.freezeAll === 'function') this.world.freezeAll();
 
-            if (btnNext) {
+            if (btnNext && btnHome) {
                 if (this.currentLevelIndex < this.levelFactories.length - 1) {
                     btnNext.classList.remove('hidden');
+                    btnHome.classList.add('hidden');
                 } else {
                     btnNext.classList.add('hidden');
+                    btnHome.classList.remove('hidden');
                 }
-            }
-            if (btnHome) {
-                btnHome.classList.remove('hidden');
             }
 
             actions.classList.add('hidden');
 
+            if (window.sfx) window.sfx.play('sys.win.sting');
+
             image.classList.remove('hidden');
             image.style.display = 'block';
             image.style.opacity = '1';
-            image.style.transform = 'scale(1)';
+            image.style.transform = 'translate(-50%, -50%) scale(1)';
 
             const start = performance.now();
             const waitMs = 2000;
@@ -1136,7 +1144,7 @@ class App {
                     image.classList.add('hidden');
                     image.style.display = 'none';
                     image.style.opacity = '0';
-                    image.style.transform = 'scale(0.6)';
+                    image.style.transform = 'translate(-50%, -50%) scale(0.6)';
 
                     actions.classList.remove('hidden');
                     actions.style.display = '';
@@ -1174,31 +1182,46 @@ class App {
     }
 
     runCountdown(seconds, onDone) {
+        if (this.cdRunning) return;
+        this.cdRunning = true;
+        if (this.cdTimer) {
+            clearInterval(this.cdTimer);
+            this.cdTimer = null;
+        }
+
         const cd = document.getElementById('countdown');
         if (!cd) {
+            this.cdRunning = false;
             if (typeof onDone === 'function') onDone();
             return;
         }
+
         let n = seconds;
         cd.style.display = 'flex';
         cd.textContent = String(n);
 
-        const tick = () => {
+        if (window.sfx) {
+            window.sfx.stop('sys.countdown.tick');
+            window.sfx.play('sys.countdown.tick');
+        }
+
+        this.cdTimer = setInterval(() => {
             n -= 1;
             if (n > 0) {
                 cd.textContent = String(n);
-                setTimeout(tick, 1000);
             } else {
                 cd.textContent = 'Go!';
+                clearInterval(this.cdTimer);
+                this.cdTimer = null;
                 setTimeout(() => {
                     cd.style.display = 'none';
+                    this.cdRunning = false;
                     if (typeof onDone === 'function') onDone();
                 }, 600);
             }
-        };
-
-        setTimeout(tick, 1000);
+        }, 1000);
     }
+
 
     getElapsedMs() {
         if (!this.timerRunning) return 0;
