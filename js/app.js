@@ -228,6 +228,25 @@ class App {
             return;
         }
 
+        const renameTriggerLabels = () => {
+            const ids = [
+                'menu-settings',
+                'btn-settings-home',
+                'btn-settings-go',
+                'btn-settings-victory'
+            ];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const txt = (el.textContent || '').trim().toLowerCase();
+                if (txt.includes('settings') || txt === '' || txt.includes('sound')) {
+                    el.textContent = 'Audio';
+                }
+                if (el.getAttribute('aria-label')) el.setAttribute('aria-label', 'Audio');
+                if (el.title) el.title = 'Audio';
+            });
+        };
+
         const ensureExclusiveOpen = () => {
             this.hideWinLoseOverlays();
             const others = [
@@ -238,10 +257,116 @@ class App {
             for (const el of others) { if (el) el.classList.add('hidden'); }
         };
 
+        const initControls = () => {
+            if (this.settingsBuilt) return;
+
+            const getVal = (x) => Math.round(x * 100);
+            const s = window.sfx;
+            const m = s ? s.master : 0.1;
+            const v = s ? s.volumes || {} : {};
+            const vm = typeof v.music === 'number' ? v.music : 0.1;
+            const vs = typeof v.system === 'number' ? v.system : 0.1;
+            const vc = typeof v.characters === 'number' ? v.characters : 0.1;
+            const vo = typeof v.objects === 'number' ? v.objects : 0.1;
+            const muted = typeof isMuted === 'function' ? isMuted() : (localStorage.getItem('muted') === '1');
+
+            content.innerHTML = `
+            <h3>Audio</h3>
+            <div class="settings-group">
+                <button id="btn-mute-toggle" class="btn">${muted ? 'Mute: ON' : 'Mute: OFF'}</button>
+            </div>
+            <div class="settings-group">
+                <label for="slider-master">Gesamt (Master): <span id="val-master">${getVal(m)}%</span></label>
+                <input id="slider-master" type="range" min="0" max="100" step="1" value="${getVal(m)}" />
+            </div>
+            <div class="settings-group">
+                <label for="slider-music">Musik (Music): <span id="val-music">${getVal(vm)}%</span></label>
+                <input id="slider-music" type="range" min="0" max="100" step="1" value="${getVal(vm)}" />
+            </div>
+            <div class="settings-group">
+                <label for="slider-system">Game Sounds (SFX → System): <span id="val-system">${getVal(vs)}%</span></label>
+                <input id="slider-system" type="range" min="0" max="100" step="1" value="${getVal(vs)}" />
+            </div>
+            <div class="settings-group">
+                <label for="slider-characters">Characters (SFX → Characters): <span id="val-characters">${getVal(vc)}%</span></label>
+                <input id="slider-characters" type="range" min="0" max="100" step="1" value="${getVal(vc)}" />
+            </div>
+            <div class="settings-group">
+                <label for="slider-objects">Objects (SFX → Objects): <span id="val-objects">${getVal(vo)}%</span></label>
+                <input id="slider-objects" type="range" min="0" max="100" step="1" value="${getVal(vo)}" />
+            </div>
+        `;
+
+            const qs = (id) => content.querySelector(id);
+            const btnMute = qs('#btn-mute-toggle');
+            const sliderMaster = qs('#slider-master');
+            const sliderMusic = qs('#slider-music');
+            const sliderSystem = qs('#slider-system');
+            const sliderCharacters = qs('#slider-characters');
+            const sliderObjects = qs('#slider-objects');
+
+            const valMaster = qs('#val-master');
+            const valMusic = qs('#val-music');
+            const valSystem = qs('#val-system');
+            const valCharacters = qs('#val-characters');
+            const valObjects = qs('#val-objects');
+
+            const to01 = (x) => Math.max(0, Math.min(1, x / 100));
+
+            const setBtnLabel = () => {
+                const on = typeof isMuted === 'function' ? isMuted() : (localStorage.getItem('muted') === '1');
+                if (btnMute) btnMute.textContent = on ? 'Mute: ON' : 'Mute: OFF';
+            };
+
+            if (btnMute) {
+                btnMute.addEventListener('click', () => {
+                    const on = typeof isMuted === 'function' ? isMuted() : (localStorage.getItem('muted') === '1');
+                    const to = !on;
+                    if (typeof setMuted === 'function') setMuted(to);
+                    else {
+                        localStorage.setItem('muted', to ? '1' : '0');
+                        if (window.sfx) window.sfx.setMuted(to);
+                    }
+                    setBtnLabel();
+                });
+                window.addEventListener('app-mute-changed', setBtnLabel);
+            }
+
+            sliderMaster.addEventListener('input', () => {
+                const n = Number(sliderMaster.value);
+                valMaster.textContent = n + '%';
+                if (window.sfx) window.sfx.setMaster(to01(n));
+            });
+            sliderMusic.addEventListener('input', () => {
+                const n = Number(sliderMusic.value);
+                valMusic.textContent = n + '%';
+                if (window.sfx) window.sfx.setBusVolume('music', to01(n));
+            });
+            sliderSystem.addEventListener('input', () => {
+                const n = Number(sliderSystem.value);
+                valSystem.textContent = n + '%';
+                if (window.sfx) window.sfx.setBusVolume('system', to01(n));
+            });
+            sliderCharacters.addEventListener('input', () => {
+                const n = Number(sliderCharacters.value);
+                valCharacters.textContent = n + '%';
+                if (window.sfx) window.sfx.setBusVolume('characters', to01(n));
+            });
+            sliderObjects.addEventListener('input', () => {
+                const n = Number(sliderObjects.value);
+                valObjects.textContent = n + '%';
+                if (window.sfx) window.sfx.setBusVolume('objects', to01(n));
+            });
+
+            this.settingsBuilt = true;
+        };
+
         const openOverlay = () => {
             ensureExclusiveOpen();
             this.suppressWinLose();
             if (typeof this.closeHamburgerMenu === 'function') this.closeHamburgerMenu();
+            renameTriggerLabels();
+            initControls();
             overlay.classList.remove('hidden');
         };
 
@@ -780,6 +905,20 @@ class App {
     }
 
     showMenu() {
+        if (this.cdTimer) {
+            clearInterval(this.cdTimer);
+            this.cdTimer = null;
+        }
+        this.cdRunning = false;
+        const cd = document.getElementById('countdown');
+        if (cd) {
+            cd.style.display = 'none';
+            cd.textContent = '';
+        }
+        if (window.sfx) {
+            window.sfx.stop('sys.countdown.tick');
+        }
+
         if (this.world && typeof this.world.dispose === 'function') {
             this.world.dispose();
         }
@@ -795,6 +934,7 @@ class App {
 
         if (window.sfx) window.sfx.musicTo('music.menu.loop', 500);
     }
+
 
     resetOverlays() {
         const ids = ['overlay-gameover', 'overlay-youwin'];
@@ -837,9 +977,28 @@ class App {
 
     startIntro() {
         this.state = GameState.INTRO;
-        this.intro = new IntroPepe(this.canvas.height);
-        this.loopIntro();
+
+        const go = () => {
+            this.intro = new IntroPepe(this.canvas.height);
+            if (window.sfx) {
+                window.sfx.stopAll('music.');
+                window.sfx.play('music.intro');
+            }
+            this.loopIntro();
+        };
+
+        const s = window.sfx;
+        if (s && (s.ready === true || (s.pools && s.pools.size > 0))) {
+            go();
+        } else {
+            const onReady = () => {
+                window.removeEventListener('sfx-ready', onReady);
+                go();
+            };
+            window.addEventListener('sfx-ready', onReady);
+        }
     }
+
 
     loopIntro() {
         if (this.state !== GameState.INTRO) return;
@@ -847,6 +1006,9 @@ class App {
         this.intro.update();
         this.intro.draw(this.ctx);
         if (this.intro.done) {
+            if (window.sfx) {
+                window.sfx.stop('music.intro');
+            }
             this.showMenu();
             return;
         }
@@ -885,6 +1047,20 @@ class App {
     }
 
     startLevel(index) {
+        if (this.cdTimer) {
+            clearInterval(this.cdTimer);
+            this.cdTimer = null;
+        }
+        this.cdRunning = false;
+        const cd = document.getElementById('countdown');
+        if (cd) {
+            cd.style.display = 'none';
+            cd.textContent = '';
+        }
+        if (window.sfx) {
+            window.sfx.stop('sys.countdown.tick');
+        }
+
         this.suppressWinLoseOverlay = false;
         this.hideWinLoseOverlays();
         IntervalTracker.clearAll();
@@ -919,8 +1095,7 @@ class App {
 
         if (this.world && this.world.character) this.world.character.canControl = false;
 
-        const lastIndex = this.levelFactories.length - 1;
-        const musicId = (this.currentLevelIndex === lastIndex) ? 'music.boss.loop' : 'music.level.loop';
+        const musicId = 'music.level.loop';
         if (window.sfx) window.sfx.musicTo(musicId, 400);
 
         this.runCountdown(3, () => {
@@ -933,6 +1108,7 @@ class App {
             this.loopWinLoseWatch();
         });
     }
+
 
 
     restartToLevel1() {
@@ -1039,7 +1215,11 @@ class App {
         const actions = document.getElementById('gameover-actions');
         if (!image || !actions) return;
 
-        if (window.sfx) window.sfx.play('sys.gameover.sting');
+        if (window.sfx) {
+            window.sfx.stop('music.boss.loop');
+            window.sfx.stop('music.level.loop');
+            window.sfx.play('sys.gameover.sting');
+        }
 
         image.classList.remove('hidden');
         image.style.display = 'block';
@@ -1065,6 +1245,10 @@ class App {
                 actions.classList.remove('hidden');
                 actions.style.display = '';
 
+                if (window.sfx) {
+                    window.sfx.musicTo('music.menu.loop', 500);
+                }
+
                 const btnRestart = document.getElementById('btn-restart');
                 if (btnRestart) {
                     btnRestart.onclick = () => {
@@ -1080,7 +1264,6 @@ class App {
         };
         requestAnimationFrame(tick);
     }
-
 
 
     showYouWin() {
@@ -1118,19 +1301,25 @@ class App {
         waitUntilCalm(() => {
             if (this.world && typeof this.world.freezeAll === 'function') this.world.freezeAll();
 
-            if (btnNext && btnHome) {
+            if (btnHome) {
+                btnHome.classList.remove('hidden');
+                btnHome.style.display = '';
+            }
+            if (btnNext) {
                 if (this.currentLevelIndex < this.levelFactories.length - 1) {
                     btnNext.classList.remove('hidden');
-                    btnHome.classList.add('hidden');
                 } else {
                     btnNext.classList.add('hidden');
-                    btnHome.classList.remove('hidden');
                 }
             }
 
             actions.classList.add('hidden');
 
-            if (window.sfx) window.sfx.play('sys.win.sting');
+            if (window.sfx) {
+                window.sfx.stop('music.boss.loop');
+                window.sfx.stop('music.level.loop');
+                window.sfx.play('sys.win.sting');
+            }
 
             image.classList.remove('hidden');
             image.style.display = 'block';
@@ -1148,6 +1337,10 @@ class App {
 
                     actions.classList.remove('hidden');
                     actions.style.display = '';
+
+                    if (window.sfx) {
+                        window.sfx.musicTo('music.menu.loop', 500);
+                    }
 
                     if (btnRestart) {
                         btnRestart.onclick = () => {
@@ -1180,6 +1373,10 @@ class App {
             requestAnimationFrame(tick);
         });
     }
+
+
+
+
 
     runCountdown(seconds, onDone) {
         if (this.cdRunning) return;

@@ -7,6 +7,8 @@ class BaseChicken extends MovableObject {
     direction = -1;
     patrolMinX = null;
     patrolMaxX = null;
+    lastStepAt = 0;
+    stepIntervalMs = 300;
 
     constructor(config) {
         super();
@@ -104,6 +106,14 @@ class BaseChicken extends MovableObject {
             if (!this.isDead) {
                 this.x += this.speed * this.direction;
                 this.otherDirection = (this.direction === 1);
+                const now = Date.now();
+                if (now - this.lastStepAt >= this.stepIntervalMs) {
+                    this.lastStepAt = now;
+                    if (window.sfx) {
+                        const id = (this instanceof ChickenSmall) ? 'chicken-small.step' : 'chicken.step';
+                        window.sfx.play(id);
+                    }
+                }
                 if (this.x <= this.patrolMinX) {
                     this.x = this.patrolMinX;
                     this.direction = 1;
@@ -121,6 +131,7 @@ class BaseChicken extends MovableObject {
             }
         }, 120);
     }
+
 
     freeze() {
         if (this.moveInterval) {
@@ -140,6 +151,10 @@ class BaseChicken extends MovableObject {
         this.speed = 0;
         this.canCollide = false;
         this.img = this.imageCache[this.IMAGE_DEAD];
+        if (window.sfx) {
+            const id = (this instanceof ChickenSmall) ? 'chicken-small.dead' : 'chicken.dead';
+            window.sfx.play(id);
+        }
         const blinkSteps = [true, false, true];
         let i = 0;
         const step = () => {
@@ -153,4 +168,5 @@ class BaseChicken extends MovableObject {
         };
         step();
     }
+
 }

@@ -262,6 +262,7 @@ class World {
                 this.bottleCount++;
                 const percent = (this.bottleCount / this.bottleMax) * 100;
                 this.bottleBar.setPercentage(percent);
+                if (window.sfx) window.sfx.play('obj.bottle.pick');
                 return false;
             } else {
                 return true;
@@ -297,11 +298,14 @@ class World {
                     self.character.energy = newEnergy;
                     self.statusBar.setPercentage(self.character.energy);
                 }
+                if (window.sfx) window.sfx.play('obj.coin.pick');
                 return false;
             }
             return true;
         });
     }
+
+
 
     checkCollisions() {
         this.level.enemies.forEach((enemy) => {

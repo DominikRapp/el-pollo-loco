@@ -55,6 +55,8 @@ class Endboss extends MovableObject {
     hurtUntil = 0;
     alertPlayed = false;
     deathAnimFinished = false;
+    lastStepAt = 0;
+    stepIntervalMs = 380;
 
     constructor() {
         super().loadImage('img/4_enemie_boss_chicken/1_walk/G1.png');
@@ -81,6 +83,26 @@ class Endboss extends MovableObject {
         if (state === 'attack') { seq = this.IMAGES_ATTACK; delay = 90; }
         if (state === 'hurt') { seq = this.IMAGES_HURT; delay = 120; }
         if (state === 'dead') { seq = this.IMAGES_DEAD; delay = 150; this.deathAnimFinished = false; }
+
+        if (state === 'alert') {
+            if (window.sfx) {
+                window.sfx.play('boss.alert');
+                window.sfx.musicTo('music.boss.loop', 400);
+            }
+        }
+        if (state === 'attack') {
+            if (window.sfx) window.sfx.play('boss.attack');
+        }
+        if (state === 'hurt') {
+            if (window.sfx) window.sfx.play('boss.hit');
+        }
+        if (state === 'dead') {
+            if (window.sfx) {
+                window.sfx.play('boss.dead');
+                window.sfx.stop('music.boss.loop');
+            }
+        }
+
         if (seq.length > 0) {
             this.img = this.imageCache[seq[0]];
         }
@@ -98,24 +120,21 @@ class Endboss extends MovableObject {
                 }
                 return;
             }
-            if (state === 'alert') {
-                if (self.currentFrame < seq.length) {
-                    self.img = self.imageCache[seq[self.currentFrame]];
-                    self.currentFrame += 1;
-                } else {
-                    clearInterval(self.animationInterval);
-                    self.animationInterval = null;
-                    self.alertPlayed = true;
-                    self.setAnimation('walk');
-                }
-                return;
+            if (self.currentFrame >= seq.length) {
+                self.currentFrame = 0;
             }
-            if (seq.length === 0) return;
-            if (self.currentFrame >= seq.length) self.currentFrame = 0;
             self.img = self.imageCache[seq[self.currentFrame]];
             self.currentFrame += 1;
+            if (self.currentState === 'alert' && self.currentFrame >= seq.length) {
+                clearInterval(self.animationInterval);
+                self.animationInterval = null;
+                self.alertPlayed = true;
+                self.setAnimation('walk');
+            }
         }, delay);
     }
+
+
 
     freeze() {
         if (this.animationInterval) {
@@ -156,16 +175,32 @@ class Endboss extends MovableObject {
         if (dist <= this.attackDistance) {
             if (this.currentState !== 'attack') this.setAnimation('attack');
             this.x += dirToPlayer * this.attackSpeed;
+            const t = Date.now();
+            if (t - this.lastStepAt >= this.stepIntervalMs) {
+                this.lastStepAt = t;
+                if (window.sfx) window.sfx.play('boss.step');
+            }
             return;
         }
         if (dist <= this.alertDistance) {
             if (this.currentState !== 'walk') this.setAnimation('walk');
             this.x += dirToPlayer * this.alertSpeed;
+            const t = Date.now();
+            if (t - this.lastStepAt >= this.stepIntervalMs) {
+                this.lastStepAt = t;
+                if (window.sfx) window.sfx.play('boss.step');
+            }
             return;
         }
         if (this.currentState !== 'walk') this.setAnimation('walk');
         this.x -= this.walkSpeed;
+        const t = Date.now();
+        if (t - this.lastStepAt >= this.stepIntervalMs) {
+            this.lastStepAt = t;
+            if (window.sfx) window.sfx.play('boss.step');
+        }
     }
+
 
     hit(damage) {
         if (typeof damage !== 'number') damage = 20;

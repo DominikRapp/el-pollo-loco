@@ -5,8 +5,6 @@ let sfx = null;
 
 function init() {
     canvas = document.getElementById('canvas');
-    app = new App();
-    app.init(canvas, keyboard);
 
     sfx = new SoundManager();
     sfx.init();
@@ -18,10 +16,33 @@ function init() {
         const muted = localStorage.getItem('muted') === '1';
         sfx.setMuted(muted);
     }
+
+    app = new App();
+    app.init(canvas, keyboard);
 }
+
+const onFirstInteract = () => {
+    if (window.sfx && typeof window.sfx.unlock === 'function') window.sfx.unlock();
+    if (window.app && app.state === GameState.INTRO && window.sfx) {
+        window.sfx.stopAll('music.');
+        window.sfx.play('music.intro');
+    }
+    window.removeEventListener('pointerdown', onFirstInteract);
+    window.removeEventListener('keydown', onFirstInteract);
+};
+window.addEventListener('pointerdown', onFirstInteract);
+window.addEventListener('keydown', onFirstInteract);
+
 
 document.addEventListener('keydown', (event) => {
     if (event.repeat) return;
+
+    if (event.keyCode === 77) {
+        keyboard.MUTE = true;
+        toggleMuteGlobal();
+        return;
+    }
+
     if (isEditableTarget(event.target)) return;
     if (!areGameShortcutsEnabled()) return;
     if (event.keyCode === 65) keyboard.LEFT = true;
@@ -54,14 +75,12 @@ document.addEventListener('keydown', (event) => {
         keyboard.FULLSCREEN = true;
         toggleFullscreen();
     }
-    if (event.keyCode === 77) {
-        keyboard.MUTE = true;
-        toggleMuteGlobal();
-    }
 });
+
 
 document.addEventListener('keyup', (event) => {
     if (isEditableTarget(event.target)) return;
+    if (event.keyCode === 77) { keyboard.MUTE = false; return; }
     if (!areGameShortcutsEnabled()) return;
     if (event.keyCode === 65) keyboard.LEFT = false;
     if (event.keyCode === 37) keyboard.LEFT = false;
@@ -75,7 +94,6 @@ document.addEventListener('keyup', (event) => {
     if (event.keyCode === 79) keyboard.SETTINGS = false;
     if (event.keyCode === 72) keyboard.HOME = false;
     if (event.keyCode === 70) keyboard.FULLSCREEN = false;
-    if (event.keyCode === 77) keyboard.MUTE = false;
 });
 
 document.addEventListener('keydown', (event) => {

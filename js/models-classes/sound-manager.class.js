@@ -5,7 +5,8 @@ class SoundManager {
     manifest = {
         'music.menu.loop': { src: 'audio/music/menu_loop.mp3', bus: 'music', loop: true, gain: 0.4, pool: 1 },
         'music.level.loop': { src: 'audio/music/level_loop.mp3', bus: 'music', loop: true, gain: 0.4, pool: 1 },
-        'music.boss.loop': { src: 'audio/music/boss_loop.mp3', bus: 'music', loop: true, gain: 1.0, pool: 1 },
+        'music.boss.loop': { src: 'audio/music/boss_loop.mp3', bus: 'music', loop: true, gain: 0.4, pool: 1 },
+        'music.intro': { src: 'audio/music/intro.mp3', bus: 'music', loop: false, gain: 0.8, pool: 1 },
 
         'sys.countdown.tick': { src: 'audio/system/countdown_tick.mp3', bus: 'system', loop: false, gain: 0.4, pool: 1 },
         'sys.gameover.sting': { src: 'audio/system/gameover_sting.mp3', bus: 'system', loop: false, gain: 0.4, pool: 2 },
@@ -31,7 +32,9 @@ class SoundManager {
         'chicken-small.dead': { src: 'audio/chicken-small/dead.mp3', bus: 'characters', loop: false, gain: 1.0, pool: 2 },
 
         'obj.bottle.pick': { src: 'audio/objects/bottle_pick.mp3', bus: 'objects', loop: false, gain: 1.0, pool: 3 },
+        'obj.bottle.splash': { src: 'audio/objects/bottle_splash.mp3', bus: 'objects', loop: false, gain: 1.0, pool: 3 },
         'obj.coin.pick': { src: 'audio/objects/coin_pick.mp3', bus: 'objects', loop: false, gain: 1.0, pool: 5 }
+
     };
     pools = new Map();
     loopHold = new Map();
@@ -54,6 +57,8 @@ class SoundManager {
         });
         this.applyMuteState();
         window.addEventListener('app-mute-changed', e => this.setMuted(!!(e && e.detail && e.detail.muted)));
+        this.ready = true;
+        window.dispatchEvent(new CustomEvent('sfx-ready'));
     }
 
     setMuted(on) {
@@ -81,14 +86,16 @@ class SoundManager {
         a.loop = !!opts.loop && !!spec.loop;
         a.playbackRate = typeof opts.rate === 'number' ? opts.rate : 1;
         try { a.currentTime = 0; } catch { }
-        a.volume = this.effectiveVolume(id, spec, opts.gain);
+        const g = this.effectiveVolume(id, spec, opts.gain);
+        a.volume = g;
+        a.muted = (this.muted === true) || (g === 0);
         inst.busy = true;
         const onEnd = () => { inst.busy = false; a.removeEventListener('ended', onEnd); };
         a.addEventListener('ended', onEnd);
-        a.muted = this.muted === true;
         a.play().catch(() => { inst.busy = false; });
         return inst;
     }
+
 
     loop(id, opts = {}) {
         const spec = this.manifest[id];
@@ -133,9 +140,6 @@ class SoundManager {
         const aNext = instNext ? instNext.audio : null;
         if (!aNext) return;
 
-        const nextTarget = this.effectiveVolume(id, this.manifest[id], 1);
-        const prevTarget = prev && this.manifest[prev] ? this.effectiveVolume(prev, this.manifest[prev], 1) : 0;
-
         aNext.volume = 0;
 
         const t0 = performance.now();
@@ -146,8 +150,20 @@ class SoundManager {
             if (t < 0) t = 0;
             if (t > 1) t = 1;
 
+            const nextSpec = this.manifest[id];
+            const prevSpec = prev ? this.manifest[prev] : null;
+
+            const nextTarget = this.effectiveVolume(id, nextSpec, 1);
+            const prevTarget = prevSpec ? this.effectiveVolume(prev, prevSpec, 1) : 0;
+
             if (aPrev) aPrev.volume = Math.min(1, Math.max(0, prevTarget * (1 - t)));
             aNext.volume = Math.min(1, Math.max(0, nextTarget * t));
+
+            const nextBusZero = this.clamp01(this.volumes[nextSpec.bus] ?? 1) === 0;
+            const prevBusZero = prevSpec ? this.clamp01(this.volumes[prevSpec.bus] ?? 1) === 0 : false;
+
+            if (aPrev) aPrev.muted = (this.muted === true) || prevBusZero || (aPrev.volume === 0);
+            aNext.muted = (this.muted === true) || nextBusZero || (aNext.volume === 0);
 
             if (t < 1) {
                 this.fadeHandle = requestAnimationFrame(step);
@@ -163,7 +179,6 @@ class SoundManager {
         this.fadeHandle = requestAnimationFrame(step);
     }
 
-
     acquire(id) {
         const list = this.pools.get(id);
         if (!list || list.length === 0) return null;
@@ -174,26 +189,33 @@ class SoundManager {
     }
 
     effectiveVolume(id, spec, gainOverride) {
+        if (this.muted === true) return 0;
         const bus = spec.bus;
+        const busVol = this.clamp01(this.volumes[bus] ?? 1);
+        if (busVol === 0) return 0;
         const base = typeof spec.gain === 'number' ? spec.gain : 1;
         const g = typeof gainOverride === 'number' ? gainOverride : 1;
-        const v = this.master * (this.volumes[bus] || 1) * base * g;
-        return this.muted ? 0 : this.clamp01(v);
+        const v = this.master * busVol * base * g;
+        return this.clamp01(v);
     }
+
 
     applyVolumes() {
         Object.keys(this.manifest).forEach(id => {
             const spec = this.manifest[id];
             const list = this.pools.get(id) || [];
+            const g = this.effectiveVolume(id, spec, 1);
+            const busVol = this.clamp01(this.volumes[spec.bus] ?? 1);
             list.forEach(inst => {
                 const a = inst.audio;
-                const g = this.effectiveVolume(id, spec, 1);
-                if (this.loopHold.has(id) && this.loopHold.get(id) === inst) return;
                 a.volume = g;
-                a.muted = this.muted === true;
+                a.muted = (this.muted === true) || (busVol === 0) || (g === 0);
             });
         });
     }
+
+
+
 
     applyMuteState() {
         Object.keys(this.manifest).forEach(id => {
@@ -203,6 +225,22 @@ class SoundManager {
             });
         });
     }
+
+    unlock() {
+        if (this.unlocked) return;
+        this.unlocked = true;
+        Object.keys(this.manifest).forEach(id => {
+            const list = this.pools.get(id) || [];
+            list.forEach(inst => {
+                const a = inst.audio;
+                const wasMuted = a.muted;
+                const wasVol = a.volume;
+                a.muted = true;
+                try { a.play().then(() => { try { a.pause(); a.currentTime = 0; } catch { } a.muted = wasMuted; a.volume = wasVol; }).catch(() => { a.muted = wasMuted; a.volume = wasVol; }); } catch { }
+            });
+        });
+    }
+
 
     peekLoopAudio(id) {
         const h = this.loopHold.get(id);

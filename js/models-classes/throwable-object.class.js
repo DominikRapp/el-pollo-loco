@@ -74,6 +74,7 @@ class ThrowableObject extends MovableObject {
         this.speedY = 0;
         this.acceleration = 0;
         this.splashFrame = 0;
+        if (window.sfx) window.sfx.play('obj.bottle.splash');
         this.splashInterval = setInterval(() => {
             if (this.splashFrame < this.IMAGES_SPLASH.length) {
                 const path = this.IMAGES_SPLASH[this.splashFrame];
@@ -86,6 +87,7 @@ class ThrowableObject extends MovableObject {
             }
         }, 60);
     }
+
 
 
     freeze() {

@@ -77,6 +77,11 @@ class Character extends MovableObject {
     deadLocked = false;
     deathAnimIndex = 0;
     deathAnimInterval = null;
+    snorePlaying = false;
+    lastStepAt = 0;
+    stepIntervalMs = 260;
+    snoreInterval = null;
+    snorePeriodMs = 1800;
 
     constructor() {
         super().loadImage('img/2_character_pepe/2_walk/W-21.png');
@@ -99,16 +104,23 @@ class Character extends MovableObject {
             if (!this.world) return;
             if (this.world?.frozen) return;
             if (this.deadLocked || this.deathStarted) {
+                if (this.snorePlaying) {
+                    this.snorePlaying = false;
+                    if (this.snoreInterval) { clearInterval(this.snoreInterval); this.snoreInterval = null; }
+                    if (window.sfx) window.sfx.stop('character.snore.loop');
+                }
                 this.world.camera_x = -this.x + 100;
                 return;
             }
             let input = false;
-            if (this.canControl && this.world.keyboard.RIGHT && this.x < this.world.level.level_end_x) {
+            const canMoveRight = this.canControl && this.world.keyboard.RIGHT && this.x < this.world.level.level_end_x;
+            const canMoveLeft = this.canControl && this.world.keyboard.LEFT && this.x > 0;
+            if (canMoveRight) {
                 this.moveRight();
                 this.otherDirection = false;
                 input = true;
             }
-            if (this.canControl && this.world.keyboard.LEFT && this.x > 0) {
+            if (canMoveLeft) {
                 this.moveLeft();
                 this.otherDirection = true;
                 input = true;
@@ -117,12 +129,28 @@ class Character extends MovableObject {
                 this.jump();
                 input = true;
             }
+
+            const grounded = !this.isAboveGround();
+            const movingHoriz = canMoveRight || canMoveLeft;
+            if (grounded && movingHoriz) {
+                const now = Date.now();
+                if (now - this.lastStepAt >= this.stepIntervalMs) {
+                    this.lastStepAt = now;
+                    if (window.sfx) window.sfx.play('character.step');
+                }
+            }
+
             if (input) {
                 this.lastInputTime = Date.now();
                 this.idleActive = false;
                 this.idleIntroPlayed = false;
                 this.currentIdleFrame = 0;
                 this.idlePhase = 'intro';
+                if (this.snorePlaying) {
+                    this.snorePlaying = false;
+                    if (this.snoreInterval) { clearInterval(this.snoreInterval); this.snoreInterval = null; }
+                    if (window.sfx) window.sfx.stop('character.snore.loop');
+                }
             }
             const currentlyInAir = this.isAboveGround();
             if (this.wasInAir && !currentlyInAir) {
@@ -132,6 +160,11 @@ class Character extends MovableObject {
                 this.currentIdleFrame = 0;
                 this.idlePhase = 'intro';
                 this.lastInputTime = Date.now();
+                if (this.snorePlaying) {
+                    this.snorePlaying = false;
+                    if (this.snoreInterval) { clearInterval(this.snoreInterval); this.snoreInterval = null; }
+                    if (window.sfx) window.sfx.stop('character.snore.loop');
+                }
             }
             this.wasInAir = currentlyInAir;
             this.world.camera_x = -this.x + 100;
@@ -169,6 +202,9 @@ class Character extends MovableObject {
         }, 50);
     }
 
+
+
+
     hit() {
         const wasDead = this.isDead();
         super.hit();
@@ -188,6 +224,7 @@ class Character extends MovableObject {
         this.energy -= amount;
         if (this.energy < 0) this.energy = 0;
         this.lastHit = Date.now();
+        if (window.sfx) window.sfx.play('character.hit');
         this.canControl = false;
         setTimeout(() => {
             if (!this.deathStarted && !this.deadLocked) this.canControl = true;
@@ -195,7 +232,10 @@ class Character extends MovableObject {
     }
 
     jump() {
-        if (!this.canControl) return; this.speedY = 30;
+        if (!this.canControl) return;
+        if (this.isAboveGround()) return;
+        this.speedY = 30;
+        if (window.sfx) window.sfx.play('character.jump');
     }
 
     startDeath() {
@@ -204,6 +244,8 @@ class Character extends MovableObject {
         this.canControl = false;
         this.speed = 0;
         this.speedY = 0;
+
+        if (window.sfx) window.sfx.play('character.dead');
 
         const seq = this.IMAGES_DEAD;
         this.deathAnimIndex = 0;
@@ -227,6 +269,7 @@ class Character extends MovableObject {
         }, 120);
     }
 
+
     playIdleAnimation() {
         if (!this.idleActive) {
             this.idleActive = true;
@@ -242,6 +285,15 @@ class Character extends MovableObject {
             activeIdleFrames = this.IDLE_FULL;
         } else {
             activeIdleFrames = this.IMAGES_LONG_IDLE;
+            if (!this.snorePlaying) {
+                this.snorePlaying = true;
+                if (window.sfx) window.sfx.play('character.snore.loop');
+                if (this.snoreInterval) { clearInterval(this.snoreInterval); this.snoreInterval = null; }
+                this.snoreInterval = setInterval(() => {
+                    if (!this.snorePlaying) return;
+                    if (window.sfx) window.sfx.play('character.snore.loop');
+                }, this.snorePeriodMs);
+            }
         }
         let path = activeIdleFrames[this.currentIdleFrame];
         this.img = this.imageCache[path];
@@ -254,6 +306,9 @@ class Character extends MovableObject {
             this.currentIdleFrame = 0;
         }
     }
+
+
+
 
     setStandingFrame() {
         let path = this.IMAGES_IDLE[0];
@@ -272,5 +327,6 @@ class Character extends MovableObject {
     playThrowFrame() {
         this.img = this.imageCache[this.throwFrame];
         this.currentImage = 0;
+        if (window.sfx) window.sfx.play('character.throw');
     }
 }
