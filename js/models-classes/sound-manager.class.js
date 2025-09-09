@@ -4,8 +4,8 @@ class SoundManager {
     muted = false;
     manifest = {
         'music.menu.loop': { src: 'audio/music/menu_loop.mp3', bus: 'music', loop: true, gain: 0.4, pool: 1 },
-        'music.level.loop': { src: 'audio/music/level_loop.mp3', bus: 'music', loop: true, gain: 0.4, pool: 1 },
-        'music.boss.loop': { src: 'audio/music/boss_loop.mp3', bus: 'music', loop: true, gain: 0.4, pool: 1 },
+        'music.level.loop': { src: 'audio/music/level_loop.mp3', bus: 'music', loop: true, gain: 0.2, pool: 1 },
+        'music.boss.loop': { src: 'audio/music/boss_loop.mp3', bus: 'music', loop: true, gain: 0.2, pool: 1 },
         'music.intro': { src: 'audio/music/intro.mp3', bus: 'music', loop: false, gain: 0.8, pool: 1 },
 
         'sys.countdown.tick': { src: 'audio/system/countdown_tick.mp3', bus: 'system', loop: false, gain: 0.4, pool: 1 },
@@ -19,21 +19,21 @@ class SoundManager {
         'character.snore.loop': { src: 'audio/character/snore_loop.mp3', bus: 'characters', loop: true, gain: 1.0, pool: 1 },
         'character.dead': { src: 'audio/character/dead.mp3', bus: 'characters', loop: false, gain: 1.0, pool: 1 },
 
-        'boss.alert': { src: 'audio/boss/alert.mp3', bus: 'characters', loop: false, gain: 1.0, pool: 1 },
-        'boss.attack': { src: 'audio/boss/attack.mp3', bus: 'characters', loop: false, gain: 1.0, pool: 2 },
-        'boss.step': { src: 'audio/boss/step.mp3', bus: 'characters', loop: false, gain: 1.0, pool: 3 },
-        'boss.hit': { src: 'audio/boss/hit.mp3', bus: 'characters', loop: false, gain: 1.0, pool: 2 },
-        'boss.dead': { src: 'audio/boss/dead.mp3', bus: 'characters', loop: false, gain: 1.0, pool: 1 },
+        'boss.alert': { src: 'audio/boss/alert.mp3', bus: 'characters', loop: false, gain: 0.4, pool: 1 },
+        'boss.attack': { src: 'audio/boss/attack.mp3', bus: 'characters', loop: false, gain: 0.4, pool: 2 },
+        'boss.step': { src: 'audio/boss/step.mp3', bus: 'characters', loop: false, gain: 0.4, pool: 3 },
+        'boss.hit': { src: 'audio/boss/hit.mp3', bus: 'characters', loop: false, gain: 0.4, pool: 2 },
+        'boss.dead': { src: 'audio/boss/dead.mp3', bus: 'characters', loop: false, gain: 0.4, pool: 1 },
 
-        'chicken.step': { src: 'audio/chicken/step.mp3', bus: 'characters', loop: false, gain: 1.0, pool: 3 },
-        'chicken.dead': { src: 'audio/chicken/dead.mp3', bus: 'characters', loop: false, gain: 1.0, pool: 2 },
+        'chicken.step': { src: 'audio/chicken/step.mp3', bus: 'characters', loop: false, gain: 0.1, pool: 3 },
+        'chicken.dead': { src: 'audio/chicken/dead.mp3', bus: 'characters', loop: false, gain: 0.4, pool: 2 },
 
-        'chicken-small.step': { src: 'audio/chicken-small/step.mp3', bus: 'characters', loop: false, gain: 1.0, pool: 3 },
-        'chicken-small.dead': { src: 'audio/chicken-small/dead.mp3', bus: 'characters', loop: false, gain: 1.0, pool: 2 },
+        'chicken-small.step': { src: 'audio/chicken-small/step.mp3', bus: 'characters', loop: false, gain: 0.1, pool: 3 },
+        'chicken-small.dead': { src: 'audio/chicken-small/dead.mp3', bus: 'characters', loop: false, gain: 0.4, pool: 2 },
 
-        'obj.bottle.pick': { src: 'audio/objects/bottle_pick.mp3', bus: 'objects', loop: false, gain: 1.0, pool: 3 },
-        'obj.bottle.splash': { src: 'audio/objects/bottle_splash.mp3', bus: 'objects', loop: false, gain: 1.0, pool: 3 },
-        'obj.coin.pick': { src: 'audio/objects/coin_pick.mp3', bus: 'objects', loop: false, gain: 1.0, pool: 5 }
+        'obj.bottle.pick': { src: 'audio/objects/bottle_pick.mp3', bus: 'objects', loop: false, gain: 0.4, pool: 3 },
+        'obj.bottle.splash': { src: 'audio/objects/bottle_splash.mp3', bus: 'objects', loop: false, gain: 0.4, pool: 3 },
+        'obj.coin.pick': { src: 'audio/objects/coin_pick.mp3', bus: 'objects', loop: false, gain: 0.4, pool: 5 }
 
     };
     pools = new Map();

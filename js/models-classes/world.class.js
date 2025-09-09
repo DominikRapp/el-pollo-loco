@@ -29,6 +29,8 @@ class World {
     coinPickups = [];
     coinCount = 0;
     coinMax = 5;
+    stats = { boss: 0, chicken: 0, chickenSmall: 0, bottle: 0, coin: 0 };
+    bossDefeated = false;
     baseGroundTopY = 335;
     frozen = false;
     lastBossHitTime = 0;
@@ -178,21 +180,23 @@ class World {
             const startY = Math.round(this.character.y + this.character.height * 0.45);
             const bottle = new ThrowableObject(startX, startY, direction);
             this.throwableObjects.push(bottle);
-            this.bottleCount = Math.max(0, this.bottleCount - 1);
+            this.bottleCount--;
             const percent = (this.bottleCount / this.bottleMax) * 100;
             this.bottleBar.setPercentage(percent);
-            if (this.character.playThrowFrame) {
-                this.character.playThrowFrame();
-                setTimeout(() => this.character.setStandingFrame(), 200);
-            }
             this.lastThrowTime = now;
+            if (window.sfx) window.sfx.play('character.throw');
         }
         this.throwableObjects.forEach((bottle) => {
             if (bottle.isSplashing) return;
             this.level.enemies.forEach((enemy) => {
                 if (!bottle.isSplashing && bottle.isColliding(enemy)) {
                     if (enemy instanceof Endboss && !enemy.isDead()) {
+                        const wasAlive = !enemy.isDead();
                         enemy.hit(bossBottleDamage);
+                        if (wasAlive && enemy.isDead() && !this.bossDefeated) {
+                            this.stats.boss = 1;
+                            this.bossDefeated = true;
+                        }
                         if (this.bossBar) {
                             const value = enemy.isDead() ? 0 : enemy.energy;
                             this.bossBar.setPercentage(value);
@@ -203,6 +207,7 @@ class World {
             });
         });
     }
+
 
     updateCharacterGround() {
         let ground = this.baseGroundTopY;
@@ -260,6 +265,7 @@ class World {
             if (!collides) return true;
             if (this.bottleCount < this.bottleMax) {
                 this.bottleCount++;
+                this.stats.bottle = (this.stats.bottle || 0) + 1;
                 const percent = (this.bottleCount / this.bottleMax) * 100;
                 this.bottleBar.setPercentage(percent);
                 if (window.sfx) window.sfx.play('obj.bottle.pick');
@@ -290,6 +296,7 @@ class World {
             }
             if (self.coinCount < self.coinMax) {
                 self.coinCount++;
+                self.stats.coin = (self.stats.coin || 0) + 1;
                 const percent = (self.coinCount / self.coinMax) * 100;
                 self.coinBar.setPercentage(percent);
                 const currentEnergy = self.character.energy;
@@ -304,6 +311,7 @@ class World {
             return true;
         });
     }
+
 
 
 
@@ -347,8 +355,14 @@ class World {
                     this.character.y = enemyTop - (this.character.height - charBottomOffset);
                     this.character.speedY = 20;
                     enemy.die();
+                    if (enemy instanceof ChickenSmall) {
+                        this.stats.chickenSmall = (this.stats.chickenSmall || 0) + 1;
+                    } else if (enemy instanceof Chicken) {
+                        this.stats.chicken = (this.stats.chicken || 0) + 1;
+                    }
                     return;
                 }
+
 
                 let canApplyDamage = !this.character.isHurt() && !this.character.isDead();
 

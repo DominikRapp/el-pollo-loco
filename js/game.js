@@ -56,8 +56,8 @@ document.addEventListener('keydown', (event) => {
         performRestart();
     }
     if (event.keyCode === 66) {
-        keyboard.SCOREBOARD = true;
-        openScoreboard();
+        keyboard.LEADERBOARD = true;
+        openLeaderboard();
     }
     if (event.keyCode === 73) {
         keyboard.INSTRUCTIONS = true;
@@ -89,7 +89,7 @@ document.addEventListener('keyup', (event) => {
     if (event.keyCode === 32) keyboard.SPACE = false;
     if (event.keyCode === 87) keyboard.THROW = false;
     if (event.keyCode === 82) keyboard.RESTART = false;
-    if (event.keyCode === 66) keyboard.SCOREBOARD = false;
+    if (event.keyCode === 66) keyboard.LEADERBOARD = false;
     if (event.keyCode === 73) keyboard.INSTRUCTIONS = false;
     if (event.keyCode === 79) keyboard.SETTINGS = false;
     if (event.keyCode === 72) keyboard.HOME = false;
@@ -107,7 +107,7 @@ function clearKeys() {
     keyboard.SPACE = false;
     keyboard.THROW = false;
     keyboard.RESTART = false;
-    keyboard.SCOREBOARD = false;
+    keyboard.LEADERBOARD = false;
     keyboard.INSTRUCTIONS = false;
     keyboard.SETTINGS = false;
     keyboard.HOME = false;
@@ -151,14 +151,14 @@ function openInstructions() {
     for (const b of btns) { if (b) { b.click(); return; } }
 }
 
-function openScoreboard() {
+function openLeaderboard() {
     const btns = [
-        document.getElementById('btn-scoreboard-home'),
-        document.getElementById('btn-scoreboard-go'),
-        document.getElementById('btn-scoreboard-victory')
+        document.getElementById('btn-leaderboard-home'),
+        document.getElementById('btn-leaderboard-go'),
+        document.getElementById('btn-leaderboard-victory')
     ];
     for (const b of btns) { if (b) { b.click(); return; } }
-    const ov = document.getElementById('scoreboard-overlay');
+    const ov = document.getElementById('leaderboard-overlay');
     if (ov) ov.classList.remove('hidden');
 }
 
@@ -222,7 +222,7 @@ function clickIfExists(id) {
 
 function handleEscCloseOverlays() {
     if (overlayOpen('instructions-overlay')) { clickIfExists('instructions-close'); return; }
-    if (overlayOpen('scoreboard-overlay')) { clickIfExists('scoreboard-close'); return; }
+    if (overlayOpen('leaderboard-overlay')) { clickIfExists('leaderboard-close'); return; }
     if (overlayOpen('settings-overlay')) { clickIfExists('settings-close'); return; }
 }
 

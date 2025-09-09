@@ -10,7 +10,7 @@ class Level {
     rules = {
         enemyContactDamage: 20,
         bossContactDamage: 20,
-        bossBottleDamage: 100
+        bossBottleDamage: 20
     };
     level_end_x = 2250;
 

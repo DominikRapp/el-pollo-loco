@@ -76,6 +76,9 @@ class App {
     ];
 
     carryOverEnergy = 100;
+    runResults = [];
+    totalCounts = { levelComplete: 0, boss: 0, chicken: 0, chickenSmall: 0, bottle: 0, coin: 0 };
+    totalTimeMs = 0;
 
     show(el) {
         if (el) el.classList.remove('hidden');
@@ -87,6 +90,9 @@ class App {
 
     init(canvas, keyboard) {
         setMuted(isMuted());
+        const preset = AudioPrefs.load();
+        if (window.sfx) AudioPrefs.applyToSfx(window.sfx, preset);
+        window.addEventListener('sfx-ready', () => AudioPrefs.applyToSfx(window.sfx, AudioPrefs.load()));
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.keyboard = keyboard;
@@ -94,7 +100,7 @@ class App {
         this.currentLevelIndex = 0;
         this.wireStartScreenControls();
         this.wireInstructionsOverlay();
-        this.wireScoreboardOverlay();
+        this.wireLeaderboardOverlay();
         this.wireSettingsOverlay();
         this.startSequence();
         this.wireHamburgerMenu();
@@ -223,150 +229,128 @@ class App {
         const overlay = document.getElementById('settings-overlay');
         const content = document.getElementById('settings-content');
         const closeBtn = document.getElementById('settings-close');
-
-        if (!overlay || !content || !closeBtn) {
-            return;
-        }
-
-        const renameTriggerLabels = () => {
-            const ids = [
-                'menu-settings',
-                'btn-settings-home',
-                'btn-settings-go',
-                'btn-settings-victory'
-            ];
-            ids.forEach(id => {
-                const el = document.getElementById(id);
-                if (!el) return;
-                const txt = (el.textContent || '').trim().toLowerCase();
-                if (txt.includes('settings') || txt === '' || txt.includes('sound')) {
-                    el.textContent = 'Audio';
-                }
-                if (el.getAttribute('aria-label')) el.setAttribute('aria-label', 'Audio');
-                if (el.title) el.title = 'Audio';
-            });
-        };
+        if (!overlay || !content || !closeBtn) return;
 
         const ensureExclusiveOpen = () => {
             this.hideWinLoseOverlays();
             const others = [
                 document.getElementById('instructions-overlay'),
-                document.getElementById('scoreboard-overlay'),
+                document.getElementById('leaderboard-overlay'),
                 document.getElementById('start-screen')
             ];
             for (const el of others) { if (el) el.classList.add('hidden'); }
         };
 
-        const initControls = () => {
-            if (this.settingsBuilt) return;
+        const pct = (x) => Math.round(Math.max(0, Math.min(1, Number(x || 0))) * 100);
+        const to01 = (n) => Math.max(0, Math.min(1, Number(n || 0) / 100));
 
-            const getVal = (x) => Math.round(x * 100);
-            const s = window.sfx;
-            const m = s ? s.master : 0.1;
-            const v = s ? s.volumes || {} : {};
-            const vm = typeof v.music === 'number' ? v.music : 0.1;
-            const vs = typeof v.system === 'number' ? v.system : 0.1;
-            const vc = typeof v.characters === 'number' ? v.characters : 0.1;
-            const vo = typeof v.objects === 'number' ? v.objects : 0.1;
-            const muted = typeof isMuted === 'function' ? isMuted() : (localStorage.getItem('muted') === '1');
-
+        const renderControls = () => {
+            const st = AudioPrefs.load();
             content.innerHTML = `
             <h3>Audio</h3>
             <div class="settings-group">
-                <button id="btn-mute-toggle" class="btn">${muted ? 'Mute: ON' : 'Mute: OFF'}</button>
+                <button id="btn-mute-toggle" class="btn">${st.muted ? 'Mute: ON' : 'Mute: OFF'}</button>
             </div>
             <div class="settings-group">
-                <label for="slider-master">Gesamt (Master): <span id="val-master">${getVal(m)}%</span></label>
-                <input id="slider-master" type="range" min="0" max="100" step="1" value="${getVal(m)}" />
+                <label for="slider-master">Master: <span id="val-master">${pct(st.master)}%</span></label>
+                <input id="slider-master" type="range" min="0" max="100" step="1" value="${pct(st.master)}" />
             </div>
             <div class="settings-group">
-                <label for="slider-music">Musik (Music): <span id="val-music">${getVal(vm)}%</span></label>
-                <input id="slider-music" type="range" min="0" max="100" step="1" value="${getVal(vm)}" />
+                <label for="slider-music">Music: <span id="val-music">${pct(st.music)}%</span></label>
+                <input id="slider-music" type="range" min="0" max="100" step="1" value="${pct(st.music)}" />
             </div>
             <div class="settings-group">
-                <label for="slider-system">Game Sounds (SFX → System): <span id="val-system">${getVal(vs)}%</span></label>
-                <input id="slider-system" type="range" min="0" max="100" step="1" value="${getVal(vs)}" />
+                <label for="slider-system">System: <span id="val-system">${pct(st.system)}%</span></label>
+                <input id="slider-system" type="range" min="0" max="100" step="1" value="${pct(st.system)}" />
             </div>
             <div class="settings-group">
-                <label for="slider-characters">Characters (SFX → Characters): <span id="val-characters">${getVal(vc)}%</span></label>
-                <input id="slider-characters" type="range" min="0" max="100" step="1" value="${getVal(vc)}" />
+                <label for="slider-characters">Characters: <span id="val-characters">${pct(st.characters)}%</span></label>
+                <input id="slider-characters" type="range" min="0" max="100" step="1" value="${pct(st.characters)}" />
             </div>
             <div class="settings-group">
-                <label for="slider-objects">Objects (SFX → Objects): <span id="val-objects">${getVal(vo)}%</span></label>
-                <input id="slider-objects" type="range" min="0" max="100" step="1" value="${getVal(vo)}" />
+                <label for="slider-objects">Objects: <span id="val-objects">${pct(st.objects)}%</span></label>
+                <input id="slider-objects" type="range" min="0" max="100" step="1" value="${pct(st.objects)}" />
             </div>
         `;
 
-            const qs = (id) => content.querySelector(id);
-            const btnMute = qs('#btn-mute-toggle');
-            const sliderMaster = qs('#slider-master');
-            const sliderMusic = qs('#slider-music');
-            const sliderSystem = qs('#slider-system');
-            const sliderCharacters = qs('#slider-characters');
-            const sliderObjects = qs('#slider-objects');
+            const btnMute = content.querySelector('#btn-mute-toggle');
+            const sliderMaster = content.querySelector('#slider-master');
+            const sliderMusic = content.querySelector('#slider-music');
+            const sliderSystem = content.querySelector('#slider-system');
+            const sliderCharacters = content.querySelector('#slider-characters');
+            const sliderObjects = content.querySelector('#slider-objects');
 
-            const valMaster = qs('#val-master');
-            const valMusic = qs('#val-music');
-            const valSystem = qs('#val-system');
-            const valCharacters = qs('#val-characters');
-            const valObjects = qs('#val-objects');
+            const valMaster = content.querySelector('#val-master');
+            const valMusic = content.querySelector('#val-music');
+            const valSystem = content.querySelector('#val-system');
+            const valCharacters = content.querySelector('#val-characters');
+            const valObjects = content.querySelector('#val-objects');
 
-            const to01 = (x) => Math.max(0, Math.min(1, x / 100));
-
-            const setBtnLabel = () => {
-                const on = typeof isMuted === 'function' ? isMuted() : (localStorage.getItem('muted') === '1');
-                if (btnMute) btnMute.textContent = on ? 'Mute: ON' : 'Mute: OFF';
-            };
+            const setMuteLabel = () => { if (btnMute) btnMute.textContent = isMuted() ? 'Mute: ON' : 'Mute: OFF'; };
 
             if (btnMute) {
                 btnMute.addEventListener('click', () => {
-                    const on = typeof isMuted === 'function' ? isMuted() : (localStorage.getItem('muted') === '1');
-                    const to = !on;
-                    if (typeof setMuted === 'function') setMuted(to);
-                    else {
-                        localStorage.setItem('muted', to ? '1' : '0');
-                        if (window.sfx) window.sfx.setMuted(to);
-                    }
-                    setBtnLabel();
+                    const to = !isMuted();
+                    setMuted(to);
+                    const cur = AudioPrefs.fromSfx(window.sfx);
+                    const saved = AudioPrefs.save({ ...cur, muted: to });
+                    AudioPrefs.applyToSfx(window.sfx, saved);
+                    setMuteLabel();
                 });
-                window.addEventListener('app-mute-changed', setBtnLabel);
+                window.addEventListener('app-mute-changed', setMuteLabel);
             }
 
             sliderMaster.addEventListener('input', () => {
                 const n = Number(sliderMaster.value);
                 valMaster.textContent = n + '%';
                 if (window.sfx) window.sfx.setMaster(to01(n));
+                const cur = AudioPrefs.fromSfx(window.sfx);
+                const saved = AudioPrefs.save({ ...cur, master: to01(n) });
+                AudioPrefs.applyToSfx(window.sfx, saved);
             });
+
             sliderMusic.addEventListener('input', () => {
                 const n = Number(sliderMusic.value);
                 valMusic.textContent = n + '%';
                 if (window.sfx) window.sfx.setBusVolume('music', to01(n));
+                const cur = AudioPrefs.fromSfx(window.sfx);
+                const saved = AudioPrefs.save({ ...cur, music: to01(n) });
+                AudioPrefs.applyToSfx(window.sfx, saved);
             });
+
             sliderSystem.addEventListener('input', () => {
                 const n = Number(sliderSystem.value);
                 valSystem.textContent = n + '%';
                 if (window.sfx) window.sfx.setBusVolume('system', to01(n));
+                const cur = AudioPrefs.fromSfx(window.sfx);
+                const saved = AudioPrefs.save({ ...cur, system: to01(n) });
+                AudioPrefs.applyToSfx(window.sfx, saved);
             });
+
             sliderCharacters.addEventListener('input', () => {
                 const n = Number(sliderCharacters.value);
                 valCharacters.textContent = n + '%';
                 if (window.sfx) window.sfx.setBusVolume('characters', to01(n));
+                const cur = AudioPrefs.fromSfx(window.sfx);
+                const saved = AudioPrefs.save({ ...cur, characters: to01(n) });
+                AudioPrefs.applyToSfx(window.sfx, saved);
             });
+
             sliderObjects.addEventListener('input', () => {
                 const n = Number(sliderObjects.value);
                 valObjects.textContent = n + '%';
                 if (window.sfx) window.sfx.setBusVolume('objects', to01(n));
+                const cur = AudioPrefs.fromSfx(window.sfx);
+                const saved = AudioPrefs.save({ ...cur, objects: to01(n) });
+                AudioPrefs.applyToSfx(window.sfx, saved);
             });
-
-            this.settingsBuilt = true;
         };
 
         const openOverlay = () => {
             ensureExclusiveOpen();
             this.suppressWinLose();
             if (typeof this.closeHamburgerMenu === 'function') this.closeHamburgerMenu();
-            renameTriggerLabels();
-            initControls();
+            renderControls();
             overlay.classList.remove('hidden');
         };
 
@@ -395,15 +379,10 @@ class App {
         });
 
         closeBtn.addEventListener('click', closeOverlay);
-
-        overlay.addEventListener('click', function (event) {
-            if (event.target === overlay) closeOverlay();
-        });
-
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape' && !overlay.classList.contains('hidden')) closeOverlay();
-        });
+        overlay.addEventListener('click', (event) => { if (event.target === overlay) closeOverlay(); });
+        document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !overlay.classList.contains('hidden')) closeOverlay(); });
     }
+
 
     wireFullscreenToggle() {
         const root = document.getElementById('game-root');
@@ -532,7 +511,7 @@ class App {
         const ensureExclusiveOpen = () => {
             this.hideWinLoseOverlays();
             const others = [
-                document.getElementById('scoreboard-overlay'),
+                document.getElementById('leaderboard-overlay'),
                 document.getElementById('settings-overlay'),
                 document.getElementById('start-screen')
             ];
@@ -592,27 +571,27 @@ class App {
         });
     }
 
-    wireScoreboardOverlay() {
-        this.scoreboardPages = this.buildScoreboardPages();
-        this.currentScoreboardPage = 0;
+    wireLeaderboardOverlay() {
+        this.leaderboardPages = [];
+        this.currentLeaderboardPage = 0;
 
-        const overlay = document.getElementById('scoreboard-overlay');
+        const overlay = document.getElementById('leaderboard-overlay');
         const box = overlay ? overlay.querySelector('.overlay-box') : null;
-        const content = document.getElementById('scoreboard-content');
-        const prevBtn = document.getElementById('scoreboard-prev');
-        const nextBtn = document.getElementById('scoreboard-next');
-        const pageIndicator = document.getElementById('scoreboard-page-indicator');
-        const closeBtn = document.getElementById('scoreboard-close');
+        const content = document.getElementById('leaderboard-content');
+        const prevBtn = document.getElementById('leaderboard-prev');
+        const nextBtn = document.getElementById('leaderboard-next');
+        const pageIndicator = document.getElementById('leaderboard-page-indicator');
+        const closeBtn = document.getElementById('leaderboard-close');
 
         if (!overlay || !box || !content || !prevBtn || !nextBtn || !pageIndicator || !closeBtn) {
             return;
         }
 
         const renderPage = (index) => {
-            const total = this.scoreboardPages.length;
+            const total = this.leaderboardPages.length;
             const target = Math.max(0, Math.min(index, total - 1));
-            this.currentScoreboardPage = target;
-            content.innerHTML = this.scoreboardPages[target];
+            this.currentLeaderboardPage = target;
+            content.innerHTML = this.leaderboardPages[target] || '<p>No data.</p>';
             pageIndicator.textContent = 'Page ' + (target + 1) + ' of ' + total;
             prevBtn.disabled = target === 0;
             nextBtn.disabled = target === total - 1;
@@ -629,12 +608,23 @@ class App {
             for (const el of others) { if (el) el.classList.add('hidden'); }
         };
 
+        const loadPages = async () => {
+            content.innerHTML = '<p>Loading…</p>';
+            try {
+                const pages = await LeaderboardView.buildPages();
+                this.leaderboardPages = pages;
+                renderPage(0);
+            } catch (e) {
+                content.innerHTML = '<p>Failed to load.</p>';
+            }
+        };
+
         const openOverlay = () => {
             ensureExclusiveOpen();
             this.suppressWinLose();
             if (typeof this.closeHamburgerMenu === 'function') this.closeHamburgerMenu();
             overlay.classList.remove('hidden');
-            renderPage(0);
+            loadPages();
         };
 
         const closeOverlay = () => {
@@ -647,17 +637,17 @@ class App {
         };
 
         const goPrev = () => {
-            if (this.currentScoreboardPage > 0) renderPage(this.currentScoreboardPage - 1);
+            if (this.currentLeaderboardPage > 0) renderPage(this.currentLeaderboardPage - 1);
         };
 
         const goNext = () => {
-            if (this.currentScoreboardPage < this.scoreboardPages.length - 1) renderPage(this.currentScoreboardPage + 1);
+            if (this.currentLeaderboardPage < this.leaderboardPages.length - 1) renderPage(this.currentLeaderboardPage + 1);
         };
 
         const openLinks = [
-            document.getElementById('btn-scoreboard-go'),
-            document.getElementById('btn-scoreboard-victory'),
-            document.getElementById('btn-scoreboard-home')
+            document.getElementById('btn-leaderboard-go'),
+            document.getElementById('btn-leaderboard-victory'),
+            document.getElementById('btn-leaderboard-home')
         ];
         openLinks.forEach(link => {
             if (link) {
@@ -680,6 +670,7 @@ class App {
             if (event.key === 'Escape' && !overlay.classList.contains('hidden')) closeOverlay();
         });
     }
+
 
 
     wireHomeActions() {
@@ -749,8 +740,8 @@ class App {
         ];
     }
 
-    buildScoreboardPages() {
-        const raw = localStorage.getItem('scoreboard_rankings') || '{}';
+    buildLeaderboardPages() {
+        const raw = localStorage.getItem('leaderboard_rankings') || '{}';
         let data = {};
         try { data = JSON.parse(raw) || {}; } catch { data = {}; }
 
@@ -858,7 +849,7 @@ class App {
         };
 
         const tableTotal =
-            '<table class="scoreboard-table">'
+            '<table class="leaderboard-table">'
             + '<thead>'
             + '<tr>'
             + '<th>#</th><th>Name</th><th>Höchstes Level</th><th>Gesamtzeit</th><th>Punkte</th>'
@@ -870,7 +861,7 @@ class App {
 
         const buildLevelTable = (lvl) => {
             return (
-                '<table class="scoreboard-table">'
+                '<table class="leaderboard-table">'
                 + '<thead>'
                 + '<tr>'
                 + '<th>#</th><th>Name</th><th>Zeit</th><th>Punkte</th>'
@@ -1153,6 +1144,43 @@ class App {
         return mm + ':' + ss;
     }
 
+    getCurrentLevelNumber() {
+        return (this.currentLevelIndex || 0) + 1;
+    }
+
+    collectLevelCounts(completed) {
+        let boss = 0, chicken = 0, chickenSmall = 0, bottle = 0, coin = 0;
+        if (this.world && this.world.stats) {
+            boss = Number(this.world.stats.boss || 0);
+            chicken = Number(this.world.stats.chicken || 0);
+            chickenSmall = Number(this.world.stats.chickenSmall || 0);
+            bottle = Number(this.world.stats.bottle || 0);
+            coin = Number(this.world.stats.coin || 0);
+        }
+        return { levelComplete: completed ? 1 : 0, boss, chicken, chickenSmall, bottle, coin };
+    }
+
+    addLevelResult(level, timeMs, counts) {
+        this.runResults.push({ level, timeMs, counts });
+        this.totalTimeMs += Number(timeMs || 0);
+        this.totalCounts.levelComplete += Number(counts.levelComplete || 0);
+        this.totalCounts.boss += Number(counts.boss || 0);
+        this.totalCounts.chicken += Number(counts.chicken || 0);
+        this.totalCounts.chickenSmall += Number(counts.chickenSmall || 0);
+        this.totalCounts.bottle += Number(counts.bottle || 0);
+        this.totalCounts.coin += Number(counts.coin || 0);
+    }
+
+    formatMsNumber(ms) {
+        const totalSeconds = Math.floor((ms || 0) / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        const mm = String(minutes).padStart(2, '0');
+        const ss = String(seconds).padStart(2, '0');
+        return mm + ':' + ss;
+    }
+
+
     loopTimer() {
         if (!this.timerRunning) {
             return;
@@ -1167,6 +1195,7 @@ class App {
     stopTimer() {
         this.timerRunning = false;
         this.showTimer(false);
+        this.lastElapsedMs = Date.now() - this.timerStart;
     }
 
     loopWinLoseWatch() {
@@ -1244,6 +1273,40 @@ class App {
 
                 actions.classList.remove('hidden');
                 actions.style.display = '';
+
+                const nameGO = this.userName || localStorage.getItem('playerName') || 'Player';
+                const levelGO = this.getCurrentLevelNumber();
+                const timeGO = this.lastElapsedMs || 0;
+                const countsGO = this.collectLevelCounts(false);
+                this.addLevelResult(levelGO, timeGO, countsGO);
+
+                const boxRootGO = actions.querySelector('.overlay-box');
+                let boxGO = boxRootGO.querySelector('#go-results');
+                if (!boxGO) {
+                    boxGO = document.createElement('div');
+                    boxGO.id = 'go-results';
+                    const h2 = boxRootGO.querySelector('h2');
+                    if (h2 && h2.nextSibling) {
+                        boxRootGO.insertBefore(boxGO, h2.nextSibling);
+                    } else {
+                        boxRootGO.appendChild(boxGO);
+                    }
+                }
+
+                LeaderboardFlow.showLevelIntermediate({ containerId: 'go-results', name: nameGO, level: levelGO, timeMs: timeGO, counts: countsGO });
+
+                const totalPreviewGO = LeaderboardAPI.makeTotalEntry({ name: nameGO, highestLevel: levelGO, totalTimeMs: this.totalTimeMs, counts: this.totalCounts });
+                const lineGO = document.createElement('div');
+                lineGO.className = 'lb-line';
+                const spanN1 = document.createElement('span'); spanN1.className = 'lb-name'; spanN1.textContent = totalPreviewGO.name;
+                const spanL1 = document.createElement('span'); spanL1.className = 'lb-level'; spanL1.textContent = 'L' + totalPreviewGO.highestLevel;
+                const spanP1 = document.createElement('span'); spanP1.className = 'lb-points'; spanP1.textContent = totalPreviewGO.points;
+                const spanT1 = document.createElement('span'); spanT1.className = 'lb-time'; spanT1.textContent = LeaderboardAPI.formatTime(totalPreviewGO.totalTimeMs);
+                lineGO.appendChild(spanN1); lineGO.appendChild(spanL1); lineGO.appendChild(spanP1); lineGO.appendChild(spanT1);
+                boxGO.appendChild(lineGO);
+
+                LeaderboardFlow.showTotalFinal({ containerId: 'go-results', name: nameGO, highestLevel: levelGO, totalTimeMs: this.totalTimeMs, counts: this.totalCounts });
+
 
                 if (window.sfx) {
                     window.sfx.musicTo('music.menu.loop', 500);
@@ -1337,6 +1400,45 @@ class App {
 
                     actions.classList.remove('hidden');
                     actions.style.display = '';
+
+                    const nameVW = this.userName || localStorage.getItem('playerName') || 'Player';
+                    const levelVW = this.getCurrentLevelNumber();
+                    const timeVW = this.lastElapsedMs || 0;
+                    const countsVW = this.collectLevelCounts(true);
+                    this.addLevelResult(levelVW, timeVW, countsVW);
+
+                    const boxRootVW = actions.querySelector('.overlay-box');
+                    let boxVW = boxRootVW.querySelector('#victory-results');
+                    if (!boxVW) {
+                        boxVW = document.createElement('div');
+                        boxVW.id = 'victory-results';
+                        const h2 = boxRootVW.querySelector('h2');
+                        if (h2 && h2.nextSibling) {
+                            boxRootVW.insertBefore(boxVW, h2.nextSibling);
+                        } else {
+                            boxRootVW.appendChild(boxVW);
+                        }
+                    }
+
+                    LeaderboardFlow.showLevelIntermediate({ containerId: 'victory-results', name: nameVW, level: levelVW, timeMs: timeVW, counts: countsVW });
+
+                    if (this.currentLevelIndex >= this.levelFactories.length - 1) {
+                        const highestVW = levelVW;
+                        LeaderboardFlow.showTotalFinal({ containerId: 'victory-results', name: nameVW, highestLevel: highestVW, totalTimeMs: this.totalTimeMs, counts: this.totalCounts });
+                    } else {
+                        const totalPreviewVW = LeaderboardAPI.makeTotalEntry({ name: nameVW, highestLevel: levelVW, totalTimeMs: this.totalTimeMs, counts: this.totalCounts });
+                        const lineVW = document.createElement('div');
+                        lineVW.className = 'lb-line';
+                        const spanN2 = document.createElement('span'); spanN2.className = 'lb-name'; spanN2.textContent = totalPreviewVW.name;
+                        const spanL2 = document.createElement('span'); spanL2.className = 'lb-level'; spanL2.textContent = 'L' + totalPreviewVW.highestLevel;
+                        const spanP2 = document.createElement('span'); spanP2.className = 'lb-points'; spanP2.textContent = totalPreviewVW.points;
+                        const spanT2 = document.createElement('span'); spanT2.className = 'lb-time'; spanT2.textContent = LeaderboardAPI.formatTime(totalPreviewVW.totalTimeMs);
+                        lineVW.appendChild(spanN2); lineVW.appendChild(spanL2); lineVW.appendChild(spanP2); lineVW.appendChild(spanT2);
+                        boxVW.appendChild(lineVW);
+                    }
+
+
+
 
                     if (window.sfx) {
                         window.sfx.musicTo('music.menu.loop', 500);

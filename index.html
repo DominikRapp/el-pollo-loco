@@ -46,25 +46,25 @@
             </div>
         </div>
 
-        <div id="scoreboard-overlay" class="hidden">
+        <div id="leaderboard-overlay" class="hidden">
             <div class="overlay-box">
-                <button id="scoreboard-close" class="overlay-closebutton" aria-label="Close">
+                <button id="leaderboard-close" class="overlay-closebutton" aria-label="Close">
                     <span class="xbar one"></span>
                     <span class="xbar two"></span>
                 </button>
 
-                <button id="scoreboard-prev" class="circle-nav left" aria-label="Previous">
+                <button id="leaderboard-prev" class="circle-nav left" aria-label="Previous">
                     <span class="chev left"></span>
                 </button>
 
-                <div id="scoreboard-content" class="overlay-content"></div>
+                <div id="leaderboard-content" class="overlay-content"></div>
 
-                <button id="scoreboard-next" class="circle-nav right" aria-label="Next">
+                <button id="leaderboard-next" class="circle-nav right" aria-label="Next">
                     <span class="chev right"></span>
                 </button>
 
                 <div class="overlay-footer">
-                    <span id="scoreboard-page-indicator">Page 1 of 6</span>
+                    <span id="leaderboard-page-indicator">Page 1 of 6</span>
                 </div>
             </div>
         </div>
@@ -76,10 +76,7 @@
                     <span class="xbar two"></span>
                 </button>
 
-                <div id="settings-content" class="overlay-content">
-                    <h3>Einstellungen</h3>
-                    <p>Hier kannst du deine Spiel-Einstellungen anpassen (Platzhalter).</p>
-                </div>
+                <div id="settings-content" class="overlay-content"></div>
             </div>
         </div>
 
@@ -107,7 +104,7 @@
                 <button id="btn-restart">Restart</button>
                 <button id="btn-home-go">Home</button>
                 <button id="btn-instructions-go">Instructions</button>
-                <button id="btn-scoreboard-go">Scoreboard</button>
+                <button id="btn-leaderboard-go">Leaderboard</button>
                 <button id="btn-settings-go">Audio</button>
                 <button id="btn-fullscreen-go">Fullscreen</button>
             </div>
@@ -122,7 +119,7 @@
                 <button id="btn-next">Next Level</button>
                 <button id="btn-home">Home</button>
                 <button id="btn-instructions-victory">Instructions</button>
-                <button id="btn-scoreboard-victory">Scoreboard</button>
+                <button id="btn-leaderboard-victory">Leaderboard</button>
                 <button id="btn-settings-victory">Audio</button>
                 <button id="btn-fullscreen-victory">Fullscreen</button>
             </div>
@@ -142,7 +139,7 @@
 
                 <div class="home-actions">
                     <button id="btn-instructions-home">Instructions</button>
-                    <button id="btn-scoreboard-home">Scoreboard</button>
+                    <button id="btn-leaderboard-home">Leaderboard</button>
                     <button id="btn-settings-home">Audio</button>
                     <button id="btn-fullscreen-home">Fullscreen</button>
                 </div>
@@ -156,6 +153,12 @@
         </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="js/api/leaderboard-api.js"></script>
+    <script src="js/api/init-firebase.js"></script>
+    <script src="js/flow/leaderboard-flow.js"></script>
+    <script src="js/ui/leaderboard-view.js"></script>
     <script src="js/models-classes/drawable-object.class.js"></script>
     <script src="js/models-classes/movable-object.class.js"></script>
     <script src="js/models-classes/character.class.js"></script>
@@ -176,6 +179,7 @@
     <script src="js/models-classes/barrel.class.js"></script>
     <script src="js/models-classes/keyboard.class.js"></script>
     <script src="js/models-classes/sound-manager.class.js"></script>
+    <script src="js/api/audio-prefs.js"></script>
     <script src="js/models-classes/interval-tracker.class.js"></script>
     <script src="js/models-classes/level.class.js"></script>
     <script src="levels/level1.js"></script>

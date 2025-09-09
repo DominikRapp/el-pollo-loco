@@ -30,38 +30,109 @@ function createLevel4() {
         new BackgroundObject('img/5_background/layers/air.png', CHUNK_WIDTH * 4),
         new BackgroundObject('img/5_background/layers/3_third_layer/1.png', CHUNK_WIDTH * 4),
         new BackgroundObject('img/5_background/layers/2_second_layer/1.png', CHUNK_WIDTH * 4),
-        new BackgroundObject('img/5_background/layers/1_first_layer/1.png', CHUNK_WIDTH * 4)
-    ];
+        new BackgroundObject('img/5_background/layers/1_first_layer/1.png', CHUNK_WIDTH * 4),
 
-    const barrels = [ new Barrel(1450) ];
+        new BackgroundObject('img/5_background/layers/air.png', CHUNK_WIDTH * 5),
+        new BackgroundObject('img/5_background/layers/3_third_layer/2.png', CHUNK_WIDTH * 5),
+        new BackgroundObject('img/5_background/layers/2_second_layer/2.png', CHUNK_WIDTH * 5),
+        new BackgroundObject('img/5_background/layers/1_first_layer/2.png', CHUNK_WIDTH * 5),
+
+        new BackgroundObject('img/5_background/layers/air.png', CHUNK_WIDTH * 6),
+        new BackgroundObject('img/5_background/layers/3_third_layer/1.png', CHUNK_WIDTH * 6),
+        new BackgroundObject('img/5_background/layers/2_second_layer/1.png', CHUNK_WIDTH * 6),
+        new BackgroundObject('img/5_background/layers/1_first_layer/1.png', CHUNK_WIDTH * 6)
+    ];
 
     let lastChunkX = 0;
     for (let i = 0; i < backgroundObjects.length; i++) {
         const obj = backgroundObjects[i];
         if (obj.x > lastChunkX) lastChunkX = obj.x;
     }
-    const LEVEL_END_PADDING = 100;
+    const LEVEL_END_PADDING = 220;
     const computedLevelEndX = lastChunkX + LEVEL_END_PADDING;
 
     const boss = new Endboss();
     boss.x = computedLevelEndX - 450;
-    boss.walkSpeed = 0.35;
-    boss.alertSpeed = 0.8;
-    boss.attackSpeed = 1.5;
-    boss.alertDistance = 520;
-    boss.attackDistance = 260;
+    boss.walkSpeed = 0.5;
+    boss.alertSpeed = 1.1;
+    boss.attackSpeed = 1.8;
+    boss.alertDistance = 580;
+    boss.attackDistance = 280;
 
+    const enemiesChickenCfg = [
+        { x: 1990, y: 430, patrol: [1370, 2000] },
+        { x: 2500, y: 430, patrol: [2100, 2600] },
+        { x: 3085, y: 430, patrol: [2700, 3185] },
+        { x: 3440, y: 430, patrol: [3300, 3870] },
+        { x: 4300, y: 430, patrol: [4000, 4700] }
+    ];
+    const enemiesChickenSmallCfg = [
+        { x: 2500, y: 290, patrol: [2230, 2600] },
+        { x: 2970, y: 290, patrol: [2700, 3070] },
+        { x: 3700, y: 290, patrol: [3410, 3800] },
+        { x: 4100, y: 290, patrol: [3900, 4260] },
+        { x: 5000, y: 290, patrol: [4800, 5300] }
+    ];
     const enemies = [
-        new Chicken(600, { patrol: [560, 820] }),
-        new ChickenSmall(950, { patrol: [900, 1100] }),
+        ...enemiesChickenCfg.map(e => new Chicken(e.x, { patrol: e.patrol, y: e.y })),
+        ...enemiesChickenSmallCfg.map(e => new ChickenSmall(e.x, { patrol: e.patrol, y: e.y })),
         boss
     ];
+
+    const platformsCfg = [
+        { x: 2200, y: 350, segmentWidth: 180, height: 80 },
+        { x: 3400, y: 350, segmentWidth: 180, height: 80 },
+        { x: 4600, y: 350, segmentWidth: 180, height: 80 }
+    ];
+    const platforms = platformsCfg.map(p => new Platform(p.x, p.y, p.segmentWidth, p.height));
+
+    const barrelsCfg = [
+        { x: 1250, y: 490 },
+        { x: 2000, y: 490 },
+        { x: 3185, y: 490 },
+        { x: 3870, y: 490 }
+    ];
+    const barrels = barrelsCfg.map(b => {
+        const o = new Barrel(b.x);
+        if (typeof b.y === 'number') o.y = b.y;
+        return o;
+    });
+
+    const bottlesCfg = [
+        { img: 'img/6_salsa_bottle/1_salsa_bottle_on_ground.png', x: 1270, y: 450 },
+        { img: 'img/6_salsa_bottle/2_salsa_bottle_on_ground.png', x: 2220, y: 300 },
+        { img: 'img/6_salsa_bottle/1_salsa_bottle_on_ground.png', x: 2520, y: 300 },
+        { img: 'img/6_salsa_bottle/2_salsa_bottle_on_ground.png', x: 3420, y: 300 },
+        { img: 'img/6_salsa_bottle/1_salsa_bottle_on_ground.png', x: 4040, y: 300 }
+    ];
+    const bottles = bottlesCfg.map(p => new BottlePickup(p.img, p.x, p.y));
+
+    const coinsCfg = [
+        { x: 1340, y: 220 },
+        { x: 2320, y: 120 },
+        { x: 3720, y: 120 },
+        { x: 4800, y: 120 },
+        { x: 5200, y: 120 }
+    ];
+    const coins = coinsCfg.map(p => {
+        const c = new CoinPickup(p.x);
+        if (typeof p.y === 'number') {
+            if (typeof c.baseY === 'number') {
+                c.baseY = p.y;
+                c.y = p.y;
+            } else {
+                c.y = p.y;
+            }
+        }
+        return c;
+    });
 
     const CLOUD_IMAGES = [
         'img/5_background/layers/4_clouds/1.png',
         'img/5_background/layers/4_clouds/2.png'
     ];
     const CLOUD_WIDTH = 450;
+
     const chunkXs = [];
     for (let i = 0; i < backgroundObjects.length; i += 4) {
         chunkXs.push(backgroundObjects[i].x);
@@ -71,13 +142,6 @@ function createLevel4() {
         const xCentered = chunkX + (CHUNK_WIDTH - CLOUD_WIDTH) / 2;
         return new Cloud(xCentered, img);
     });
-
-    const platforms = [ new Platform(1200, 520, 216, 80) ];
-    const bottles = [
-        new BottlePickup('img/6_salsa_bottle/1_salsa_bottle_on_ground.png', 450),
-        new BottlePickup('img/6_salsa_bottle/1_salsa_bottle_on_ground.png', 900)
-    ];
-    const coins = [ new CoinPickup(520), new CoinPickup(780) ];
 
     const startCfg = { characterX: 100 };
 

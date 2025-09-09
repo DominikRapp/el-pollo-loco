@@ -3,6 +3,7 @@ class ChickenSmall extends BaseChicken {
     constructor(x, options = {}) {
         super({
             x,
+            y: options.y,
             width: 70,
             height: 70,
             speed: 0.8,

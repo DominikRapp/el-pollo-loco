@@ -97,7 +97,13 @@ class BaseChicken extends MovableObject {
         if (this.IMAGE_DEAD !== '') {
             this.loadImages([this.IMAGE_DEAD]);
         }
-        this.y = this.groundBottomY - this.height;
+
+        if (typeof config.y === 'number') {
+            this.y = config.y;
+        } else {
+            this.y = this.groundBottomY - this.height;
+        }
+
         this.animate();
     }
 

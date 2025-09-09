@@ -1,13 +1,13 @@
 class BottlePickup extends DrawableObject {
 
-    constructor(imagePath, x) {
+    constructor(imagePath, x, y = null) {
         super().loadImage(imagePath);
         this.width = 60;
         this.height = 60;
         this.offset = { top: 5, left: 15, right: 8, bottom: 5 };
         const groundBottomY = 630;
         this.x = x;
-        this.baseY = groundBottomY - this.height;
+        this.baseY = (typeof y === 'number') ? y : (groundBottomY - this.height);
         this.y = this.baseY;
         this.bobTick = 0;
         this.bobInterval = setInterval(() => {

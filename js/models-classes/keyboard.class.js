@@ -5,7 +5,7 @@ class Keyboard {
     SPACE = false;
     THROW = false;
     RESTART = false;
-    SCOREBOARD = false;
+    LEADERBOARD = false;
     INSTRUCTIONS = false;
     SETTINGS = false;
     HOME = false;
