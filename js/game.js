@@ -37,68 +37,76 @@ window.addEventListener('keydown', onFirstInteract);
 document.addEventListener('keydown', (event) => {
     if (event.repeat) return;
 
-    if (event.keyCode === 77) {
+    const k = event.key || '';
+    const kc = event.keyCode || 0;
+    const lower = k.toLowerCase();
+
+    if (kc === 13 || lower === 'enter') { handleEnterOnStart(); return; }
+    if (kc === 27 || lower === 'escape') { handleEscCloseOverlays(); return; }
+
+    if (kc === 77 || lower === 'm') {
         keyboard.MUTE = true;
-        toggleMuteGlobal();
+        if (areGameShortcutsEnabled()) toggleMuteGlobal();
         return;
     }
 
-    if (isEditableTarget(event.target)) return;
     if (!areGameShortcutsEnabled()) return;
-    if (event.keyCode === 65) keyboard.LEFT = true;
-    if (event.keyCode === 37) keyboard.LEFT = true;
-    if (event.keyCode === 68) keyboard.RIGHT = true;
-    if (event.keyCode === 39) keyboard.RIGHT = true;
-    if (event.keyCode === 32) keyboard.SPACE = true;
-    if (event.keyCode === 87) keyboard.THROW = true;
-    if (event.keyCode === 82) {
+
+    if (kc === 65 || lower === 'a' || kc === 37 || lower === 'arrowleft') keyboard.LEFT = true;
+    if (kc === 68 || lower === 'd' || kc === 39 || lower === 'arrowright') keyboard.RIGHT = true;
+    if (kc === 32 || lower === ' ') keyboard.SPACE = true;
+
+    if (kc === 83 || lower === 's') {
+        keyboard.THROW = true;
+        if (typeof world !== 'undefined' && world && world.character) world.character.tryThrow();
+    }
+
+    if (kc === 82 || lower === 'r') {
         keyboard.RESTART = true;
-        performRestart();
+        if (typeof performRestart === 'function') performRestart();
     }
-    if (event.keyCode === 66) {
+    if (kc === 66 || lower === 'b') {
         keyboard.LEADERBOARD = true;
-        openLeaderboard();
+        if (typeof openLeaderboard === 'function') openLeaderboard();
     }
-    if (event.keyCode === 73) {
+    if (kc === 73 || lower === 'i') {
         keyboard.INSTRUCTIONS = true;
-        openInstructions();
+        if (typeof openInstructions === 'function') openInstructions();
     }
-    if (event.keyCode === 79) {
+    if (kc === 79 || lower === 'o') {
         keyboard.SETTINGS = true;
-        openSettings();
+        if (typeof openSettings === 'function') openSettings();
     }
-    if (event.keyCode === 72) {
+    if (kc === 72 || lower === 'h') {
         keyboard.HOME = true;
-        goHome();
+        if (typeof goHome === 'function') goHome();
     }
-    if (event.keyCode === 70) {
+    if (kc === 70 || lower === 'f') {
         keyboard.FULLSCREEN = true;
-        toggleFullscreen();
+        if (typeof toggleFullscreen === 'function') toggleFullscreen();
     }
 });
+
 
 
 document.addEventListener('keyup', (event) => {
-    if (isEditableTarget(event.target)) return;
-    if (event.keyCode === 77) { keyboard.MUTE = false; return; }
-    if (!areGameShortcutsEnabled()) return;
-    if (event.keyCode === 65) keyboard.LEFT = false;
-    if (event.keyCode === 37) keyboard.LEFT = false;
-    if (event.keyCode === 68) keyboard.RIGHT = false;
-    if (event.keyCode === 39) keyboard.RIGHT = false;
-    if (event.keyCode === 32) keyboard.SPACE = false;
-    if (event.keyCode === 87) keyboard.THROW = false;
-    if (event.keyCode === 82) keyboard.RESTART = false;
-    if (event.keyCode === 66) keyboard.LEADERBOARD = false;
-    if (event.keyCode === 73) keyboard.INSTRUCTIONS = false;
-    if (event.keyCode === 79) keyboard.SETTINGS = false;
-    if (event.keyCode === 72) keyboard.HOME = false;
-    if (event.keyCode === 70) keyboard.FULLSCREEN = false;
-});
+    const k = event.key || '';
+    const kc = event.keyCode || 0;
+    const lower = k.toLowerCase();
 
-document.addEventListener('keydown', (event) => {
-    if (event.keyCode === 13) handleEnterOnStart();
-    if (event.keyCode === 27) handleEscCloseOverlays();
+    if (kc === 77 || lower === 'm') { keyboard.MUTE = false; return; }
+    if (!areGameShortcutsEnabled()) return;
+
+    if (kc === 65 || lower === 'a' || kc === 37 || lower === 'arrowleft') keyboard.LEFT = false;
+    if (kc === 68 || lower === 'd' || kc === 39 || lower === 'arrowright') keyboard.RIGHT = false;
+    if (kc === 32 || lower === ' ') keyboard.SPACE = false;
+    if (kc === 83 || lower === 's') keyboard.THROW = false;
+    if (kc === 82 || lower === 'r') keyboard.RESTART = false;
+    if (kc === 66 || lower === 'b') keyboard.LEADERBOARD = false;
+    if (kc === 73 || lower === 'i') keyboard.INSTRUCTIONS = false;
+    if (kc === 79 || lower === 'o') keyboard.SETTINGS = false;
+    if (kc === 72 || lower === 'h') keyboard.HOME = false;
+    if (kc === 70 || lower === 'f') keyboard.FULLSCREEN = false;
 });
 
 function clearKeys() {
@@ -122,9 +130,9 @@ function isEditableTarget(t) {
 }
 
 function areGameShortcutsEnabled() {
-    const start = document.getElementById('start-screen');
-    return !!(start && start.classList.contains('hidden'));
+    return !!(typeof app !== 'undefined' && app && app.state === GameState.GAME);
 }
+
 
 function isInGame() {
     return !!(window.app && app.state === GameState.GAME);

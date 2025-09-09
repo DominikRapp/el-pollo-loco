@@ -80,6 +80,8 @@ class App {
     totalCounts = { levelComplete: 0, boss: 0, chicken: 0, chickenSmall: 0, bottle: 0, coin: 0 };
     totalTimeMs = 0;
 
+
+
     show(el) {
         if (el) el.classList.remove('hidden');
     }
@@ -113,8 +115,12 @@ class App {
         const nameInput = document.getElementById('player-name');
         const nameErr = document.getElementById('name-error');
 
+        this.showNameErrors = false;
+        this.userName = '';
+        this.nameValid = false;
+
         const updateEnablement = () => {
-            if (btnStart) btnStart.disabled = !this.nameValid;
+            if (btnStart) btnStart.disabled = !(nameInput && nameInput.value.trim().length > 0);
         };
 
         const isNameTakenLocal = (name) => {
@@ -127,34 +133,43 @@ class App {
             }
         };
 
+        const setError = (msg, visible) => {
+            if (!nameErr) return;
+            nameErr.textContent = msg || ' ';
+            if (visible) {
+                nameErr.classList.remove('soft-hidden');
+            } else {
+                nameErr.classList.add('soft-hidden');
+            }
+        };
+
         const validate = () => {
             const value = (nameInput?.value || '').trim();
             this.userName = value;
             const basicOk = value.length >= 3 && value.length <= 16 && /^[a-z0-9_]+$/i.test(value);
             const taken = value ? isNameTakenLocal(value) : false;
 
-            if (!basicOk) {
-                this.nameValid = false;
-                if (nameErr) {
-                    nameErr.textContent = '3–16 Zeichen, nur Buchstaben/Zahlen/_.';
-                    nameErr.classList.remove('hidden');
-                }
-            } else if (taken && value.toLowerCase() !== (localStorage.getItem('playerName') || '').toLowerCase()) {
-                this.nameValid = false;
-                if (nameErr) {
-                    nameErr.textContent = 'Name ist bereits vergeben.';
-                    nameErr.classList.remove('hidden');
-                }
+            let msg = '';
+            if (!basicOk) msg = '3–16 characters, letters/numbers/_ only.';
+            else if (taken && value.toLowerCase() !== (localStorage.getItem('playerName') || '').toLowerCase()) msg = 'Name ist bereits vergeben.';
+
+            this.nameValid = msg === '';
+            if (this.showNameErrors) {
+                setError(this.nameValid ? ' ' : msg, !this.nameValid);
             } else {
-                this.nameValid = true;
-                if (nameErr) nameErr.classList.add('hidden');
+                setError(' ', false);
             }
             updateEnablement();
+            return this.nameValid;
         };
 
         if (nameInput) {
-            nameInput.addEventListener('input', validate);
-            nameInput.addEventListener('blur', validate);
+            nameInput.addEventListener('input', () => {
+                validate();
+            });
+            nameInput.addEventListener('blur', () => {
+                validate();
+            });
         }
 
         const saved = localStorage.getItem('playerName');
@@ -164,11 +179,19 @@ class App {
             this.nameValid = true;
         }
 
+        if (nameErr) {
+            nameErr.classList.add('soft-hidden');
+            nameErr.classList.remove('hidden');
+            if (!nameErr.textContent) nameErr.textContent = ' ';
+        }
+
         updateEnablement();
+        validate();
 
         if (btnStart) {
             btnStart.addEventListener('click', () => {
-                if (!this.nameValid) return;
+                this.showNameErrors = true;
+                if (!validate()) return;
                 this.persistName(this.userName);
                 this.startLevel(0);
             });
@@ -451,6 +474,48 @@ class App {
         update();
     }
 
+    async renderTotalLine(containerId, totalEntry) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        const top = await LeaderboardAPI.fetchTop10('total');
+        const qualifies = await LeaderboardAPI.qualifiesForTop10('total', totalEntry);
+        const inTop = top.some(e => String(e && e.name || '').toLowerCase() === String(totalEntry.name || '').toLowerCase());
+        const showRec = qualifies || inTop;
+
+        const line = document.createElement('div');
+        line.className = 'lb-line';
+
+        const n = document.createElement('span');
+        n.className = 'lb-name';
+        n.textContent = totalEntry.name;
+
+        const l = document.createElement('span');
+        l.className = 'lb-level';
+        l.textContent = 'TOTAL';
+
+        const p = document.createElement('span');
+        p.className = 'lb-points';
+        p.textContent = totalEntry.points;
+
+        if (showRec) {
+            const r = document.createElement('span');
+            r.className = 'lb-rec';
+            r.textContent = 'REC';
+            p.appendChild(r);
+        }
+
+        const t = document.createElement('span');
+        t.className = 'lb-time';
+        t.textContent = LeaderboardAPI.formatTime(totalEntry.totalTimeMs);
+
+        line.appendChild(n);
+        line.appendChild(l);
+        line.appendChild(p);
+        line.appendChild(t);
+        container.appendChild(line);
+    }
+
 
 
 
@@ -680,6 +745,10 @@ class App {
 
         const goHome = (ev) => {
             if (ev) ev.preventDefault();
+
+            this.resetRunTotals();
+            this.clearRunOverlayResults();
+
             this.resetOverlays();
             this.hideWinLoseOverlays();
             this.showMenu();
@@ -687,11 +756,9 @@ class App {
 
         if (btnHomeGo) btnHomeGo.addEventListener('click', goHome);
         if (menuHome) menuHome.addEventListener('click', goHome);
-
-        if (btnHomeWin) {
-            btnHomeWin.addEventListener('click', goHome);
-        }
+        if (btnHomeWin) btnHomeWin.addEventListener('click', goHome);
     }
+
 
 
     hideWinLoseOverlays() {
@@ -727,18 +794,36 @@ class App {
 
     buildInstructionsPages() {
         return [
-            '<h3>Welcome</h3><p>Move with A/D, jump with Space, throw with S. Collect coins to heal 20 HP. Defeat enemies and the boss to win the level.</p><p>Move with A/D, jump with Space, throw with S. Collect coins to heal 20 HP. Defeat enemies and the boss to win the level.</p><p>Move with A/D, jump with Space, throw with S. Collect coins to heal 20 HP. Defeat enemies and the boss to win the level.</p><p>Move with A/D, jump with Space, throw with S. Collect coins to heal 20 HP. Defeat enemies and the boss to win the level.</p><p>Move with A/D, jump with Space, throw with S. Collect coins to heal 20 HP. Defeat enemies and the boss to win the level.</p><p>Move with A/D, jump with Space, throw with S. Collect coins to heal 20 HP. Defeat enemies and the boss to win the level.</p><p>Move with A/D, jump with Space, throw with S. Collect coins to heal 20 HP. Defeat enemies and the boss to win the level.</p><p>Move with A/D, jump with Space, throw with S. Collect coins to heal 20 HP. Defeat enemies and the boss to win the level.</p><p>Move with A/D, jump with Space, throw with S. Collect coins to heal 20 HP. Defeat enemies and the boss to win the level.</p><p>Move with A/D, jump with Space, throw with S. Collect coins to heal 20 HP. Defeat enemies and the boss to win the level.</p><p>Move with A/D, jump with Space, throw with S. Collect coins to heal 20 HP. Defeat enemies and the boss to win the level.</p><p>Move with A/D, jump with Space, throw with S. Collect coins to heal 20 HP. Defeat enemies and the boss to win the level.</p><p>Move with A/D, jump with Space, throw with S. Collect coins to heal 20 HP. Defeat enemies and the boss to win the level.</p><p>Move with A/D, jump with Space, throw with S. Collect coins to heal 20 HP. Defeat enemies and the boss to win the level.</p><p>Move with A/D, jump with Space, throw with S. Collect coins to heal 20 HP. Defeat enemies and the boss to win the level.</p><p>Move with A/D, jump with Space, throw with S. Collect coins to heal 20 HP. Defeat enemies and the boss to win the level.</p><p>Move with A/D, jump with Space, throw with S. Collect coins to heal 20 HP. Defeat enemies and the boss to win the level.</p><p>Move with A/D, jump with Space, throw with S. Collect coins to heal 20 HP. Defeat enemies and the boss to win the level.</p>',
-            '<h3>Movement</h3><p>Use <b>A</b> to move left and <b>D</b> to move right. Jump with <b>Space</b>.</p>',
-            '<h3>Throwing</h3><p>Press <b>S</b> to throw a bottle. Bottles hurt enemies, especially the boss.</p>',
-            '<h3>Platforms & Barrels</h3><p>Stand on platforms and avoid getting stuck at barrels. Position matters!</p>',
-            '<h3>Enemies</h3><p>Jump on small chickens to defeat them. Beware of contact damage.</p>',
-            '<h3>Boss</h3><p>The boss deals 20 damage on contact. Use bottles and timing.</p>',
-            '<h3>Health & HUD</h3><p>Health does not reset between levels. Coins heal <b>20</b>. Watch the status bar.</p>',
-            '<h3>Bottles & Coins</h3><p>Pick up bottles and coins. Bottle bar and coin bar show your current amount.</p>',
-            '<h3>Timer</h3><p>The timer runs only during gameplay. It stops on Game Over and Victory.</p>',
-            '<h3>Good luck!</h3><p>Have fun and try to clear all levels!</p>'
+            '<h2>How to Play</h2><p>EL POLLO LOCO is a fast-paced 5-level jump-and-run with a speedrun twist. Finish levels as quickly as possible while scoring points to climb into the Top-10 leaderboards. A 3-2-1 countdown starts each run. Enter a player name to enable the Start button—your name appears on the scoreboards.</p>',
+
+            '<h2>Keyboard Controls</h2><ul><li><kbd>A</kbd> / <kbd>&larr;</kbd> — Move left</li><li><kbd>D</kbd> / <kbd>&rarr;</kbd> — Move right</li><li><kbd>Space</kbd> — Jump</li><li><kbd>M</kbd> — Mute / Unmute</li><li><kbd>R</kbd> — Quick Restart (resets to Level 1 and restarts the run)</li><li><kbd>B</kbd> — Open Leaderboard</li><li><kbd>I</kbd> — Open Instructions</li><li><kbd>O</kbd> — Open Audio Settings</li><li><kbd>H</kbd> — Go to Home</li><li><kbd>F</kbd> — Toggle Fullscreen</li></ul>',
+
+            '<h2>Mobile Controls</h2><ul><li>Bottom-left: <strong>Reset</strong>, <strong>Left</strong>, <strong>Right</strong></li><li>Bottom-right: <strong>Jump</strong>, <strong>Throw</strong> (bottle)</li></ul>',
+
+            '<h2>Run & Countdown</h2><ul><li>Starting a level triggers a <strong>3-2-1 → GO</strong> countdown.</li><li><strong>Reset</strong> sends you back to Level 1 and restarts the run.</li><li>Your health carries over between levels, manage healing with coins.</li></ul>',
+
+            '<h2>Goals & Levels</h2><ul><li>There are <strong>5 levels</strong>, difficulty increases each level.</li><li>Clear levels as fast as you can while maximizing points.</li><li>Health does not automatically refill between levels.</li></ul>',
+
+            '<h2>Scoring Overview</h2><ul><li><strong>Boss defeated:</strong> +5 points (1 boss per level)</li><li><strong>Chicken defeated:</strong> +4 points (max 5 per level → 20 pts)</li><li><strong>Chick defeated:</strong> +3 points (max 5 per level → 15 pts)</li><li><strong>Bottle collected:</strong> +2 points (max 5 per level → 10 pts)</li><li><strong>Coin collected:</strong> +1 point (max 5 per level → 5 pts)</li></ul><p><em>Leaderboards:</em> one <strong>Total</strong> board (sum of all levels) and one board per <strong>Level</strong>. Only Top-10 are shown.</p>',
+
+            '<h2>Ranking Rules</h2><ul><li>Higher <strong>points</strong> rank above lower points.</li><li>Ties are broken by <strong>faster time</strong>.</li><li>If still tied, <strong>earlier achievement</strong> (first reached, by <code>createdAt</code>) ranks higher.</li></ul>',
+
+            '<h2>Your Character: Pepe</h2><p><img class="ins-ico" src="img/2_character_pepe/5_dead/D-53.png" alt="Pepe"><img class="ins-ico" src="img/7_statusbars/1_statusbar/2_statusbar_health/green/60.png" alt="Health"></p><ul><li><strong>Health:</strong> 100 HP. Each enemy hit deals 20 damage.</li><li><strong>Invulnerability:</strong> 1 second after taking damage, slight knockback.</li><li><strong>Actions:</strong> run left/right, jump, throw bottles, collect bottles and coins.</li><li><strong>Stomp:</strong> jump on chickens and chicks to defeat them.</li><li><strong>Healing:</strong> each coin restores 20 HP (up to 100).</li><li><strong>Idle:</strong> after 15 seconds without input, Pepe gets sleepy.</li><li><strong>Bottles:</strong> carry up to 5 per level.</li></ul>',
+
+            '<h2>Endboss</h2><p><img class="ins-ico" src="img/4_enemie_boss_chicken/2_alert/G11.png" alt="Boss"><img class="ins-ico" src="img/7_statusbars/2_statusbar_endboss/green/green60.png" alt="Boss HP"></p><ul><li><strong>Boss HP:</strong> 100 HP, bottles deal 20 damage each → needs 5 hits.</li><li><strong>Damage to Pepe:</strong> 20 per hit.</li><li><strong>Behavior:</strong> turns alert when close, boss music starts, chases and melee attacks.</li><li><strong>Scaling:</strong> gets faster each level.</li><li><strong>Points:</strong> defeating the boss gives +5 points.</li><li><strong>Important:</strong> only 5 bottles per level. If you miss one boss hit, you cannot finish that level.</li></ul>',
+
+            '<h2>Chicken</h2><p><img class="ins-ico" src="img/3_enemies_chicken/chicken_normal/1_walk/2_w.png" alt="Chicken"></p><ul><li>Defeat by <strong>stomping</strong> on its head.</li><li><strong>Points:</strong> +4 each (max 5 per level → 20 pts).</li></ul>',
+
+            '<h2>Chick</h2><p><img class="ins-ico" src="img/3_enemies_chicken/chicken_small/1_walk/2_w.png" alt="Chick"></p><ul><li>Defeat by <strong>stomping</strong> on its head.</li><li><strong>Points:</strong> +3 each (max 5 per level → 15 pts).</li></ul>',
+
+            '<h2>Bottle</h2><p><img class="ins-ico" src="img/6_salsa_bottle/bottle_rotation/1_bottle_rotation.png" alt="Bottle"><img class="ins-ico" src="img/7_statusbars/1_statusbar/3_statusbar_bottle/blue/60.png" alt="Bottle bar"></p><ul><li><strong>Spawns:</strong> 5 per level.</li><li><strong>Use:</strong> required to defeat the boss, collect all if you want a chance to win.</li><li><strong>Damage:</strong> 20 per boss hit.</li><li><strong>Points:</strong> +2 per collected bottle (up to 10 per level).</li></ul>',
+
+            '<h2>Coin</h2><p><img class="ins-ico" src="img/8_coin/coin_2.png" alt="Coin"><img class="ins-ico" src="img/7_statusbars/1_statusbar/1_statusbar_coin/blue/60.png" alt="Coin bar"></p><ul><li><strong>Healing:</strong> +20 HP each.</li><li><strong>Spawns:</strong> 5 per level.</li><li><strong>Points:</strong> +1 each (up to 5 per level).</li></ul>',
+
+            '<h2>World Objects</h2><h3>Barrel</h3><p><img class="ins-ico" src="img/10_fix_objects/barrel.png" alt="Barrel"></p><ul><li>Static, indestructible. Use as cover or to reach higher spots.</li></ul><h3>Platforms</h3><p><span class="icon-row"><img class="ins-ico" src="img/10_fix_objects/platform_set/platform1.png" alt="P1"><img class="ins-ico" src="img/10_fix_objects/platform_set/platform2.png" alt="P2"><img class="ins-ico" src="img/10_fix_objects/platform_set/platform3.png" alt="P3"><img class="ins-ico" src="img/10_fix_objects/platform_set/platform4.png" alt="P4"><img class="ins-ico" src="img/10_fix_objects/platform_set/platform5.png" alt="P5"></span></p><ul><li>Static, built from 5 segments.</li><li>You can jump up through a platform from below.</li><li>Typically reached via a <strong>barrel-assisted jump</strong>, not directly from ground height.</li></ul>'
         ];
     }
+
 
     buildLeaderboardPages() {
         const raw = localStorage.getItem('leaderboard_rankings') || '{}';
@@ -756,43 +841,47 @@ class App {
         };
 
         const fmt = (n) => typeof n === 'number' ? String(n) : '–';
+
         const mmss = (ms) => {
             if (typeof ms !== 'number' || ms < 0) return '–';
             const totalSeconds = Math.floor(ms / 1000);
             const minutes = Math.floor(totalSeconds / 60);
             const seconds = totalSeconds % 60;
-            const mm = String(minutes).padStart(2, '0');
-            const ss = String(seconds).padStart(2, '0');
-            return mm + ':' + ss;
+            return String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
         };
 
         const pts = (c) => {
-            const b = c && c.boss ? c.boss : 0;
-            const ch = c && c.chicken ? c.chicken : 0;
-            const cs = c && c.chickenSmall ? c.chickenSmall : 0;
-            const bo = c && c.bottle ? c.bottle : 0;
-            const co = c && c.coin ? c.coin : 0;
-            return b * 10 + ch * 5 + cs * 3 + bo * 2 + co * 1;
+            const lc = Number(c && c.levelComplete || 0);
+            const b = Number(c && c.boss || 0);
+            const ch = Number(c && c.chicken || 0);
+            const cs = Number(c && c.chickenSmall || 0);
+            const bo = Number(c && c.bottle || 0);
+            const co = Number(c && c.coin || 0);
+            return lc * 10 + b * 5 + ch * 4 + cs * 3 + bo * 2 + co * 1;
         };
 
-        const sortByPointsThenTime = (arr) => {
+        const sortByPointsThenTimeThenCreated = (arr, timeKey) => {
             return arr.slice().sort((a, b) => {
-                const pa = pts(a.counts || {});
-                const pb = pts(b.counts || {});
+                const pa = pts(a.counts || {}), pb = pts(b.counts || {});
                 if (pb !== pa) return pb - pa;
-                const ta = typeof a.timeMs === 'number' ? a.timeMs : Number.MAX_SAFE_INTEGER;
-                const tb = typeof b.timeMs === 'number' ? b.timeMs : Number.MAX_SAFE_INTEGER;
-                return ta - tb;
+                const ta = typeof a[timeKey] === 'number' ? a[timeKey] : Number.MAX_SAFE_INTEGER;
+                const tb = typeof b[timeKey] === 'number' ? b[timeKey] : Number.MAX_SAFE_INTEGER;
+                if (ta !== tb) return ta - tb;
+                const ca = typeof a.createdAt === 'number' ? a.createdAt : Number.MAX_SAFE_INTEGER;
+                const cb = typeof b.createdAt === 'number' ? b.createdAt : Number.MAX_SAFE_INTEGER;
+                return ca - cb;
             }).slice(0, 10);
         };
 
+        const isPlaceholder = (e) => Number(e && e.createdAt) === 0;
+
         const rankRowsTotal = (arr) => {
             const rows = [];
-            const sorted = sortByPointsThenTime(arr);
+            const sorted = sortByPointsThenTimeThenCreated(arr, 'totalTimeMs');
             sorted.forEach((e, i) => {
                 const name = e && e.name ? e.name : 'Player';
                 const highest = e && typeof e.highestLevel === 'number' ? e.highestLevel : 0;
-                const time = mmss(e && typeof e.totalTimeMs === 'number' ? e.totalTimeMs : null);
+                const timeStr = isPlaceholder(e) ? '00:00' : mmss(e && typeof e.totalTimeMs === 'number' ? e.totalTimeMs : null);
                 const c = e && e.counts ? e.counts : {};
                 const score = pts(c);
                 const b = c.boss || 0;
@@ -805,7 +894,7 @@ class App {
                     + '<td>' + (i + 1) + '.</td>'
                     + '<td>' + name + '</td>'
                     + '<td>' + fmt(highest) + '</td>'
-                    + '<td>' + time + '</td>'
+                    + '<td>' + timeStr + '</td>'
                     + '<td>' + fmt(score) + '</td>'
                     + '<td>' + fmt(b) + '</td>'
                     + '<td>' + fmt(ch) + '</td>'
@@ -820,10 +909,10 @@ class App {
 
         const rankRowsLevel = (arr) => {
             const rows = [];
-            const sorted = sortByPointsThenTime(arr);
+            const sorted = sortByPointsThenTimeThenCreated(arr, 'timeMs');
             sorted.forEach((e, i) => {
                 const name = e && e.name ? e.name : 'Player';
-                const time = mmss(e && typeof e.timeMs === 'number' ? e.timeMs : null);
+                const timeStr = isPlaceholder(e) ? '00:00' : mmss(e && typeof e.timeMs === 'number' ? e.timeMs : null);
                 const c = e && e.counts ? e.counts : {};
                 const score = pts(c);
                 const b = c.boss || 0;
@@ -835,7 +924,7 @@ class App {
                     '<tr>'
                     + '<td>' + (i + 1) + '.</td>'
                     + '<td>' + name + '</td>'
-                    + '<td>' + time + '</td>'
+                    + '<td>' + timeStr + '</td>'
                     + '<td>' + fmt(score) + '</td>'
                     + '<td>' + fmt(b) + '</td>'
                     + '<td>' + fmt(ch) + '</td>'
@@ -882,6 +971,8 @@ class App {
         pages.push('<h3>Level 5</h3>' + buildLevelTable(5));
         return pages;
     }
+
+
 
     persistName(name) {
         localStorage.setItem('playerName', name);
@@ -1103,6 +1194,9 @@ class App {
 
 
     restartToLevel1() {
+        this.resetRunTotals();
+        this.clearRunOverlayResults();
+
         this.carryOverEnergy = 100;
 
         if (this.world && typeof this.world.dispose === 'function') {
@@ -1110,6 +1204,20 @@ class App {
         }
 
         this.startLevel(0);
+    }
+
+    resetRunTotals() {
+        this.runResults = [];
+        this.totalCounts = { levelComplete: 0, boss: 0, chicken: 0, chickenSmall: 0, bottle: 0, coin: 0 };
+        this.totalTimeMs = 0;
+    }
+
+    clearRunOverlayResults() {
+        const ids = ['go-results', 'victory-results'];
+        for (const id of ids) {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = '';
+        }
     }
 
     showTimer(visible) {
@@ -1179,7 +1287,6 @@ class App {
         const ss = String(seconds).padStart(2, '0');
         return mm + ':' + ss;
     }
-
 
     loopTimer() {
         if (!this.timerRunning) {
@@ -1295,18 +1402,8 @@ class App {
 
                 LeaderboardFlow.showLevelIntermediate({ containerId: 'go-results', name: nameGO, level: levelGO, timeMs: timeGO, counts: countsGO });
 
-                const totalPreviewGO = LeaderboardAPI.makeTotalEntry({ name: nameGO, highestLevel: levelGO, totalTimeMs: this.totalTimeMs, counts: this.totalCounts });
-                const lineGO = document.createElement('div');
-                lineGO.className = 'lb-line';
-                const spanN1 = document.createElement('span'); spanN1.className = 'lb-name'; spanN1.textContent = totalPreviewGO.name;
-                const spanL1 = document.createElement('span'); spanL1.className = 'lb-level'; spanL1.textContent = 'L' + totalPreviewGO.highestLevel;
-                const spanP1 = document.createElement('span'); spanP1.className = 'lb-points'; spanP1.textContent = totalPreviewGO.points;
-                const spanT1 = document.createElement('span'); spanT1.className = 'lb-time'; spanT1.textContent = LeaderboardAPI.formatTime(totalPreviewGO.totalTimeMs);
-                lineGO.appendChild(spanN1); lineGO.appendChild(spanL1); lineGO.appendChild(spanP1); lineGO.appendChild(spanT1);
-                boxGO.appendChild(lineGO);
-
-                LeaderboardFlow.showTotalFinal({ containerId: 'go-results', name: nameGO, highestLevel: levelGO, totalTimeMs: this.totalTimeMs, counts: this.totalCounts });
-
+                const totalEntry = LeaderboardAPI.makeTotalEntry({ name: nameGO, highestLevel: levelGO, totalTimeMs: this.totalTimeMs, counts: this.totalCounts });
+                this.renderTotalLine('go-results', totalEntry);
 
                 if (window.sfx) {
                     window.sfx.musicTo('music.menu.loop', 500);
@@ -1327,6 +1424,8 @@ class App {
         };
         requestAnimationFrame(tick);
     }
+
+
 
 
     showYouWin() {
@@ -1422,23 +1521,9 @@ class App {
 
                     LeaderboardFlow.showLevelIntermediate({ containerId: 'victory-results', name: nameVW, level: levelVW, timeMs: timeVW, counts: countsVW });
 
-                    if (this.currentLevelIndex >= this.levelFactories.length - 1) {
-                        const highestVW = levelVW;
-                        LeaderboardFlow.showTotalFinal({ containerId: 'victory-results', name: nameVW, highestLevel: highestVW, totalTimeMs: this.totalTimeMs, counts: this.totalCounts });
-                    } else {
-                        const totalPreviewVW = LeaderboardAPI.makeTotalEntry({ name: nameVW, highestLevel: levelVW, totalTimeMs: this.totalTimeMs, counts: this.totalCounts });
-                        const lineVW = document.createElement('div');
-                        lineVW.className = 'lb-line';
-                        const spanN2 = document.createElement('span'); spanN2.className = 'lb-name'; spanN2.textContent = totalPreviewVW.name;
-                        const spanL2 = document.createElement('span'); spanL2.className = 'lb-level'; spanL2.textContent = 'L' + totalPreviewVW.highestLevel;
-                        const spanP2 = document.createElement('span'); spanP2.className = 'lb-points'; spanP2.textContent = totalPreviewVW.points;
-                        const spanT2 = document.createElement('span'); spanT2.className = 'lb-time'; spanT2.textContent = LeaderboardAPI.formatTime(totalPreviewVW.totalTimeMs);
-                        lineVW.appendChild(spanN2); lineVW.appendChild(spanL2); lineVW.appendChild(spanP2); lineVW.appendChild(spanT2);
-                        boxVW.appendChild(lineVW);
-                    }
-
-
-
+                    const highest = levelVW;
+                    const totalEntry = LeaderboardAPI.makeTotalEntry({ name: nameVW, highestLevel: highest, totalTimeMs: this.totalTimeMs, counts: this.totalCounts });
+                    this.renderTotalLine('victory-results', totalEntry);
 
                     if (window.sfx) {
                         window.sfx.musicTo('music.menu.loop', 500);
@@ -1464,7 +1549,12 @@ class App {
                         btnHome.onclick = () => {
                             actions.classList.add('hidden');
                             IntervalTracker.clearAll();
+
                             this.carryOverEnergy = 100;
+
+                            this.resetRunTotals();
+                            this.clearRunOverlayResults();
+
                             this.showMenu();
                         };
                     }
@@ -1475,9 +1565,6 @@ class App {
             requestAnimationFrame(tick);
         });
     }
-
-
-
 
 
     runCountdown(seconds, onDone) {

@@ -10,26 +10,29 @@ const LeaderboardAPI = (() => {
     };
 
     const formatTime = (ms) => {
-        const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+        const n = Number(ms);
+        if (!Number.isFinite(n)) return '–';
+        if (n >= 9999999999) return '00:00';
+        const totalSeconds = Math.max(0, Math.floor(n / 1000));
         const minutes = Math.floor(totalSeconds / 60);
         const seconds = totalSeconds % 60;
-        const m = String(minutes).padStart(2, '0');
-        const s = String(seconds).padStart(2, '0');
-        return `${m}:${s}`;
+        return String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
     };
+
 
     const calculatePoints = ({ levelComplete = 0, boss = 0, chicken = 0, chickenSmall = 0, bottle = 0, coin = 0 }) => {
         const p = levelComplete * 10 + boss * 5 + chicken * 4 + chickenSmall * 3 + bottle * 2 + coin * 1;
         return p;
     };
 
-    const buildSortKey = (points, timeMs, name) => {
-        const p = String(points).padStart(6, '0');
-        const maxTime = 9999999999;
-        const ti = Math.max(0, maxTime - Math.min(maxTime, timeMs));
-        const t = String(ti).padStart(10, '0');
-        const n = String(name || '').toLowerCase();
-        return `${p}:${t}:${n}`;
+    const buildSortKey = (points, timeMs, createdAtMs) => {
+        const pad = (n, w) => String(Math.max(0, Math.floor(n || 0))).padStart(w, '0');
+        const p = pad(points, 6);
+        const tMax = 9999999999;
+        const t = pad(tMax - Math.min(tMax, Math.max(0, Math.floor(timeMs || 0))), 10);
+        const cMax = 9999999999999;
+        const c = pad(cMax - Math.min(cMax, Math.max(0, Math.floor(createdAtMs || 0))), 13);
+        return `${p}:${t}:${c}`;
     };
 
     const getRef = (kind, level) => {
@@ -57,13 +60,15 @@ const LeaderboardAPI = (() => {
         });
         rows.sort((a, b) => {
             if (b.points !== a.points) return b.points - a.points;
-            const ta = a[timeField];
-            const tb = b[timeField];
+            const ta = a[timeField], tb = b[timeField];
             if (ta !== tb) return ta - tb;
-            return String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' });
+            const ca = typeof a.createdAt === 'number' ? a.createdAt : Number.MAX_SAFE_INTEGER;
+            const cb = typeof b.createdAt === 'number' ? b.createdAt : Number.MAX_SAFE_INTEGER;
+            return ca - cb;
         });
         return rows.slice(0, 10);
     };
+
 
     const qualifiesForTop10 = async (kind, candidate, level) => {
         const top = await fetchTop10(kind, level);
@@ -82,8 +87,14 @@ const LeaderboardAPI = (() => {
     };
 
     const submitIfTop10 = async (kind, candidate, level) => {
-        const now = firebase.database.ServerValue.TIMESTAMP;
-        const payload = { ...candidate, createdAt: now };
+        const createdAt = Date.now();
+        const timeField = kind === 'total' ? 'totalTimeMs' : 'timeMs';
+        const timeVal = typeof candidate[timeField] === 'number' ? candidate[timeField] :
+            (typeof candidate.timeMs === 'number' ? candidate.timeMs :
+                (typeof candidate.totalTimeMs === 'number' ? candidate.totalTimeMs : 0));
+        const points = typeof candidate.points === 'number' ? candidate.points : calculatePoints(candidate.counts || {});
+        const sortKey = buildSortKey(points, timeVal, createdAt);
+        const payload = { ...candidate, points, [timeField]: timeVal, createdAt, sortKey };
         await getRef(kind, level).push(payload);
         const top = await fetchTop10(kind, level);
         return { saved: true, rec: true, top };
@@ -91,14 +102,16 @@ const LeaderboardAPI = (() => {
 
     const makeLevelEntry = ({ name, level, timeMs, counts }) => {
         const points = calculatePoints(counts);
-        const sortKey = buildSortKey(points, timeMs, name);
-        return { name, level, timeMs, counts, points, sortKey };
+        const createdAt = Date.now();
+        const sortKey = buildSortKey(points, timeMs, createdAt);
+        return { name, level, timeMs, counts, points, sortKey, createdAt };
     };
 
     const makeTotalEntry = ({ name, highestLevel, totalTimeMs, counts }) => {
         const points = calculatePoints(counts);
-        const sortKey = buildSortKey(points, totalTimeMs, name);
-        return { name, highestLevel, totalTimeMs, counts, points, sortKey };
+        const createdAt = Date.now();
+        const sortKey = buildSortKey(points, totalTimeMs, createdAt);
+        return { name, highestLevel, totalTimeMs, counts, points, sortKey, createdAt };
     };
 
     return {

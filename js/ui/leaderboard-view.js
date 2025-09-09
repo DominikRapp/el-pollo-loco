@@ -7,6 +7,17 @@ const LeaderboardView = (() => {
         return String(m).padStart(2, '0') + ':' + String(r).padStart(2, '0');
     };
 
+    const isPlaceholder = (e, key) => {
+        const t = Number(e && e[key]);
+        const c = Number(e && e.createdAt);
+        return c === 0 || t >= 9999999999;
+    };
+
+    const timeStr = (e, key) => {
+        if (!e) return '–';
+        return isPlaceholder(e, key) ? '00:00' : mmss(e[key]);
+    };
+
     const buildTotalTable = (rows) => {
         const head = '<table class="leaderboard-table"><thead><tr><th>#</th><th>Name</th><th>Highest Level</th><th>Points</th><th>Time</th></tr></thead><tbody>';
         let body = '';
@@ -15,7 +26,7 @@ const LeaderboardView = (() => {
             const name = e.name || 'Player';
             const lvl = typeof e.highestLevel === 'number' ? e.highestLevel : 0;
             const pts = typeof e.points === 'number' ? e.points : 0;
-            const time = mmss(typeof e.totalTimeMs === 'number' ? e.totalTimeMs : null);
+            const time = timeStr(e, 'totalTimeMs');
             body += '<tr><td>' + (i + 1) + '.</td><td>' + name + '</td><td>' + lvl + '</td><td>' + pts + '</td><td>' + time + '</td></tr>';
         }
         return head + body + '</tbody></table>';
@@ -29,7 +40,7 @@ const LeaderboardView = (() => {
             const name = e.name || 'Player';
             const lvl = 'L' + String(level);
             const pts = typeof e.points === 'number' ? e.points : 0;
-            const time = mmss(typeof e.timeMs === 'number' ? e.timeMs : null);
+            const time = timeStr(e, 'timeMs');
             body += '<tr><td>' + (i + 1) + '.</td><td>' + name + '</td><td>' + lvl + '</td><td>' + pts + '</td><td>' + time + '</td></tr>';
         }
         return head + body + '</tbody></table>';
