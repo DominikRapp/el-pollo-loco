@@ -56,7 +56,7 @@ document.addEventListener('keydown', (event) => {
     if (kc === 68 || lower === 'd' || kc === 39 || lower === 'arrowright') keyboard.RIGHT = true;
     if (kc === 32 || lower === ' ') keyboard.SPACE = true;
 
-    if (kc === 83 || lower === 's') {
+    if (kc === 87 || lower === 'w') {
         keyboard.THROW = true;
         if (typeof world !== 'undefined' && world && world.character) world.character.tryThrow();
     }
@@ -100,7 +100,7 @@ document.addEventListener('keyup', (event) => {
     if (kc === 65 || lower === 'a' || kc === 37 || lower === 'arrowleft') keyboard.LEFT = false;
     if (kc === 68 || lower === 'd' || kc === 39 || lower === 'arrowright') keyboard.RIGHT = false;
     if (kc === 32 || lower === ' ') keyboard.SPACE = false;
-    if (kc === 83 || lower === 's') keyboard.THROW = false;
+    if (kc === 87 || lower === 'w') keyboard.THROW = false;
     if (kc === 82 || lower === 'r') keyboard.RESTART = false;
     if (kc === 66 || lower === 'b') keyboard.LEADERBOARD = false;
     if (kc === 73 || lower === 'i') keyboard.INSTRUCTIONS = false;

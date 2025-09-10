@@ -131,8 +131,8 @@ button:disabled {
     transition: transform 600ms ease, opacity 600ms ease;
     z-index: 1200;
     pointer-events: none;
-    max-width: 80vw;
-    max-height: 80vh;
+    max-width: 75vw;
+    max-height: 75vh;
 }
 
 #countdown {
@@ -645,6 +645,17 @@ button:disabled {
     min-width: 72px;
 }
 
+.lb-line .lb-time {
+    margin-left: auto;
+}
+
+.lb-line .lb-time {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
 #leaderboard-content {
     max-height: min(65vh, 640px);
     overflow: auto;
@@ -737,25 +748,6 @@ button:disabled {
     text-align: center;
 }
 
-.lb-rec {
-    display: inline-flex;
-    align-items: center;
-    margin-left: 8px;
-    padding: 4px 10px;
-    background: linear-gradient(180deg, #ff8a1a 0%, #ff7a00 100%);
-    color: #fff;
-    border: 1px solid rgba(0, 0, 0, .18);
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 900;
-    letter-spacing: .04em;
-    line-height: 1;
-    text-transform: uppercase;
-    vertical-align: middle;
-    box-shadow: 0 2px 8px rgba(255, 122, 0, .35), inset 0 -1px 0 rgba(0, 0, 0, .12);
-    transform: translateZ(0);
-}
-
 #settings-content h3 {
     margin: 0 0 10px;
     font-size: 24px;
@@ -837,15 +829,15 @@ button:disabled {
 #victory-actions .lb-line {
     display: grid;
     grid-template-columns: 1fr auto auto auto;
-    gap: 12px 16px;
     align-items: center;
-    padding: 14px 16px;
-    margin: 10px 0;
-    background: rgba(255, 122, 0, .08);
-    border: 1px solid rgba(0, 0, 0, .08);
+    gap: 12px 16px;
+    padding: 16px 18px;
+    margin: 12px 0;
+    background: #fff9ea;
+    border: 1px solid #e8b86a;
     border-radius: 14px;
     position: relative;
-    box-shadow: 0 8px 22px rgba(0, 0, 0, .08);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .18);
 }
 
 #gameover-actions .lb-line::before,
@@ -858,15 +850,14 @@ button:disabled {
     width: 6px;
     border-radius: 14px 0 0 14px;
     background: #ff7a00;
-    opacity: .9;
+    opacity: 1;
 }
 
 #gameover-actions .lb-name,
 #victory-actions .lb-name {
     font-weight: 800;
-    font-size: 16.8px;
+    font-size: 17px;
     color: #1e1e1e;
-    letter-spacing: .01em;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -877,11 +868,11 @@ button:disabled {
 #victory-actions .lb-level {
     justify-self: center;
     font-weight: 800;
-    font-size: 14.72px;
+    font-size: 14px;
     color: #1f1f1f;
-    background: #ffd2ad;
+    background: #ffdcb3;
     border: 1px solid rgba(0, 0, 0, .08);
-    padding: 4px 9.6px;
+    padding: 4px 10px;
     border-radius: 999px;
     line-height: 1;
 }
@@ -890,7 +881,7 @@ button:disabled {
 #victory-actions .lb-points {
     justify-self: center;
     font-weight: 900;
-    font-size: 17.6px;
+    font-size: 18px;
     color: #ff7a00;
     letter-spacing: .02em;
 }
@@ -902,30 +893,9 @@ button:disabled {
     font-size: 16px;
     color: #2a2a2a;
     font-variant-numeric: tabular-nums;
-}
-
-#gameover-actions .lb-rec,
-#victory-actions .lb-rec {
-    margin-left: 8px;
-    padding: 4px 12px;
-    background: linear-gradient(180deg, #ff8a1a 0%, #ff7a00 100%);
-    color: #fff;
-    border: 1px solid rgba(0, 0, 0, .2);
-    border-radius: 999px;
-    font-size: 12.8px;
-    font-weight: 900;
-    letter-spacing: .04em;
-    line-height: 1;
-    vertical-align: middle;
-    box-shadow: 0 3px 10px rgba(255, 122, 0, .4), inset 0 -1px 0 rgba(0, 0, 0, .15);
-}
-
-#gameover-actions .lb-line:hover,
-#victory-actions .lb-line:hover {
-    background: rgba(255, 122, 0, .12);
-    border-color: rgba(0, 0, 0, .12);
-    transform: translateY(-1px);
-    transition: all .15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 }
 
 #instructions-content {

@@ -474,51 +474,6 @@ class App {
         update();
     }
 
-    async renderTotalLine(containerId, totalEntry) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-
-        const top = await LeaderboardAPI.fetchTop10('total');
-        const qualifies = await LeaderboardAPI.qualifiesForTop10('total', totalEntry);
-        const inTop = top.some(e => String(e && e.name || '').toLowerCase() === String(totalEntry.name || '').toLowerCase());
-        const showRec = qualifies || inTop;
-
-        const line = document.createElement('div');
-        line.className = 'lb-line';
-
-        const n = document.createElement('span');
-        n.className = 'lb-name';
-        n.textContent = totalEntry.name;
-
-        const l = document.createElement('span');
-        l.className = 'lb-level';
-        l.textContent = 'TOTAL';
-
-        const p = document.createElement('span');
-        p.className = 'lb-points';
-        p.textContent = totalEntry.points;
-
-        if (showRec) {
-            const r = document.createElement('span');
-            r.className = 'lb-rec';
-            r.textContent = 'REC';
-            p.appendChild(r);
-        }
-
-        const t = document.createElement('span');
-        t.className = 'lb-time';
-        t.textContent = LeaderboardAPI.formatTime(totalEntry.totalTimeMs);
-
-        line.appendChild(n);
-        line.appendChild(l);
-        line.appendChild(p);
-        line.appendChild(t);
-        container.appendChild(line);
-    }
-
-
-
-
     getHamburgerElements() {
         const root = document.getElementById('hamburger-root');
         const button = document.getElementById('hamburger-button');
@@ -796,7 +751,7 @@ class App {
         return [
             '<h2>How to Play</h2><p>EL POLLO LOCO is a fast-paced 5-level jump-and-run with a speedrun twist. Finish levels as quickly as possible while scoring points to climb into the Top-10 leaderboards. A 3-2-1 countdown starts each run. Enter a player name to enable the Start button—your name appears on the scoreboards.</p>',
 
-            '<h2>Keyboard Controls</h2><ul><li><kbd>A</kbd> / <kbd>&larr;</kbd> — Move left</li><li><kbd>D</kbd> / <kbd>&rarr;</kbd> — Move right</li><li><kbd>Space</kbd> — Jump</li><li><kbd>M</kbd> — Mute / Unmute</li><li><kbd>R</kbd> — Quick Restart (resets to Level 1 and restarts the run)</li><li><kbd>B</kbd> — Open Leaderboard</li><li><kbd>I</kbd> — Open Instructions</li><li><kbd>O</kbd> — Open Audio Settings</li><li><kbd>H</kbd> — Go to Home</li><li><kbd>F</kbd> — Toggle Fullscreen</li></ul>',
+            '<h2>Keyboard Controls</h2><ul><li><kbd>A</kbd> / <kbd>&larr;</kbd> — Move left</li><li><kbd>D</kbd> / <kbd>&rarr;</kbd> — Move right</li><li><kbd>Space</kbd> — Jump</li><li><kbd>W</kbd> — Throw (bottle)</li><li><kbd>M</kbd> — Mute / Unmute</li><li><kbd>R</kbd> — Quick Restart (resets to Level 1 and restarts the run)</li><li><kbd>B</kbd> — Open Leaderboard</li><li><kbd>I</kbd> — Open Instructions</li><li><kbd>O</kbd> — Open Audio Settings</li><li><kbd>H</kbd> — Go to Home</li><li><kbd>F</kbd> — Toggle Fullscreen</li></ul>',
 
             '<h2>Mobile Controls</h2><ul><li>Bottom-left: <strong>Reset</strong>, <strong>Left</strong>, <strong>Right</strong></li><li>Bottom-right: <strong>Jump</strong>, <strong>Throw</strong> (bottle)</li></ul>',
 
@@ -823,6 +778,7 @@ class App {
             '<h2>World Objects</h2><h3>Barrel</h3><p><img class="ins-ico" src="img/10_fix_objects/barrel.png" alt="Barrel"></p><ul><li>Static, indestructible. Use as cover or to reach higher spots.</li></ul><h3>Platforms</h3><p><span class="icon-row"><img class="ins-ico" src="img/10_fix_objects/platform_set/platform1.png" alt="P1"><img class="ins-ico" src="img/10_fix_objects/platform_set/platform2.png" alt="P2"><img class="ins-ico" src="img/10_fix_objects/platform_set/platform3.png" alt="P3"><img class="ins-ico" src="img/10_fix_objects/platform_set/platform4.png" alt="P4"><img class="ins-ico" src="img/10_fix_objects/platform_set/platform5.png" alt="P5"></span></p><ul><li>Static, built from 5 segments.</li><li>You can jump up through a platform from below.</li><li>Typically reached via a <strong>barrel-assisted jump</strong>, not directly from ground height.</li></ul>'
         ];
     }
+
 
 
     buildLeaderboardPages() {
@@ -1402,8 +1358,6 @@ class App {
 
                 LeaderboardFlow.showLevelIntermediate({ containerId: 'go-results', name: nameGO, level: levelGO, timeMs: timeGO, counts: countsGO });
 
-                const totalEntry = LeaderboardAPI.makeTotalEntry({ name: nameGO, highestLevel: levelGO, totalTimeMs: this.totalTimeMs, counts: this.totalCounts });
-                this.renderTotalLine('go-results', totalEntry);
 
                 if (window.sfx) {
                     window.sfx.musicTo('music.menu.loop', 500);
@@ -1521,9 +1475,6 @@ class App {
 
                     LeaderboardFlow.showLevelIntermediate({ containerId: 'victory-results', name: nameVW, level: levelVW, timeMs: timeVW, counts: countsVW });
 
-                    const highest = levelVW;
-                    const totalEntry = LeaderboardAPI.makeTotalEntry({ name: nameVW, highestLevel: highest, totalTimeMs: this.totalTimeMs, counts: this.totalCounts });
-                    this.renderTotalLine('victory-results', totalEntry);
 
                     if (window.sfx) {
                         window.sfx.musicTo('music.menu.loop', 500);

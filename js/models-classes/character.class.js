@@ -82,6 +82,11 @@ class Character extends MovableObject {
     stepIntervalMs = 260;
     snoreInterval = null;
     snorePeriodMs = 1800;
+    jumpFrameDelayMs = 40;
+    lastJumpFrameAt = 0;
+    idleStartDelaySec = 15;
+    idleFrameDelayMs = 250;
+    lastIdleFrameAt = 0;
 
     constructor() {
         super().loadImage('img/2_character_pepe/2_walk/W-21.png');
@@ -146,6 +151,7 @@ class Character extends MovableObject {
                 this.idleIntroPlayed = false;
                 this.currentIdleFrame = 0;
                 this.idlePhase = 'intro';
+                this.lastIdleFrameAt = 0;
                 if (this.snorePlaying) {
                     this.snorePlaying = false;
                     if (this.snoreInterval) { clearInterval(this.snoreInterval); this.snoreInterval = null; }
@@ -160,6 +166,7 @@ class Character extends MovableObject {
                 this.currentIdleFrame = 0;
                 this.idlePhase = 'intro';
                 this.lastInputTime = Date.now();
+                this.lastIdleFrameAt = 0;
                 if (this.snorePlaying) {
                     this.snorePlaying = false;
                     if (this.snoreInterval) { clearInterval(this.snoreInterval); this.snoreInterval = null; }
@@ -185,25 +192,29 @@ class Character extends MovableObject {
                 return;
             }
             if (this.isAboveGround()) {
-                this.playAnimation(this.IMAGES_JUMPING);
+                const now = Date.now();
+                if (now - this.lastJumpFrameAt >= this.jumpFrameDelayMs) {
+                    this.playAnimation(this.IMAGES_JUMPING);
+                    this.lastJumpFrameAt = now;
+                }
                 return;
+            } else {
+                this.lastJumpFrameAt = 0;
             }
             const moving = this.world.keyboard.RIGHT || this.world.keyboard.LEFT;
             if (moving) {
                 this.playAnimation(this.IMAGES_WALKING);
             } else {
                 const idleTime = (Date.now() - this.lastInputTime) / 1000;
-                if (idleTime > 3) {
+                if (idleTime > this.idleStartDelaySec) {
                     this.playIdleAnimation();
                 } else {
                     this.setStandingFrame();
+                    this.lastIdleFrameAt = 0;
                 }
             }
         }, 50);
     }
-
-
-
 
     hit() {
         const wasDead = this.isDead();
@@ -274,12 +285,13 @@ class Character extends MovableObject {
         if (!this.idleActive) {
             this.idleActive = true;
             this.currentIdleFrame = 0;
-            if (this.idleIntroPlayed) {
-                this.idlePhase = 'loop';
-            } else {
-                this.idlePhase = 'intro';
-            }
+            this.idlePhase = this.idleIntroPlayed ? 'loop' : 'intro';
+            this.lastIdleFrameAt = 0;
         }
+        const now = Date.now();
+        if (now - this.lastIdleFrameAt < this.idleFrameDelayMs) return;
+        this.lastIdleFrameAt = now;
+
         let activeIdleFrames;
         if (this.idlePhase === 'intro') {
             activeIdleFrames = this.IDLE_FULL;
@@ -295,9 +307,11 @@ class Character extends MovableObject {
                 }, this.snorePeriodMs);
             }
         }
+
         let path = activeIdleFrames[this.currentIdleFrame];
         this.img = this.imageCache[path];
         this.currentIdleFrame++;
+
         if (this.idlePhase === 'intro' && this.currentIdleFrame >= this.IDLE_FULL.length) {
             this.idleIntroPlayed = true;
             this.idlePhase = 'loop';
@@ -306,9 +320,6 @@ class Character extends MovableObject {
             this.currentIdleFrame = 0;
         }
     }
-
-
-
 
     setStandingFrame() {
         let path = this.IMAGES_IDLE[0];

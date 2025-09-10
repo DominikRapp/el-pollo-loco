@@ -1,6 +1,13 @@
 function createLevel4() {
     const CHUNK_WIDTH = 1080;
 
+    const ENEMY_SPEEDS = {
+        chickenWalk: 1.75,
+        chickenSmallWalk: 2,
+        bossWalk: 2.25,
+        bossAttack: 4.5
+    };
+
     const backgroundObjects = [
         new BackgroundObject('img/5_background/layers/air.png', -CHUNK_WIDTH),
         new BackgroundObject('img/5_background/layers/3_third_layer/2.png', -CHUNK_WIDTH),
@@ -40,7 +47,12 @@ function createLevel4() {
         new BackgroundObject('img/5_background/layers/air.png', CHUNK_WIDTH * 6),
         new BackgroundObject('img/5_background/layers/3_third_layer/1.png', CHUNK_WIDTH * 6),
         new BackgroundObject('img/5_background/layers/2_second_layer/1.png', CHUNK_WIDTH * 6),
-        new BackgroundObject('img/5_background/layers/1_first_layer/1.png', CHUNK_WIDTH * 6)
+        new BackgroundObject('img/5_background/layers/1_first_layer/1.png', CHUNK_WIDTH * 6),
+
+        new BackgroundObject('img/5_background/layers/air.png', CHUNK_WIDTH * 7),
+        new BackgroundObject('img/5_background/layers/3_third_layer/1.png', CHUNK_WIDTH * 7),
+        new BackgroundObject('img/5_background/layers/2_second_layer/1.png', CHUNK_WIDTH * 7),
+        new BackgroundObject('img/5_background/layers/1_first_layer/1.png', CHUNK_WIDTH * 7)
     ];
 
     let lastChunkX = 0;
@@ -53,9 +65,9 @@ function createLevel4() {
 
     const boss = new Endboss();
     boss.x = computedLevelEndX - 450;
-    boss.walkSpeed = 0.5;
+    boss.walkSpeed = ENEMY_SPEEDS.bossWalk;
     boss.alertSpeed = 1.1;
-    boss.attackSpeed = 1.8;
+    boss.attackSpeed = ENEMY_SPEEDS.bossAttack;
     boss.alertDistance = 580;
     boss.attackDistance = 280;
 
@@ -78,6 +90,16 @@ function createLevel4() {
         ...enemiesChickenSmallCfg.map(e => new ChickenSmall(e.x, { patrol: e.patrol, y: e.y })),
         boss
     ];
+
+    const setWalk = (o, v) => {
+        if (typeof o.walkSpeed === 'number') o.walkSpeed = v;
+        if (typeof o.speed === 'number') o.speed = v;
+        if (typeof o.speedX === 'number') o.speedX = v;
+    };
+    for (const e of enemies) {
+        if (e instanceof Chicken) setWalk(e, ENEMY_SPEEDS.chickenWalk);
+        else if (e instanceof ChickenSmall) setWalk(e, ENEMY_SPEEDS.chickenSmallWalk);
+    }
 
     const platformsCfg = [
         { x: 2200, y: 350, segmentWidth: 180, height: 80 },

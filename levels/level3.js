@@ -1,6 +1,13 @@
 function createLevel3() {
     const CHUNK_WIDTH = 1080;
 
+    const ENEMY_SPEEDS = {
+        chickenWalk: 1.5,
+        chickenSmallWalk: 1.75,
+        bossWalk: 2,
+        bossAttack: 4
+    };
+
     const backgroundObjects = [
         new BackgroundObject('img/5_background/layers/air.png', -CHUNK_WIDTH),
         new BackgroundObject('img/5_background/layers/3_third_layer/2.png', -CHUNK_WIDTH),
@@ -53,9 +60,9 @@ function createLevel3() {
 
     const boss = new Endboss();
     boss.x = computedLevelEndX - 450;
-    boss.walkSpeed = 0.45;
+    boss.walkSpeed = ENEMY_SPEEDS.bossWalk;
     boss.alertSpeed = 1.0;
-    boss.attackSpeed = 1.7;
+    boss.attackSpeed = ENEMY_SPEEDS.bossAttack;
     boss.alertDistance = 560;
     boss.attackDistance = 270;
 
@@ -78,6 +85,16 @@ function createLevel3() {
         ...enemiesChickenSmallCfg.map(e => new ChickenSmall(e.x, { patrol: e.patrol, y: e.y })),
         boss
     ];
+
+    const setWalk = (o, v) => {
+        if (typeof o.walkSpeed === 'number') o.walkSpeed = v;
+        if (typeof o.speed === 'number') o.speed = v;
+        if (typeof o.speedX === 'number') o.speedX = v;
+    };
+    for (const e of enemies) {
+        if (e instanceof Chicken) setWalk(e, ENEMY_SPEEDS.chickenWalk);
+        else if (e instanceof ChickenSmall) setWalk(e, ENEMY_SPEEDS.chickenSmallWalk);
+    }
 
     const platformsCfg = [
         { x: 2100, y: 350, segmentWidth: 180, height: 80 },
