@@ -763,7 +763,7 @@ class App {
 
             '<h2>Ranking Rules</h2><ul><li>Higher <strong>points</strong> rank above lower points.</li><li>Ties are broken by <strong>faster time</strong>.</li><li>If still tied, <strong>earlier achievement</strong> (first reached, by <code>createdAt</code>) ranks higher.</li></ul>',
 
-            '<h2>Your Character: Pepe</h2><p><img class="ins-ico" src="img/2_character_pepe/5_dead/D-53.png" alt="Pepe"><img class="ins-ico" src="img/7_statusbars/1_statusbar/2_statusbar_health/green/60.png" alt="Health"></p><ul><li><strong>Health:</strong> 100 HP. Each enemy hit deals 20 damage.</li><li><strong>Invulnerability:</strong> 1 second after taking damage, slight knockback.</li><li><strong>Actions:</strong> run left/right, jump, throw bottles, collect bottles and coins.</li><li><strong>Stomp:</strong> jump on chickens and chicks to defeat them.</li><li><strong>Healing:</strong> each coin restores 20 HP (up to 100).</li><li><strong>Idle:</strong> after 15 seconds without input, Pepe gets sleepy.</li><li><strong>Bottles:</strong> carry up to 5 per level.</li></ul>',
+            '<h2>Your Character: Pepe</h2><p><img class="ins-ico" src="img/2_character_pepe/5_dead/D-53.png" alt="Pepe"><img class="ins-ico" src="img/7_statusbars/1_statusbar/2_statusbar_health/green/60.png" alt="Health"></p><ul><li><strong>Health:</strong> 100 HP. Each enemy hit deals 20 damage.</li><li><strong>Invulnerability:</strong> 1 second after taking damage, slight knockback.</li><li><strong>Actions:</strong> run left/right, jump, throw bottles, collect bottles and coins.</li><li><strong>Stomp:</strong> jump on chickens and chicks to defeat them.</li><li><strong>Healing:</strong> each coin restores 20 HP (up to 100).</li><li><strong>Idle:</strong> after 15 seconds without input, Pepe gets sleepy.</li><li><strong>Bottles:</strong> carry up to 5 per level. Throwing bottles has a 2-second cooldown.</li></ul>',
 
             '<h2>Endboss</h2><p><img class="ins-ico" src="img/4_enemie_boss_chicken/2_alert/G11.png" alt="Boss"><img class="ins-ico" src="img/7_statusbars/2_statusbar_endboss/green/green60.png" alt="Boss HP"></p><ul><li><strong>Boss HP:</strong> 100 HP, bottles deal 20 damage each → needs 5 hits.</li><li><strong>Damage to Pepe:</strong> 20 per hit.</li><li><strong>Behavior:</strong> turns alert when close, boss music starts, chases and melee attacks.</li><li><strong>Scaling:</strong> gets faster each level.</li><li><strong>Points:</strong> defeating the boss gives +5 points.</li><li><strong>Important:</strong> only 5 bottles per level. If you miss one boss hit, you cannot finish that level.</li></ul>',
 
@@ -1322,7 +1322,7 @@ class App {
 
         const start = performance.now();
         const waitMs = 2000;
-        const tick = (now) => {
+        const tick = async (now) => {
             if (now - start >= waitMs) {
                 image.classList.add('hidden');
                 image.style.display = 'none';
@@ -1357,7 +1357,7 @@ class App {
                 }
 
                 LeaderboardFlow.showLevelIntermediate({ containerId: 'go-results', name: nameGO, level: levelGO, timeMs: timeGO, counts: countsGO });
-
+                await LeaderboardFlow.showTotalFinal({ name: nameGO, highestLevel: levelGO, totalTimeMs: this.totalTimeMs, counts: this.totalCounts });
 
                 if (window.sfx) {
                     window.sfx.musicTo('music.menu.loop', 500);
@@ -1378,6 +1378,7 @@ class App {
         };
         requestAnimationFrame(tick);
     }
+
 
 
 
@@ -1444,7 +1445,7 @@ class App {
 
             const start = performance.now();
             const waitMs = 2000;
-            const tick = (now) => {
+            const tick = async (now) => {
                 if (now - start >= waitMs) {
                     image.classList.add('hidden');
                     image.style.display = 'none';
@@ -1474,7 +1475,7 @@ class App {
                     }
 
                     LeaderboardFlow.showLevelIntermediate({ containerId: 'victory-results', name: nameVW, level: levelVW, timeMs: timeVW, counts: countsVW });
-
+                    await LeaderboardFlow.showTotalFinal({ name: nameVW, highestLevel: levelVW, totalTimeMs: this.totalTimeMs, counts: this.totalCounts });
 
                     if (window.sfx) {
                         window.sfx.musicTo('music.menu.loop', 500);
@@ -1515,6 +1516,7 @@ class App {
             };
             requestAnimationFrame(tick);
         });
+
     }
 
 

@@ -17,7 +17,7 @@ class World {
     bossBar = null;
     throwableObjects = [];
     lastThrowTime = 0;
-    throwCooldown = 1000;
+    throwCooldown = 2000;
     bottleCount = 0;
     bottleMax = 5;
     groundBottles = [];

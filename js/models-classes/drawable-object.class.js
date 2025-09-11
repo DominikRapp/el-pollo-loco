@@ -9,6 +9,7 @@ class DrawableObject {
     width = 100;
     offset = { top: 0, left: 0, right: 0, bottom: 0 };
     visible = true;
+    showFrames = true;
 
     loadImage(path) {
         this.img = new Image();
@@ -21,6 +22,7 @@ class DrawableObject {
     }
 
     drawFrame(ctx) {
+        if (!this.showFrames) return;
         if (this instanceof Character || this instanceof Chicken || this instanceof ChickenSmall || this instanceof Endboss || this instanceof ThrowableObject || this instanceof BottlePickup || this instanceof CoinPickup || this instanceof Platform || this instanceof Barrel) {
             ctx.beginPath();
             ctx.lineWidth = '2';
