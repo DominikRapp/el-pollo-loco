@@ -38,9 +38,7 @@ const LeaderboardFlow = (() => {
 
     const showTotalFinal = async ({ name, highestLevel, totalTimeMs, counts }) => {
         const entry = LeaderboardAPI.makeTotalEntry({ name, highestLevel, totalTimeMs, counts });
-        console.log('LB total submit →', entry);
         const res = await LeaderboardAPI.submitIfTop10('total', entry);
-        console.log('LB total saved →', res && res.saved);
         return { saved: res.saved, entry };
     };
 
@@ -49,7 +47,6 @@ const LeaderboardFlow = (() => {
         const container = document.getElementById(containerId);
         if (!container) return;
         const entry = LeaderboardAPI.makeTotalEntry({ name, highestLevel, totalTimeMs, counts });
-        console.log('LB total preview →', entry);
         clearEl(container);
         container.appendChild(rowLine({ name: entry.name, level: `L${highestLevel}`, points: entry.points, time: LeaderboardAPI.formatTime(entry.totalTimeMs) }));
         return entry;

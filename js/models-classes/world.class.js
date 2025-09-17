@@ -458,6 +458,7 @@ class World {
         if (this.disposed) {
             return;
         }
+        this.camera_x = -this.character.x + 250;
         this.ctx.clearRect(0, 0, canvas.width, canvas.height);
         this.ctx.save();
         this.ctx.translate(this.camera_x, 0);
