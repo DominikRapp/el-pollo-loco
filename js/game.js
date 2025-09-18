@@ -5,18 +5,15 @@ let sfx = null;
 
 function init() {
     canvas = document.getElementById('canvas');
-
     sfx = new SoundManager();
     sfx.init();
     window.sfx = sfx;
-
     if (typeof setMuted === 'function') {
         setMuted(isMuted());
     } else {
         const muted = localStorage.getItem('muted') === '1';
         sfx.setMuted(muted);
     }
-
     app = new App();
     app.init(canvas, keyboard);
 }
@@ -36,31 +33,24 @@ window.addEventListener('keydown', onFirstInteract);
 
 document.addEventListener('keydown', (event) => {
     if (event.repeat) return;
-
     const k = event.key || '';
     const kc = event.keyCode || 0;
     const lower = k.toLowerCase();
-
     if (kc === 13 || lower === 'enter') { handleEnterOnStart(); return; }
     if (kc === 27 || lower === 'escape') { handleEscCloseOverlays(); return; }
-
     if (kc === 77 || lower === 'm') {
         keyboard.MUTE = true;
         if (areGameShortcutsEnabled()) toggleMuteGlobal();
         return;
     }
-
     if (!areGameShortcutsEnabled()) return;
-
     if (kc === 65 || lower === 'a' || kc === 37 || lower === 'arrowleft') keyboard.LEFT = true;
     if (kc === 68 || lower === 'd' || kc === 39 || lower === 'arrowright') keyboard.RIGHT = true;
     if (kc === 32 || lower === ' ') keyboard.SPACE = true;
-
     if (kc === 87 || lower === 'w') {
         keyboard.THROW = true;
         if (typeof world !== 'undefined' && world && world.character) world.character.tryThrow();
     }
-
     if (kc === 82 || lower === 'r') {
         keyboard.RESTART = true;
         if (typeof performRestart === 'function') performRestart();
@@ -93,10 +83,8 @@ document.addEventListener('keyup', (event) => {
     const k = event.key || '';
     const kc = event.keyCode || 0;
     const lower = k.toLowerCase();
-
     if (kc === 77 || lower === 'm') { keyboard.MUTE = false; return; }
     if (!areGameShortcutsEnabled()) return;
-
     if (kc === 65 || lower === 'a' || kc === 37 || lower === 'arrowleft') keyboard.LEFT = false;
     if (kc === 68 || lower === 'd' || kc === 39 || lower === 'arrowright') keyboard.RIGHT = false;
     if (kc === 32 || lower === ' ') keyboard.SPACE = false;
@@ -195,7 +183,6 @@ function toggleFullscreen() {
         document.fullscreenElement === root ||
         document.webkitFullscreenElement === root ||
         document.msFullscreenElement === root;
-
     if (isFs) {
         if (document.exitFullscreen) document.exitFullscreen();
         else if (document.webkitExitFullscreen) document.webkitExitFullscreen();

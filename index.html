@@ -7,13 +7,10 @@
     <title>El pollo loco</title>
     <link rel="icon" type="image/png" sizes="48x48" href="img/4_enemie_boss_chicken/3_attack/G18.png">
     <link rel="stylesheet" href="style.css">
-
 </head>
 
 <body onload="init()">
-
     <div class="background"></div>
-
     <div id="game-root">
         <div id="rotate-overlay" aria-hidden="true" role="dialog">
             <div class="rotate-bg" aria-hidden="true"></div>
@@ -28,19 +25,14 @@
                     <path d="M18 10 L20.001 12.001 L22 10" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round" opacity="0.85" />
                 </svg>
-
-
                 <h2>Rotate your device</h2>
                 <p>Please rotate your device to <strong>landscape</strong> to play.</p>
             </div>
         </div>
         <canvas id="canvas" width="1080" height="720"></canvas>
-
         <img id="splash-start" src="img/9_intro_outro_screens/start/startscreen_2.png">
-
         <div id="hud-timer" class="hidden">00:00</div>
         <div id="hud-level" class="hidden">Level 1</div>
-
         <div id="instructions-overlay" class="hidden">
             <div class="overlay-box instructions-box">
                 <button id="instructions-close" class="overlay-closebutton" aria-label="Close">
@@ -59,7 +51,6 @@
                 </div>
             </div>
         </div>
-
         <div id="leaderboard-overlay" class="hidden">
             <div class="overlay-box">
                 <button id="leaderboard-close" class="overlay-closebutton" aria-label="Close">
@@ -78,7 +69,6 @@
                 </div>
             </div>
         </div>
-
         <div id="settings-overlay" class="hidden">
             <div class="overlay-box">
                 <button id="settings-close" class="overlay-closebutton" aria-label="Close">
@@ -88,7 +78,6 @@
                 <div id="settings-content" class="overlay-content"></div>
             </div>
         </div>
-
         <div id="hamburger-root" class="hidden">
             <button id="hamburger-button" aria-label="Menu" aria-expanded="false">
                 <span class="hamburger-bar top"></span>
@@ -103,9 +92,7 @@
                 <a href="legal/impressum.html" target="_blank" rel="noopener" id="menu-imprint">Imprint</a>
             </nav>
         </div>
-
         <img id="overlay-gameover" class="hidden" src="img/You won, you lost/Game over A.png" alt="Game Over">
-
         <div id="gameover-actions" class="hidden">
             <div class="overlay-box">
                 <h2>Game Over</h2>
@@ -117,9 +104,7 @@
                 <button id="btn-fullscreen-go">Fullscreen</button>
             </div>
         </div>
-
         <img id="overlay-youwin" class="hidden" src="img/You won, you lost/You Win A.png" alt="You Win">
-
         <div id="victory-actions" class="hidden">
             <div class="overlay-box">
                 <h2>You Win!</h2>
@@ -132,9 +117,7 @@
                 <button id="btn-fullscreen-victory">Fullscreen</button>
             </div>
         </div>
-
         <div id="countdown" class="hidden">3</div>
-
         <div id="start-screen" class="hidden">
             <div class="overlay-box home-box">
                 <h2 class="home-title">El Pollo Loco</h2>
@@ -167,10 +150,7 @@
                 <button id="btn-jump" class="mctrl-btn is-jump" aria-label="Jump"></button>
             </div>
         </div>
-
     </div>
-
-
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="js/api/leaderboard-api.js"></script>
@@ -206,19 +186,50 @@
     <script src="levels/level4.js"></script>
     <script src="levels/level5.js"></script>
     <script src="js/models-classes/world.class.js"></script>
+    <script src="js/app/preload-overlays.js"></script>
+    <script src="js/app/game-state.js"></script>
+    <script src="js/models-classes/intro-pepe.class.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/app/instructions-pages.js"></script>
+    <script src="js/app/player-name.js"></script>
+    <script src="js/app/reset-overlays.js"></script>
+    <script src="js/app/wire-mobile-buttons.js"></script>
+    <script src="js/app/wire-start-screen.js"></script>
+    <script src="js/app/wire-hamburger.js"></script>
+    <script src="js/app/wire-settings.js"></script>
+    <script src="js/app/wire-instructions.js"></script>
+    <script src="js/app/leaderboard-pages.js"></script>
+    <script src="js/app/wire-leaderboard.js"></script>
+    <script src="js/app/wire-fullscreen.js"></script>
+    <script src="js/app/wire-home-actions.js"></script>
+    <script src="js/app/winlose-utils.js"></script>
+    <script src="js/app/show-gameover.js"></script>
+    <script src="js/app/show-victory.js"></script>
+    <script src="js/app/winlose-watch.js"></script>
+    <script src="js/app/start-sequence.js"></script>
+    <script src="js/app/intro-flow.js"></script>
+    <script src="js/app/run-countdown.js"></script>
+    <script src="js/app/start-game.js"></script>
+    <script src="js/app/start-level.js"></script>
+    <script src="js/app/restart.js"></script>
+    <script src="js/app/timer.js"></script>
+    <script src="js/app/time-format.js"></script>
+    <script src="js/app/dom-utils.js"></script>
+    <script src="js/app/hamburger-utils.js"></script>
+    <script src="js/app/hud-utils.js"></script>
+    <script src="js/app/app-helpers.js"></script>
+    <script src="js/app/show-menu.js"></script>
+    <script src="js/app/run-stats.js"></script>
     <script src="js/game.js"></script>
     <script>
         (function () {
             const overlay = document.getElementById('rotate-overlay');
-
             function isTouch() {
                 return window.matchMedia('(hover: none) and (pointer: coarse)').matches;
             }
             function isPortrait() {
                 return window.matchMedia('(orientation: portrait)').matches;
             }
-
             function updateRotateOverlay() {
                 const show = isTouch() && isPortrait();
                 overlay.style.display = show ? 'flex' : 'none';
