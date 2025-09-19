@@ -1,157 +1,150 @@
 function wireSettingsOverlay(app) {
+    const elements = getSettingsElements();
+    if (!elements) return;
+    attachSettingsOpenLinks(app, elements);
+    attachSettingsCloseHandlers(app, elements);
+}
+
+function getSettingsElements() {
     const overlay = document.getElementById('settings-overlay');
     const content = document.getElementById('settings-content');
     const closeBtn = document.getElementById('settings-close');
-    if (!overlay || !content || !closeBtn) return;
+    if (!overlay || !content || !closeBtn) return null;
+    return { overlay, content, closeBtn };
+}
 
-    const ensureExclusiveOpen = () => {
-        app.hideWinLoseOverlays();
-        const others = [
-            document.getElementById('instructions-overlay'),
-            document.getElementById('leaderboard-overlay'),
-            document.getElementById('start-screen')
-        ];
-        for (const el of others) { if (el) el.classList.add('hidden'); }
-    };
-
-    const pct = (x) => Math.round(Math.max(0, Math.min(1, Number(x || 0))) * 100);
-    const to01 = (n) => Math.max(0, Math.min(1, Number(n || 0) / 100));
-
-    const renderControls = () => {
-        const st = AudioPrefs.load();
-        content.innerHTML = `
-            <h3>Audio</h3>
-            <div class="settings-group">
-                <button id="btn-mute-toggle" class="btn">${st.muted ? 'Mute: ON' : 'Mute: OFF'}</button>
-            </div>
-            <div class="settings-group">
-                <label for="slider-master">Master: <span id="val-master">${pct(st.master)}%</span></label>
-                <input id="slider-master" type="range" min="0" max="100" step="1" value="${pct(st.master)}" />
-            </div>
-            <div class="settings-group">
-                <label for="slider-music">Music: <span id="val-music">${pct(st.music)}%</span></label>
-                <input id="slider-music" type="range" min="0" max="100" step="1" value="${pct(st.music)}" />
-            </div>
-            <div class="settings-group">
-                <label for="slider-system">System: <span id="val-system">${pct(st.system)}%</span></label>
-                <input id="slider-system" type="range" min="0" max="100" step="1" value="${pct(st.system)}" />
-            </div>
-            <div class="settings-group">
-                <label for="slider-characters">Characters: <span id="val-characters">${pct(st.characters)}%</span></label>
-                <input id="slider-characters" type="range" min="0" max="100" step="1" value="${pct(st.characters)}" />
-            </div>
-            <div class="settings-group">
-                <label for="slider-objects">Objects: <span id="val-objects">${pct(st.objects)}%</span></label>
-                <input id="slider-objects" type="range" min="0" max="100" step="1" value="${pct(st.objects)}" />
-            </div>
-        `;
-
-        const btnMute = content.querySelector('#btn-mute-toggle');
-        const sliderMaster = content.querySelector('#slider-master');
-        const sliderMusic = content.querySelector('#slider-music');
-        const sliderSystem = content.querySelector('#slider-system');
-        const sliderCharacters = content.querySelector('#slider-characters');
-        const sliderObjects = content.querySelector('#slider-objects');
-
-        const valMaster = content.querySelector('#val-master');
-        const valMusic = content.querySelector('#val-music');
-        const valSystem = content.querySelector('#val-system');
-        const valCharacters = content.querySelector('#val-characters');
-        const valObjects = content.querySelector('#val-objects');
-
-        const setMuteLabel = () => { if (btnMute) btnMute.textContent = isMuted() ? 'Mute: ON' : 'Mute: OFF'; };
-
-        if (btnMute) {
-            btnMute.addEventListener('click', () => {
-                const to = !isMuted();
-                setMuted(to);
-                const cur = AudioPrefs.fromSfx(window.sfx);
-                const saved = AudioPrefs.save({ ...cur, muted: to });
-                AudioPrefs.applyToSfx(window.sfx, saved);
-                setMuteLabel();
-            });
-            window.addEventListener('app-mute-changed', setMuteLabel);
-        }
-
-        sliderMaster.addEventListener('input', () => {
-            const n = Number(sliderMaster.value);
-            valMaster.textContent = n + '%';
-            if (window.sfx) window.sfx.setMaster(to01(n));
-            const cur = AudioPrefs.fromSfx(window.sfx);
-            const saved = AudioPrefs.save({ ...cur, master: to01(n) });
-            AudioPrefs.applyToSfx(window.sfx, saved);
-        });
-
-        sliderMusic.addEventListener('input', () => {
-            const n = Number(sliderMusic.value);
-            valMusic.textContent = n + '%';
-            if (window.sfx) window.sfx.setBusVolume('music', to01(n));
-            const cur = AudioPrefs.fromSfx(window.sfx);
-            const saved = AudioPrefs.save({ ...cur, music: to01(n) });
-            AudioPrefs.applyToSfx(window.sfx, saved);
-        });
-
-        sliderSystem.addEventListener('input', () => {
-            const n = Number(sliderSystem.value);
-            valSystem.textContent = n + '%';
-            if (window.sfx) window.sfx.setBusVolume('system', to01(n));
-            const cur = AudioPrefs.fromSfx(window.sfx);
-            const saved = AudioPrefs.save({ ...cur, system: to01(n) });
-            AudioPrefs.applyToSfx(window.sfx, saved);
-        });
-
-        sliderCharacters.addEventListener('input', () => {
-            const n = Number(sliderCharacters.value);
-            valCharacters.textContent = n + '%';
-            if (window.sfx) window.sfx.setBusVolume('characters', to01(n));
-            const cur = AudioPrefs.fromSfx(window.sfx);
-            const saved = AudioPrefs.save({ ...cur, characters: to01(n) });
-            AudioPrefs.applyToSfx(window.sfx, saved);
-        });
-
-        sliderObjects.addEventListener('input', () => {
-            const n = Number(sliderObjects.value);
-            valObjects.textContent = n + '%';
-            if (window.sfx) window.sfx.setBusVolume('objects', to01(n));
-            const cur = AudioPrefs.fromSfx(window.sfx);
-            const saved = AudioPrefs.save({ ...cur, objects: to01(n) });
-            AudioPrefs.applyToSfx(window.sfx, saved);
-        });
-    };
-
-    const openOverlay = () => {
-        ensureExclusiveOpen();
-        app.suppressWinLose();
-        if (typeof app.closeHamburgerMenu === 'function') app.closeHamburgerMenu();
-        renderControls();
-        overlay.classList.remove('hidden');
-    };
-
-    const closeOverlay = () => {
-        overlay.classList.add('hidden');
-        app.restoreWinLoseActionsOnly();
-        if (app.state === GameState.MENU) {
-            const start = document.getElementById('start-screen');
-            if (start) start.classList.remove('hidden');
-        }
-    };
-
-    const openLinks = [
-        document.getElementById('btn-settings-go'),
-        document.getElementById('btn-settings-victory'),
-        document.getElementById('menu-settings'),
-        document.getElementById('btn-settings-home')
+function ensureSettingsExclusiveOpen(app) {
+    app.hideWinLoseOverlays();
+    const others = [
+        document.getElementById('instructions-overlay'),
+        document.getElementById('leaderboard-overlay'),
+        document.getElementById('start-screen')
     ];
-    openLinks.forEach(link => {
-        if (link) {
-            link.addEventListener('click', (event) => {
-                event.preventDefault();
-                openOverlay();
-            });
-        }
-    });
+    for (let i = 0; i < others.length; i++) {
+        const el = others[i];
+        if (el) el.classList.add('hidden');
+    }
+}
 
-    closeBtn.addEventListener('click', closeOverlay);
-    overlay.addEventListener('click', (event) => { if (event.target === overlay) closeOverlay(); });
-    document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !overlay.classList.contains('hidden')) closeOverlay(); });
+function percentFrom01(x) {
+    return Math.round(Math.max(0, Math.min(1, Number(x || 0))) * 100);
+}
+
+function to01FromPercent(n) {
+    return Math.max(0, Math.min(1, Number(n || 0) / 100));
+}
+
+function renderSettingsControls(content) {
+    const state = AudioPrefs.load();
+    renderSettingsContent(content, state);
+    const refs = getSettingsControlRefs(content);
+    wireMuteToggle(refs);
+    wireSliders(refs);
+}
+
+function renderSettingsContent(content, st) {
+    content.innerHTML = settingsTemplate(st);
+}
+
+
+function getSettingsControlRefs(content) {
+    const btnMute = content.querySelector('#btn-mute-toggle');
+    const sliderMaster = content.querySelector('#slider-master');
+    const sliderMusic = content.querySelector('#slider-music');
+    const sliderSystem = content.querySelector('#slider-system');
+    const sliderCharacters = content.querySelector('#slider-characters');
+    const sliderObjects = content.querySelector('#slider-objects');
+    const valMaster = content.querySelector('#val-master');
+    const valMusic = content.querySelector('#val-music');
+    const valSystem = content.querySelector('#val-system');
+    const valCharacters = content.querySelector('#val-characters');
+    const valObjects = content.querySelector('#val-objects');
+    return { btnMute, sliderMaster, sliderMusic, sliderSystem, sliderCharacters, sliderObjects, valMaster, valMusic, valSystem, valCharacters, valObjects };
+}
+
+function saveAndApplyAudio(patch) {
+    const cur = AudioPrefs.fromSfx(window.sfx);
+    const saved = AudioPrefs.save({ ...cur, ...patch });
+    AudioPrefs.applyToSfx(window.sfx, saved);
+}
+
+function wireMuteToggle(refs) {
+    if (!refs.btnMute) return;
+    function setMuteLabel() { refs.btnMute.textContent = isMuted() ? 'Mute: ON' : 'Mute: OFF'; }
+    refs.btnMute.addEventListener('click', function () {
+        const next = !isMuted();
+        setMuted(next);
+        saveAndApplyAudio({ muted: next });
+        setMuteLabel();
+    });
+    window.addEventListener('app-mute-changed', setMuteLabel);
+}
+
+function wireSliders(refs) {
+    wireMasterSlider(refs.sliderMaster, refs.valMaster);
+    wireBusSlider(refs.sliderMusic, refs.valMusic, 'music', 'music');
+    wireBusSlider(refs.sliderSystem, refs.valSystem, 'system', 'system');
+    wireBusSlider(refs.sliderCharacters, refs.valCharacters, 'characters', 'characters');
+    wireBusSlider(refs.sliderObjects, refs.valObjects, 'objects', 'objects');
+}
+
+function wireMasterSlider(slider, valueSpan) {
+    if (!slider || !valueSpan) return;
+    slider.addEventListener('input', function () {
+        const n = Number(slider.value);
+        valueSpan.textContent = n + '%';
+        if (window.sfx) window.sfx.setMaster(to01FromPercent(n));
+        saveAndApplyAudio({ master: to01FromPercent(n) });
+    });
+}
+
+function wireBusSlider(slider, valueSpan, busName, keyName) {
+    if (!slider || !valueSpan) return;
+    slider.addEventListener('input', function () {
+        const n = Number(slider.value);
+        valueSpan.textContent = n + '%';
+        if (window.sfx) window.sfx.setBusVolume(busName, to01FromPercent(n));
+        const patch = {}; patch[keyName] = to01FromPercent(n);
+        saveAndApplyAudio(patch);
+    });
+}
+
+function openSettingsOverlay(app, elements) {
+    ensureSettingsExclusiveOpen(app);
+    app.suppressWinLose();
+    if (typeof app.closeHamburgerMenu === 'function') app.closeHamburgerMenu();
+    renderSettingsControls(elements.content);
+    elements.overlay.classList.remove('hidden');
+}
+
+function closeSettingsOverlay(app, elements) {
+    elements.overlay.classList.add('hidden');
+    app.restoreWinLoseActionsOnly();
+    if (app.state === GameState.MENU) {
+        const start = document.getElementById('start-screen');
+        if (start) start.classList.remove('hidden');
+    }
+}
+
+function attachSettingsOpenLinks(app, elements) {
+    const ids = ['btn-settings-go', 'btn-settings-victory', 'menu-settings', 'btn-settings-home'];
+    for (let i = 0; i < ids.length; i++) {
+        const link = document.getElementById(ids[i]);
+        if (!link) continue;
+        link.addEventListener('click', function (event) {
+            event.preventDefault();
+            openSettingsOverlay(app, elements);
+        });
+    }
+}
+
+function attachSettingsCloseHandlers(app, elements) {
+    elements.closeBtn.addEventListener('click', function () { closeSettingsOverlay(app, elements); });
+    elements.overlay.addEventListener('click', function (event) {
+        if (event.target === elements.overlay) closeSettingsOverlay(app, elements);
+    });
+    document.addEventListener('keydown', function (event) {
+        const open = !elements.overlay.classList.contains('hidden');
+        if (event.key === 'Escape' && open) closeSettingsOverlay(app, elements);
+    });
 }

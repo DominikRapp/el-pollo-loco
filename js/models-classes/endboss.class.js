@@ -70,12 +70,23 @@ class Endboss extends MovableObject {
     }
 
     setAnimation(state) {
+        this.resetAnimationState(state);
+        const { seq, delay } = this.selectAnimation(state);
+        this.triggerSfxForState(state);
+        this.setInitialFrame(seq);
+        this.beginAnimationLoop(seq, delay);
+    }
+
+    resetAnimationState(state) {
         this.currentState = state;
         this.currentFrame = 0;
         if (this.animationInterval) {
             clearInterval(this.animationInterval);
             this.animationInterval = null;
         }
+    }
+
+    selectAnimation(state) {
         let seq = [];
         let delay = 120;
         if (state === 'walk') { seq = this.IMAGES_WALK; delay = 150; }
@@ -83,58 +94,66 @@ class Endboss extends MovableObject {
         if (state === 'attack') { seq = this.IMAGES_ATTACK; delay = 90; }
         if (state === 'hurt') { seq = this.IMAGES_HURT; delay = 120; }
         if (state === 'dead') { seq = this.IMAGES_DEAD; delay = 150; this.deathAnimFinished = false; }
+        return { seq, delay };
+    }
 
+    triggerSfxForState(state) {
+        if (!window.sfx) return;
         if (state === 'alert') {
-            if (window.sfx) {
-                window.sfx.play('boss.alert');
-                window.sfx.musicTo('music.boss.loop', 400);
-            }
+            window.sfx.play('boss.alert');
+            window.sfx.musicTo('music.boss.loop', 400);
         }
-        if (state === 'attack') {
-            if (window.sfx) window.sfx.play('boss.attack');
-        }
-        if (state === 'hurt') {
-            if (window.sfx) window.sfx.play('boss.hit');
-        }
+        if (state === 'attack') window.sfx.play('boss.attack');
+        if (state === 'hurt') window.sfx.play('boss.hit');
         if (state === 'dead') {
-            if (window.sfx) {
-                window.sfx.play('boss.dead');
-                window.sfx.stop('music.boss.loop');
-            }
+            window.sfx.play('boss.dead');
+            window.sfx.stop('music.boss.loop');
         }
+    }
 
-        if (seq.length > 0) {
+    setInitialFrame(seq) {
+        if (Array.isArray(seq) && seq.length > 0) {
             this.img = this.imageCache[seq[0]];
         }
-        const self = this;
-        this.animationInterval = setInterval(function () {
-            if (self.currentState === 'dead') {
-                if (self.currentFrame < seq.length) {
-                    self.img = self.imageCache[seq[self.currentFrame]];
-                    self.currentFrame += 1;
-                } else {
-                    clearInterval(self.animationInterval);
-                    self.animationInterval = null;
-                    self.canCollide = false;
-                    self.deathAnimFinished = true;
-                }
-                return;
-            }
-            if (self.currentFrame >= seq.length) {
-                self.currentFrame = 0;
-            }
-            self.img = self.imageCache[seq[self.currentFrame]];
-            self.currentFrame += 1;
-            if (self.currentState === 'alert' && self.currentFrame >= seq.length) {
-                clearInterval(self.animationInterval);
-                self.animationInterval = null;
-                self.alertPlayed = true;
-                self.setAnimation('walk');
-            }
+    }
+
+    beginAnimationLoop(seq, delay) {
+        this.animationInterval = setInterval(() => {
+            this.tickAnimation(seq);
         }, delay);
     }
 
+    tickAnimation(seq) {
+        if (this.currentState === 'dead') {
+            this.tickDead(seq);
+            return;
+        }
+        if (this.currentFrame >= seq.length) this.currentFrame = 0;
+        this.img = this.imageCache[seq[this.currentFrame]];
+        this.currentFrame += 1;
+        if (this.currentState === 'alert' && this.currentFrame >= seq.length) {
+            this.finishAlert();
+        }
+    }
 
+    tickDead(seq) {
+        if (this.currentFrame < seq.length) {
+            this.img = this.imageCache[seq[this.currentFrame]];
+            this.currentFrame += 1;
+        } else {
+            clearInterval(this.animationInterval);
+            this.animationInterval = null;
+            this.canCollide = false;
+            this.deathAnimFinished = true;
+        }
+    }
+
+    finishAlert() {
+        clearInterval(this.animationInterval);
+        this.animationInterval = null;
+        this.alertPlayed = true;
+        this.setAnimation('walk');
+    }
 
     freeze() {
         if (this.animationInterval) {
@@ -147,60 +166,81 @@ class Endboss extends MovableObject {
     }
 
     updateAI(world) {
-        if (this.currentState === 'dead') return;
-        if (world && world.gameOver) return;
-        if (!world || !world.character) return;
-
-        let player = world.character;
-        let dirToPlayer = (player.x >= this.x) ? 1 : -1;
+        if (this.shouldSkipAI(world)) return;
+        const { player, dirToPlayer, now } = this.aiContext(world);
         this.otherDirection = (dirToPlayer === 1);
-        let now = Date.now();
+        if (this.handleHurt(now, dirToPlayer)) return;
+        if (this.handleDead()) return;
+        const dist = Math.abs(player.x - this.x);
+        if (this.handleAlert(dist)) return;
+        if (this.handleAttack(dist, dirToPlayer)) return;
+        this.handleApproach(dist, dirToPlayer);
+    }
 
+    shouldSkipAI(world) {
+        if (this.currentState === 'dead') return true;
+        if (world && world.gameOver) return true;
+        if (!world || !world.character) return true;
+        return false;
+    }
+
+    aiContext(world) {
+        const player = world.character;
+        const dirToPlayer = (player.x >= this.x) ? 1 : -1;
+        const now = Date.now();
+        return { player, dirToPlayer, now };
+    }
+
+    handleHurt(now, dirToPlayer) {
         if (now < this.hurtUntil) {
             if (this.currentState !== 'hurt') this.setAnimation('hurt');
             this.x += -dirToPlayer * 0.4;
-            return;
+            return true;
         }
+        return false;
+    }
 
-        if (this.isDead()) {
-            if (this.currentState !== 'dead') this.setAnimation('dead');
-            return;
-        }
+    handleDead() {
+        if (!this.isDead()) return false;
+        if (this.currentState !== 'dead') this.setAnimation('dead');
+        return true;
+    }
 
-        let dist = Math.abs(player.x - this.x);
+    handleAlert(dist) {
         if (this.alertPlayed === false && dist <= this.alertDistance) {
             if (this.currentState !== 'alert') this.setAnimation('alert');
-            return;
+            return true;
         }
-        if (dist <= this.attackDistance) {
-            if (this.currentState !== 'attack') this.setAnimation('attack');
-            this.x += dirToPlayer * this.attackSpeed;
-            const t = Date.now();
-            if (t - this.lastStepAt >= this.stepIntervalMs) {
-                this.lastStepAt = t;
-                if (window.sfx) window.sfx.play('boss.step');
-            }
-            return;
-        }
+        return false;
+    }
+
+    handleAttack(dist, dirToPlayer) {
+        if (dist > this.attackDistance) return false;
+        if (this.currentState !== 'attack') this.setAnimation('attack');
+        this.x += dirToPlayer * this.attackSpeed;
+        this.playStepIfDue();
+        return true;
+    }
+
+    handleApproach(dist, dirToPlayer) {
         if (dist <= this.alertDistance) {
             if (this.currentState !== 'walk') this.setAnimation('walk');
             this.x += dirToPlayer * this.alertSpeed;
-            const t = Date.now();
-            if (t - this.lastStepAt >= this.stepIntervalMs) {
-                this.lastStepAt = t;
-                if (window.sfx) window.sfx.play('boss.step');
-            }
+            this.playStepIfDue();
             return;
         }
         if (this.currentState !== 'walk') this.setAnimation('walk');
         this.x -= this.walkSpeed;
+        this.playStepIfDue();
+    }
+
+    playStepIfDue() {
         const t = Date.now();
         if (t - this.lastStepAt >= this.stepIntervalMs) {
             this.lastStepAt = t;
             if (window.sfx) window.sfx.play('boss.step');
         }
     }
-
 
     hit(damage) {
         if (typeof damage !== 'number') damage = 20;

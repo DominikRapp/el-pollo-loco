@@ -14,7 +14,6 @@ class ThrowableObject extends MovableObject {
         'img/6_salsa_bottle/bottle_rotation/bottle_splash/5_bottle_splash.png',
         'img/6_salsa_bottle/bottle_rotation/bottle_splash/6_bottle_splash.png'
     ];
-
     height = 80;
     width = 80;
     isFlying = true;
@@ -67,28 +66,50 @@ class ThrowableObject extends MovableObject {
 
     splash() {
         if (this.isSplashing) return;
+        this.beginSplashSetup();
+        this.stopMotion();
+        this.playSplashSfx();
+        this.startSplashLoop();
+    }
+
+    beginSplashSetup() {
         this.isFlying = false;
         this.isSplashing = true;
-        if (this.moveInterval) clearInterval(this.moveInterval);
-        if (this.rotationInterval) clearInterval(this.rotationInterval);
         this.speedY = 0;
         this.acceleration = 0;
         this.splashFrame = 0;
+    }
+
+    stopMotion() {
+        if (this.moveInterval) { clearInterval(this.moveInterval); this.moveInterval = null; }
+        if (this.rotationInterval) { clearInterval(this.rotationInterval); this.rotationInterval = null; }
+    }
+
+    playSplashSfx() {
         if (window.sfx) window.sfx.play('obj.bottle.splash');
+    }
+
+    startSplashLoop() {
         this.splashInterval = setInterval(() => {
-            if (this.splashFrame < this.IMAGES_SPLASH.length) {
-                const path = this.IMAGES_SPLASH[this.splashFrame];
-                this.img = this.imageCache[path];
-                this.splashFrame++;
-            } else {
-                clearInterval(this.splashInterval);
-                this.freeze();
-                this.markForRemoval = true;
-            }
+            if (this.stepSplashFrame()) return;
+            clearInterval(this.splashInterval);
+            this.finishSplash();
         }, 60);
     }
 
+    stepSplashFrame() {
+        if (this.splashFrame < this.IMAGES_SPLASH.length) {
+            const path = this.IMAGES_SPLASH[this.splashFrame++];
+            this.img = this.imageCache[path];
+            return true;
+        }
+        return false;
+    }
 
+    finishSplash() {
+        this.freeze();
+        this.markForRemoval = true;
+    }
 
     freeze() {
         if (this.moveInterval) { clearInterval(this.moveInterval); this.moveInterval = null; }

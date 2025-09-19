@@ -1,27 +1,61 @@
 function loopWinLoseWatch(app) {
-    if (app.state !== GameState.GAME || !app.world || app.stoppedForWinOrLose) return;
+    if (shouldExitWinLoseWatch(app)) return;
+    if (isWorldGameOver(app)) { handleGameOver(app); return; }
+    if (isVictoryConditionMet(app)) { handleVictory(app); return; }
+    scheduleNextWinLoseCheck(app);
+}
 
-    if (app.world.gameOver === true) {
-        app.stoppedForWinOrLose = true;
-        app.stopTimer();
-        showGameOver(app);
-        return;
-    }
+function shouldExitWinLoseWatch(app) {
+    const notInGame = app.state !== GameState.GAME;
+    const noWorld = !app.world;
+    const alreadyStopped = app.stoppedForWinOrLose;
+    return notInGame || noWorld || alreadyStopped;
+}
 
-    const boss = app.world.boss;
-    const bossReady = !!(boss && boss.isDead && boss.isDead() && boss.deathAnimFinished === true);
-    const bottlesClear = !app.world.throwableObjects || app.world.throwableObjects.every(b => b.markForRemoval || !b.isSplashing);
+function isWorldGameOver(app) {
+    return app.world && app.world.gameOver === true;
+}
 
-    if (bossReady && bottlesClear) {
-        app.stoppedForWinOrLose = true;
-        app.stopTimer();
-        if (app.world) app.world.canFreezeNow = true;
-        if (app.world && typeof app.world.freezeAll === 'function') app.world.freezeAll();
-        showYouWin(app);
-        return;
-    }
+function handleGameOver(app) {
+    app.stoppedForWinOrLose = true;
+    app.stopTimer();
+    if (app.world) app.world.canFreezeNow = true;
+    showGameOver(app);
+}
 
-    setTimeout(() => app.loopWinLoseWatch(), 120);
+function isVictoryConditionMet(app) {
+    return isBossReady(app) && areBottlesCleared(app);
+}
+
+function isBossReady(app) {
+    const boss = app.world ? app.world.boss : null;
+    const hasBoss = !!boss;
+    const canReportDeath = hasBoss && boss.isDead;
+    const isDeadNow = canReportDeath && boss.isDead();
+    const deathAnimDone = hasBoss && boss.deathAnimFinished === true;
+    return hasBoss && isDeadNow && deathAnimDone;
+}
+
+function areBottlesCleared(app) {
+    const items = app.world ? app.world.throwableObjects : null;
+    if (!items) return true;
+    return items.every(function (item) {
+        const marked = item.markForRemoval;
+        const notSplashing = !item.isSplashing;
+        return marked || notSplashing;
+    });
+}
+
+function handleVictory(app) {
+    app.stoppedForWinOrLose = true;
+    app.stopTimer();
+    if (app.world) app.world.canFreezeNow = true;
+    if (app.world && typeof app.world.freezeAll === 'function') app.world.freezeAll();
+    showYouWin(app);
+}
+
+function scheduleNextWinLoseCheck(app) {
+    setTimeout(function () { app.loopWinLoseWatch(); }, 120);
 }
 
 function attachWinLoseWatch(app) {

@@ -1,56 +1,58 @@
-const LeaderboardFlow = (() => {
-    const text = (s) => document.createTextNode(String(s));
-    const clearEl = (el) => { while (el.firstChild) el.removeChild(el.firstChild); };
-    const rowLine = ({ name, level, points, time }) => {
-        const line = document.createElement('div');
-        line.className = 'lb-line';
-        const a = document.createElement('span'); a.className = 'lb-name'; a.appendChild(text(name));
-        const b = document.createElement('span'); b.className = 'lb-level'; b.appendChild(text(level));
-        const c = document.createElement('span'); c.className = 'lb-points'; c.appendChild(text(points));
-        const d = document.createElement('span'); d.className = 'lb-time'; d.appendChild(text(time));
-        line.appendChild(a); line.appendChild(b); line.appendChild(c); line.appendChild(d);
-        return line;
-    };
+function createTextNodeSafe(value) {
+    return document.createTextNode(String(value));
+}
 
-    const showLevelIntermediate = async ({ containerId, name, level, timeMs, counts }) => {
-        const container = document.getElementById(containerId);
-        if (!container) return { saved: false, entry: null };
-        const entry = LeaderboardAPI.makeLevelEntry({ name, level, timeMs, counts });
+function clearElementChildren(element) {
+    while (element.firstChild) element.removeChild(element.firstChild);
+}
 
-        const localLine = ({ name, level, points, time }) => {
-            const line = document.createElement('div');
-            line.className = 'lb-line';
-            const a = document.createElement('span'); a.className = 'lb-name'; a.textContent = name;
-            const b = document.createElement('span'); b.className = 'lb-level'; b.textContent = 'L' + level;
-            const c = document.createElement('span'); c.className = 'lb-points'; c.textContent = String(points);
-            const d = document.createElement('span'); d.className = 'lb-time'; d.textContent = LeaderboardAPI.formatTime(time);
-            line.appendChild(a); line.appendChild(b); line.appendChild(c); line.appendChild(d);
-            return line;
-        };
+function createLeaderboardRow(data) {
+    const line = document.createElement('div');
+    line.className = 'lb-line';
+    const name = document.createElement('span'); name.className = 'lb-name'; name.appendChild(createTextNodeSafe(data.name));
+    const level = document.createElement('span'); level.className = 'lb-level'; level.appendChild(createTextNodeSafe(data.level));
+    const points = document.createElement('span'); points.className = 'lb-points'; points.appendChild(createTextNodeSafe(data.points));
+    const time = document.createElement('span'); time.className = 'lb-time'; time.appendChild(createTextNodeSafe(data.time));
+    line.appendChild(name); line.appendChild(level); line.appendChild(points); line.appendChild(time);
+    return line;
+}
 
-        clearEl(container);
-        container.appendChild(localLine({ name: entry.name, level: entry.level, points: entry.points, time: entry.timeMs }));
-        const res = await LeaderboardAPI.submitIfTop10('level', entry, level);
-        clearEl(container);
-        container.appendChild(localLine({ name: entry.name, level: entry.level, points: entry.points, time: entry.timeMs }));
-        return { saved: res.saved, entry };
-    };
+function createLevelRowLocal(entry) {
+    const line = document.createElement('div');
+    line.className = 'lb-line';
+    const name = document.createElement('span'); name.className = 'lb-name'; name.textContent = entry.name;
+    const level = document.createElement('span'); level.className = 'lb-level'; level.textContent = 'L' + entry.level;
+    const points = document.createElement('span'); points.className = 'lb-points'; points.textContent = String(entry.points);
+    const time = document.createElement('span'); time.className = 'lb-time'; time.textContent = LeaderboardAPI.formatTime(entry.timeMs);
+    line.appendChild(name); line.appendChild(level); line.appendChild(points); line.appendChild(time);
+    return line;
+}
 
-    const showTotalFinal = async ({ name, highestLevel, totalTimeMs, counts }) => {
-        const entry = LeaderboardAPI.makeTotalEntry({ name, highestLevel, totalTimeMs, counts });
-        const res = await LeaderboardAPI.submitIfTop10('total', entry);
-        return { saved: res.saved, entry };
-    };
+async function showLevelIntermediate(args) {
+    const container = document.getElementById(args.containerId);
+    if (!container) return { saved: false, entry: null };
+    const entry = LeaderboardAPI.makeLevelEntry({ name: args.name, level: args.level, timeMs: args.timeMs, counts: args.counts });
+    clearElementChildren(container);
+    container.appendChild(createLevelRowLocal(entry));
+    const result = await LeaderboardAPI.submitIfTop10('level', entry, args.level);
+    clearElementChildren(container);
+    container.appendChild(createLevelRowLocal(entry));
+    return { saved: result.saved, entry };
+}
 
+async function showTotalFinal(args) {
+    const entry = LeaderboardAPI.makeTotalEntry({ name: args.name, highestLevel: args.highestLevel, totalTimeMs: args.totalTimeMs, counts: args.counts });
+    const result = await LeaderboardAPI.submitIfTop10('total', entry);
+    return { saved: result.saved, entry };
+}
 
-    const previewTotalOnly = ({ containerId, name, highestLevel, totalTimeMs, counts }) => {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-        const entry = LeaderboardAPI.makeTotalEntry({ name, highestLevel, totalTimeMs, counts });
-        clearEl(container);
-        container.appendChild(rowLine({ name: entry.name, level: `L${highestLevel}`, points: entry.points, time: LeaderboardAPI.formatTime(entry.totalTimeMs) }));
-        return entry;
-    };
+function previewTotalOnly(args) {
+    const container = document.getElementById(args.containerId);
+    if (!container) return;
+    const entry = LeaderboardAPI.makeTotalEntry({ name: args.name, highestLevel: args.highestLevel, totalTimeMs: args.totalTimeMs, counts: args.counts });
+    clearElementChildren(container);
+    container.appendChild(createLeaderboardRow({ name: entry.name, level: 'L' + args.highestLevel, points: entry.points, time: LeaderboardAPI.formatTime(entry.totalTimeMs) }));
+    return entry;
+}
 
-    return { showLevelIntermediate, showTotalFinal, previewTotalOnly };
-})();
+const LeaderboardFlow = { showLevelIntermediate, showTotalFinal, previewTotalOnly };

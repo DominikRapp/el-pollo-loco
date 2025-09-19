@@ -1,61 +1,57 @@
-const LeaderboardView = (() => {
-    const mmss = (ms) => {
-        if (typeof ms !== 'number' || ms < 0) return '–';
-        const s = Math.floor(ms / 1000);
-        const m = Math.floor(s / 60);
-        const r = s % 60;
-        return String(m).padStart(2, '0') + ':' + String(r).padStart(2, '0');
-    };
+function formatMinutesSeconds(milliseconds) {
+    if (typeof milliseconds !== 'number' || milliseconds < 0) return '–';
+    const totalSeconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+}
 
-    const isPlaceholder = (e, key) => {
-        const t = Number(e && e[key]);
-        const c = Number(e && e.createdAt);
-        return c === 0 || t >= 9999999999;
-    };
+function isPlaceholderEntry(entry, key) {
+    const timeValue = Number(entry && entry[key]);
+    const createdAt = Number(entry && entry.createdAt);
+    return createdAt === 0 || timeValue >= 9999999999;
+}
 
-    const timeStr = (e, key) => {
-        if (!e) return '–';
-        return isPlaceholder(e, key) ? '00:00' : mmss(e[key]);
-    };
+function toTimeText(entry, key) {
+    if (!entry) return '–';
+    return isPlaceholderEntry(entry, key) ? '00:00' : formatMinutesSeconds(entry[key]);
+}
 
-    const buildTotalTable = (rows) => {
-        const head = '<table class="leaderboard-table"><thead><tr><th>#</th><th>Name</th><th>Highest Level</th><th>Points</th><th>Time</th></tr></thead><tbody>';
-        let body = '';
-        for (let i = 0; i < rows.length; i++) {
-            const e = rows[i] || {};
-            const name = e.name || 'Player';
-            const lvl = typeof e.highestLevel === 'number' ? e.highestLevel : 0;
-            const pts = typeof e.points === 'number' ? e.points : 0;
-            const time = timeStr(e, 'totalTimeMs');
-            body += '<tr><td>' + (i + 1) + '.</td><td>' + name + '</td><td>' + lvl + '</td><td>' + pts + '</td><td>' + time + '</td></tr>';
-        }
-        return head + body + '</tbody></table>';
-    };
+function toTotalRowData(e, i) {
+    const name = e?.name || 'Player';
+    const level = typeof e?.highestLevel === 'number' ? e.highestLevel : 0;
+    const points = typeof e?.points === 'number' ? e.points : 0;
+    const time = toTimeText(e, 'totalTimeMs');
+    return totalLeaderboardSimpleRowTemplate({ index: i, name, level, points, time });
+}
 
-    const buildLevelTable = (level, rows) => {
-        const head = '<table class="leaderboard-table"><thead><tr><th>#</th><th>Name</th><th>Level</th><th>Points</th><th>Time</th></tr></thead><tbody>';
-        let body = '';
-        for (let i = 0; i < rows.length; i++) {
-            const e = rows[i] || {};
-            const name = e.name || 'Player';
-            const lvl = 'L' + String(level);
-            const pts = typeof e.points === 'number' ? e.points : 0;
-            const time = timeStr(e, 'timeMs');
-            body += '<tr><td>' + (i + 1) + '.</td><td>' + name + '</td><td>' + lvl + '</td><td>' + pts + '</td><td>' + time + '</td></tr>';
-        }
-        return head + body + '</tbody></table>';
-    };
+function buildTotalTable(rows) {
+    const body = (rows || []).map((e, i) => toTotalRowData(e || {}, i)).join('');
+    return totalLeaderboardSimpleTableTemplate(body);
+}
 
-    const buildPages = async () => {
-        const pages = [];
-        const total = await LeaderboardAPI.fetchTop10('total');
-        pages.push('<h3>Total</h3>' + buildTotalTable(total));
-        for (let lvl = 1; lvl <= 5; lvl++) {
-            const rows = await LeaderboardAPI.fetchTop10('level', lvl);
-            pages.push('<h3>Level ' + lvl + '</h3>' + buildLevelTable(lvl, rows));
-        }
-        return pages;
-    };
+function toLevelRowData(levelNumber, e, i) {
+    const name = e?.name || 'Player';
+    const level = 'L' + String(levelNumber);
+    const points = typeof e?.points === 'number' ? e.points : 0;
+    const time = toTimeText(e, 'timeMs');
+    return levelLeaderboardSimpleRowTemplate({ index: i, name, level, points, time });
+}
 
-    return { buildPages };
-})();
+function buildLevelTable(levelNumber, rows) {
+    const body = (rows || []).map((e, i) => toLevelRowData(levelNumber, e || {}, i)).join('');
+    return levelLeaderboardSimpleTableTemplate(body);
+}
+
+async function buildLeaderboardPages() {
+    const pages = [];
+    const totalRows = await LeaderboardAPI.fetchTop10('total');
+    pages.push('<h3>Total</h3>' + buildTotalTable(totalRows));
+    for (let lvl = 1; lvl <= 5; lvl++) {
+        const rows = await LeaderboardAPI.fetchTop10('level', lvl);
+        pages.push('<h3>Level ' + lvl + '</h3>' + buildLevelTable(lvl, rows));
+    }
+    return pages;
+}
+
+const LeaderboardView = { buildPages: buildLeaderboardPages };

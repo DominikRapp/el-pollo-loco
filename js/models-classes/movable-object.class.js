@@ -15,22 +15,38 @@ class MovableObject extends DrawableObject {
     applyGravity() {
         if (this.gravityInterval) return;
         this.gravityInterval = setInterval(() => {
-            if (this instanceof ThrowableObject) {
-                if (this.isAboveGround() || this.speedY > 0) {
-                    this.y -= this.speedY;
-                    this.speedY -= this.acceleration;
-                }
-                return;
-            }
-            if (this.isAboveGround() || this.speedY !== 0) {
-                this.y -= this.speedY;
-                this.speedY -= this.acceleration;
-                if (this.y >= this.groundTopY && this.speedY <= 0) {
-                    this.y = this.groundTopY;
-                    this.speedY = 0;
-                }
-            }
+            this.stepGravity();
         }, 1000 / 60);
+    }
+
+    stepGravity() {
+        if (this.isThrowable()) {
+            this.stepThrowableGravity();
+            return;
+        }
+        this.stepDefaultGravity();
+    }
+
+    isThrowable() {
+        return this instanceof ThrowableObject;
+    }
+
+    stepThrowableGravity() {
+        if (this.isAboveGround() || this.speedY > 0) {
+            this.y -= this.speedY;
+            this.speedY -= this.acceleration;
+        }
+    }
+
+    stepDefaultGravity() {
+        if (this.isAboveGround() || this.speedY !== 0) {
+            this.y -= this.speedY;
+            this.speedY -= this.acceleration;
+            if (this.y >= this.groundTopY && this.speedY <= 0) {
+                this.y = this.groundTopY;
+                this.speedY = 0;
+            }
+        }
     }
 
     freeze() {

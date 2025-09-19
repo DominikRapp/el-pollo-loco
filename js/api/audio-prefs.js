@@ -1,54 +1,150 @@
-const AudioPrefs = (() => {
-    const key = 'audioSettings';
-    const def = { muted: false, master: 0.1, music: 0.1, system: 0.1, characters: 0.1, objects: 0.1 };
-    const load = () => {
-        try {
-            const x = JSON.parse(localStorage.getItem(key) || '{}');
-            return {
-                muted: typeof x.muted === 'boolean' ? x.muted : def.muted,
-                master: typeof x.master === 'number' ? x.master : def.master,
-                music: typeof x.music === 'number' ? x.music : def.music,
-                system: typeof x.system === 'number' ? x.system : def.system,
-                characters: typeof x.characters === 'number' ? x.characters : def.characters,
-                objects: typeof x.objects === 'number' ? x.objects : def.objects
-            };
-        } catch { return { ...def }; }
+let AudioPrefs = createAudioPrefsMain();
+
+function createAudioPrefsMain() {
+    return {
+        load: audioPrefsLoad,
+        save: audioPrefsSave,
+        applyToSfx: audioPrefsApplyToSfx,
+        fromSfx: audioPrefsFromSfx
     };
-    const save = (s) => {
-        const obj = {
-            muted: !!s.muted,
-            master: Math.max(0, Math.min(1, Number(s.master || 0))),
-            music: Math.max(0, Math.min(1, Number(s.music || 0))),
-            system: Math.max(0, Math.min(1, Number(s.system || 0))),
-            characters: Math.max(0, Math.min(1, Number(s.characters || 0))),
-            objects: Math.max(0, Math.min(1, Number(s.objects || 0)))
-        };
-        localStorage.setItem(key, JSON.stringify(obj));
-        return obj;
+}
+
+function audioPrefsLoad() {
+    const storedObject = storageReadJson(audioPrefsStorageKey());
+    return audioPrefsToSettings(storedObject);
+}
+
+function audioPrefsSave(inputSettings) {
+    const normalizedSettings = audioPrefsNormalizeSettings(inputSettings || {});
+    storageWriteJson(audioPrefsStorageKey(), normalizedSettings);
+    return normalizedSettings;
+}
+
+function audioPrefsApplyToSfx(sfxObject, optionalSettings) {
+    if (!sfxObject) return;
+    const effectiveSettings = optionalSettings ? audioPrefsNormalizeSettings(optionalSettings) : audioPrefsLoad();
+    sfxSetMuted(sfxObject, effectiveSettings.muted);
+    sfxSetMaster(sfxObject, effectiveSettings.master);
+    sfxApplyBusVolumes(sfxObject, effectiveSettings);
+}
+
+function audioPrefsFromSfx(sfxObject) {
+    if (!sfxObject) return audioPrefsLoad();
+    const defaultSettings = audioPrefsCreateDefaultSettings();
+    const muted = sfxReadMuted(sfxObject);
+    const master = sfxReadMaster(sfxObject, defaultSettings.master);
+    const volumes = sfxReadVolumes(sfxObject);
+    return {
+        muted: muted,
+        master: master,
+        music: volumes.music,
+        system: volumes.system,
+        characters: volumes.characters,
+        objects: volumes.objects
     };
-    const applyToSfx = (sfx, s) => {
-        if (!sfx) return;
-        const st = s || load();
-        if (typeof sfx.setMuted === 'function') sfx.setMuted(!!st.muted);
-        if (typeof sfx.setMaster === 'function') sfx.setMaster(st.master);
-        if (typeof sfx.setBusVolume === 'function') {
-            sfx.setBusVolume('music', st.music);
-            sfx.setBusVolume('system', st.system);
-            sfx.setBusVolume('characters', st.characters);
-            sfx.setBusVolume('objects', st.objects);
-        }
+}
+
+function audioPrefsStorageKey() {
+    return 'audioSettings';
+}
+
+function audioPrefsCreateDefaultSettings() {
+    return {
+        muted: false,
+        master: 0.1,
+        music: 0.1,
+        system: 0.1,
+        characters: 0.1,
+        objects: 0.1
     };
-    const fromSfx = (sfx) => {
-        if (!sfx) return load();
-        const v = sfx.volumes || {};
-        return {
-            muted: !!(typeof sfx.muted === 'boolean' ? sfx.muted : (localStorage.getItem('muted') === '1')),
-            master: typeof sfx.master === 'number' ? sfx.master : def.master,
-            music: typeof v.music === 'number' ? v.music : def.music,
-            system: typeof v.system === 'number' ? v.system : def.system,
-            characters: typeof v.characters === 'number' ? v.characters : def.characters,
-            objects: typeof v.objects === 'number' ? v.objects : def.objects
-        };
+}
+
+function audioPrefsClampUnit(inputValue) {
+    const numericValue = Number(inputValue || 0);
+    if (numericValue < 0) return 0;
+    if (numericValue > 1) return 1;
+    return numericValue;
+}
+
+function storageReadJson(storageKey) {
+    const rawJson = localStorage.getItem(storageKey);
+    if (!rawJson) return {};
+    try { return JSON.parse(rawJson); } catch { return {}; }
+}
+
+function storageWriteJson(storageKey, objectToWrite) {
+    localStorage.setItem(storageKey, JSON.stringify(objectToWrite));
+}
+
+function getBooleanOr(value, fallbackValue) {
+    return typeof value === 'boolean' ? value : fallbackValue;
+}
+
+function getNumberOr(value, fallbackValue) {
+    return typeof value === 'number' ? value : fallbackValue;
+}
+
+function audioPrefsToSettings(sourceObject) {
+    const defaultSettings = audioPrefsCreateDefaultSettings();
+    const muted = getBooleanOr(sourceObject.muted, defaultSettings.muted);
+    const master = getNumberOr(sourceObject.master, defaultSettings.master);
+    const music = getNumberOr(sourceObject.music, defaultSettings.music);
+    const system = getNumberOr(sourceObject.system, defaultSettings.system);
+    const characters = getNumberOr(sourceObject.characters, defaultSettings.characters);
+    const objects = getNumberOr(sourceObject.objects, defaultSettings.objects);
+    return { muted, master, music, system, characters, objects };
+}
+
+function audioPrefsNormalizeSettings(inputSettings) {
+    return {
+        muted: !!inputSettings.muted,
+        master: audioPrefsClampUnit(inputSettings.master),
+        music: audioPrefsClampUnit(inputSettings.music),
+        system: audioPrefsClampUnit(inputSettings.system),
+        characters: audioPrefsClampUnit(inputSettings.characters),
+        objects: audioPrefsClampUnit(inputSettings.objects)
     };
-    return { load, save, applyToSfx, fromSfx };
-})();
+}
+
+function canCallFunctionOnObject(targetObject, functionName) {
+    return !!targetObject && typeof targetObject[functionName] === 'function';
+}
+
+function sfxSetMuted(sfxObject, isMuted) {
+    if (canCallFunctionOnObject(sfxObject, 'setMuted')) sfxObject.setMuted(!!isMuted);
+}
+
+function sfxSetMaster(sfxObject, masterValue) {
+    if (canCallFunctionOnObject(sfxObject, 'setMaster')) sfxObject.setMaster(masterValue);
+}
+
+function sfxSetBusVolume(sfxObject, busName, volumeValue) {
+    if (canCallFunctionOnObject(sfxObject, 'setBusVolume')) sfxObject.setBusVolume(busName, volumeValue);
+}
+
+function sfxApplyBusVolumes(sfxObject, settingsObject) {
+    sfxSetBusVolume(sfxObject, 'music', settingsObject.music);
+    sfxSetBusVolume(sfxObject, 'system', settingsObject.system);
+    sfxSetBusVolume(sfxObject, 'characters', settingsObject.characters);
+    sfxSetBusVolume(sfxObject, 'objects', settingsObject.objects);
+}
+
+function sfxReadMuted(sfxObject) {
+    const hasMutedFlag = typeof sfxObject.muted === 'boolean';
+    if (hasMutedFlag) return !!sfxObject.muted;
+    return localStorage.getItem('muted') === '1';
+}
+
+function sfxReadMaster(sfxObject, fallbackValue) {
+    return typeof sfxObject.master === 'number' ? sfxObject.master : fallbackValue;
+}
+
+function sfxReadVolumes(sfxObject) {
+    const defaultSettings = audioPrefsCreateDefaultSettings();
+    const volumesObject = (sfxObject && sfxObject.volumes) || {};
+    const music = getNumberOr(volumesObject.music, defaultSettings.music);
+    const system = getNumberOr(volumesObject.system, defaultSettings.system);
+    const characters = getNumberOr(volumesObject.characters, defaultSettings.characters);
+    const objects = getNumberOr(volumesObject.objects, defaultSettings.objects);
+    return { music, system, characters, objects };
+}

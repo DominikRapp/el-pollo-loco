@@ -23,23 +23,48 @@ class DrawableObject {
 
     drawFrame(ctx) {
         if (!this.showFrames) return;
-        if (this instanceof Character || this instanceof Chicken || this instanceof ChickenSmall || this instanceof Endboss || this instanceof ThrowableObject || this instanceof BottlePickup || this instanceof CoinPickup || this instanceof Platform || this instanceof Barrel) {
-            ctx.beginPath();
-            ctx.lineWidth = '2';
-            ctx.strokeStyle = 'blue';
-            ctx.rect(this.x, this.y, this.width, this.height);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.lineWidth = '2';
-            ctx.strokeStyle = 'red';
-            ctx.rect(
-                this.x + this.offset.left,
-                this.y + this.offset.top,
-                this.width - this.offset.left - this.offset.right,
-                this.height - this.offset.top - this.offset.bottom
-            );
-            ctx.stroke();
-        }
+        if (!this.isDebuggable()) return;
+        this.drawOuterRect(ctx);
+        this.drawInnerRect(ctx);
+    }
+
+    isDebuggable() {
+        return (
+            this instanceof Character ||
+            this instanceof Chicken ||
+            this instanceof ChickenSmall ||
+            this instanceof Endboss ||
+            this instanceof ThrowableObject ||
+            this instanceof BottlePickup ||
+            this instanceof CoinPickup ||
+            this instanceof Platform ||
+            this instanceof Barrel
+        );
+    }
+
+    drawOuterRect(ctx) {
+        ctx.beginPath();
+        ctx.lineWidth = '2';
+        ctx.strokeStyle = 'blue';
+        ctx.rect(this.x, this.y, this.width, this.height);
+        ctx.stroke();
+    }
+
+    drawInnerRect(ctx) {
+        const r = this.getOffsetRect();
+        ctx.beginPath();
+        ctx.lineWidth = '2';
+        ctx.strokeStyle = 'red';
+        ctx.rect(r.x, r.y, r.w, r.h);
+        ctx.stroke();
+    }
+
+    getOffsetRect() {
+        const x = this.x + this.offset.left;
+        const y = this.y + this.offset.top;
+        const w = this.width - this.offset.left - this.offset.right;
+        const h = this.height - this.offset.top - this.offset.bottom;
+        return { x, y, w, h };
     }
 
     loadImages(array) {

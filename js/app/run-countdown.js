@@ -1,40 +1,64 @@
 function runCountdown(app, seconds, onDone) {
     if (app.cdRunning) return;
     app.cdRunning = true;
+    clearExistingCountdownTimer(app);
+    const countdownElement = document.getElementById('countdown');
+    if (!countdownElement) {
+        app.cdRunning = false;
+        invokeCallback(onDone);
+        return;
+    }
+    showCountdownStart(countdownElement, seconds);
+    playCountdownTickSound();
+    startCountdownInterval(app, countdownElement, seconds, onDone);
+}
+
+function clearExistingCountdownTimer(app) {
     if (app.cdTimer) {
         clearInterval(app.cdTimer);
         app.cdTimer = null;
     }
+}
 
-    const cd = document.getElementById('countdown');
-    if (!cd) {
-        app.cdRunning = false;
-        if (typeof onDone === 'function') onDone();
+function invokeCallback(callback) {
+    if (typeof callback === 'function') callback();
+}
+
+function showCountdownStart(countdownElement, seconds) {
+    countdownElement.style.display = 'flex';
+    countdownElement.textContent = String(seconds);
+}
+
+function playCountdownTickSound() {
+    const sfxInstance = window.sfx;
+    if (!sfxInstance) return;
+    sfxInstance.stop('sys.countdown.tick');
+    sfxInstance.play('sys.countdown.tick');
+}
+
+function startCountdownInterval(app, countdownElement, seconds, onDone) {
+    let remainingSeconds = seconds;
+    app.cdTimer = setInterval(function () {
+        remainingSeconds -= 1;
+        handleCountdownTick(app, countdownElement, remainingSeconds, onDone);
+    }, 1000);
+}
+
+function handleCountdownTick(app, countdownElement, remainingSeconds, onDone) {
+    if (remainingSeconds > 0) {
+        countdownElement.textContent = String(remainingSeconds);
         return;
     }
+    countdownElement.textContent = 'Go!';
+    clearInterval(app.cdTimer);
+    app.cdTimer = null;
+    setTimeout(function () {
+        finishCountdown(app, countdownElement, onDone);
+    }, 600);
+}
 
-    let n = seconds;
-    cd.style.display = 'flex';
-    cd.textContent = String(n);
-
-    if (window.sfx) {
-        window.sfx.stop('sys.countdown.tick');
-        window.sfx.play('sys.countdown.tick');
-    }
-
-    app.cdTimer = setInterval(() => {
-        n -= 1;
-        if (n > 0) {
-            cd.textContent = String(n);
-        } else {
-            cd.textContent = 'Go!';
-            clearInterval(app.cdTimer);
-            app.cdTimer = null;
-            setTimeout(() => {
-                cd.style.display = 'none';
-                app.cdRunning = false;
-                if (typeof onDone === 'function') onDone();
-            }, 600);
-        }
-    }, 1000);
+function finishCountdown(app, countdownElement, onDone) {
+    countdownElement.style.display = 'none';
+    app.cdRunning = false;
+    invokeCallback(onDone);
 }

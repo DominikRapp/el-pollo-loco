@@ -27,9 +27,9 @@ const onFirstInteract = () => {
     window.removeEventListener('pointerdown', onFirstInteract);
     window.removeEventListener('keydown', onFirstInteract);
 };
+
 window.addEventListener('pointerdown', onFirstInteract);
 window.addEventListener('keydown', onFirstInteract);
-
 
 document.addEventListener('keydown', (event) => {
     if (event.repeat) return;
@@ -77,8 +77,6 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
-
-
 document.addEventListener('keyup', (event) => {
     const k = event.key || '';
     const kc = event.keyCode || 0;
@@ -120,7 +118,6 @@ function isEditableTarget(t) {
 function areGameShortcutsEnabled() {
     return !!(typeof app !== 'undefined' && app && app.state === GameState.GAME);
 }
-
 
 function isInGame() {
     return !!(window.app && app.state === GameState.GAME);

@@ -1,172 +1,141 @@
 function createLevel1() {
-    const CHUNK_WIDTH = 1080;
+    const chunkWidth = 1080;
+    const enemySpeeds = { chickenWalk: 1, chickenSmallWalk: 1.25, bossWalk: 1.5, bossAttack: 3 };
+    const backgroundObjects = buildBackgroundObjects(chunkWidth);
+    const computedLevelEndX = computeLevelEndX(backgroundObjects) + 100;
+    const boss = makeBoss(computedLevelEndX, enemySpeeds);
+    const enemies = buildEnemies(boss, enemySpeeds);
+    const platforms = buildPlatforms();
+    const barrels = buildBarrels();
+    const bottles = buildBottles();
+    const coins = buildCoins();
+    const clouds = buildClouds(backgroundObjects, chunkWidth);
+    const startCfg = { characterX: 100 };
+    const level = new Level(enemies, clouds, backgroundObjects, platforms, barrels, bottles, coins, startCfg);
+    level.level_end_x = computedLevelEndX;
+    return level;
+}
 
-    const ENEMY_SPEEDS = {
-        chickenWalk: 1,
-        chickenSmallWalk: 1.25,
-        bossWalk: 1.5,
-        bossAttack: 3
-    };
-
-    const backgroundObjects = [
-        new BackgroundObject('img/5_background/layers/air.png', -CHUNK_WIDTH),
-        new BackgroundObject('img/5_background/layers/3_third_layer/2.png', -CHUNK_WIDTH),
-        new BackgroundObject('img/5_background/layers/2_second_layer/2.png', -CHUNK_WIDTH),
-        new BackgroundObject('img/5_background/layers/1_first_layer/2.png', -CHUNK_WIDTH),
-
+function buildBackgroundObjects(chunkWidth) {
+    return [
+        new BackgroundObject('img/5_background/layers/air.png', -chunkWidth),
+        new BackgroundObject('img/5_background/layers/3_third_layer/2.png', -chunkWidth),
+        new BackgroundObject('img/5_background/layers/2_second_layer/2.png', -chunkWidth),
+        new BackgroundObject('img/5_background/layers/1_first_layer/2.png', -chunkWidth),
         new BackgroundObject('img/5_background/layers/air.png', 0),
         new BackgroundObject('img/5_background/layers/3_third_layer/1.png', 0),
         new BackgroundObject('img/5_background/layers/2_second_layer/1.png', 0),
         new BackgroundObject('img/5_background/layers/1_first_layer/1.png', 0),
-
-        new BackgroundObject('img/5_background/layers/air.png', CHUNK_WIDTH),
-        new BackgroundObject('img/5_background/layers/3_third_layer/2.png', CHUNK_WIDTH),
-        new BackgroundObject('img/5_background/layers/2_second_layer/2.png', CHUNK_WIDTH),
-        new BackgroundObject('img/5_background/layers/1_first_layer/2.png', CHUNK_WIDTH),
-
-        new BackgroundObject('img/5_background/layers/air.png', CHUNK_WIDTH * 2),
-        new BackgroundObject('img/5_background/layers/3_third_layer/1.png', CHUNK_WIDTH * 2),
-        new BackgroundObject('img/5_background/layers/2_second_layer/1.png', CHUNK_WIDTH * 2),
-        new BackgroundObject('img/5_background/layers/1_first_layer/1.png', CHUNK_WIDTH * 2),
-
-        new BackgroundObject('img/5_background/layers/air.png', CHUNK_WIDTH * 3),
-        new BackgroundObject('img/5_background/layers/3_third_layer/2.png', CHUNK_WIDTH * 3),
-        new BackgroundObject('img/5_background/layers/2_second_layer/2.png', CHUNK_WIDTH * 3),
-        new BackgroundObject('img/5_background/layers/1_first_layer/2.png', CHUNK_WIDTH * 3),
-
-        new BackgroundObject('img/5_background/layers/air.png', CHUNK_WIDTH * 4),
-        new BackgroundObject('img/5_background/layers/3_third_layer/1.png', CHUNK_WIDTH * 4),
-        new BackgroundObject('img/5_background/layers/2_second_layer/1.png', CHUNK_WIDTH * 4),
-        new BackgroundObject('img/5_background/layers/1_first_layer/1.png', CHUNK_WIDTH * 4),
-
-        new BackgroundObject('img/5_background/layers/air.png', CHUNK_WIDTH * 5),
-        new BackgroundObject('img/5_background/layers/3_third_layer/2.png', CHUNK_WIDTH * 5),
-        new BackgroundObject('img/5_background/layers/2_second_layer/2.png', CHUNK_WIDTH * 5),
-        new BackgroundObject('img/5_background/layers/1_first_layer/2.png', CHUNK_WIDTH * 5),
+        new BackgroundObject('img/5_background/layers/air.png', chunkWidth),
+        new BackgroundObject('img/5_background/layers/3_third_layer/2.png', chunkWidth),
+        new BackgroundObject('img/5_background/layers/2_second_layer/2.png', chunkWidth),
+        new BackgroundObject('img/5_background/layers/1_first_layer/2.png', chunkWidth),
+        new BackgroundObject('img/5_background/layers/air.png', chunkWidth * 2),
+        new BackgroundObject('img/5_background/layers/3_third_layer/1.png', chunkWidth * 2),
+        new BackgroundObject('img/5_background/layers/2_second_layer/1.png', chunkWidth * 2),
+        new BackgroundObject('img/5_background/layers/1_first_layer/1.png', chunkWidth * 2),
+        new BackgroundObject('img/5_background/layers/air.png', chunkWidth * 3),
+        new BackgroundObject('img/5_background/layers/3_third_layer/2.png', chunkWidth * 3),
+        new BackgroundObject('img/5_background/layers/2_second_layer/2.png', chunkWidth * 3),
+        new BackgroundObject('img/5_background/layers/1_first_layer/2.png', chunkWidth * 3),
+        new BackgroundObject('img/5_background/layers/air.png', chunkWidth * 4),
+        new BackgroundObject('img/5_background/layers/3_third_layer/1.png', chunkWidth * 4),
+        new BackgroundObject('img/5_background/layers/2_second_layer/1.png', chunkWidth * 4),
+        new BackgroundObject('img/5_background/layers/1_first_layer/1.png', chunkWidth * 4),
+        new BackgroundObject('img/5_background/layers/air.png', chunkWidth * 5),
+        new BackgroundObject('img/5_background/layers/3_third_layer/2.png', chunkWidth * 5),
+        new BackgroundObject('img/5_background/layers/2_second_layer/2.png', chunkWidth * 5),
+        new BackgroundObject('img/5_background/layers/1_first_layer/2.png', chunkWidth * 5),
     ];
+}
 
-    let lastChunkX = 0;
-    for (let i = 0; i < backgroundObjects.length; i++) {
-        const obj = backgroundObjects[i];
-        if (obj.x > lastChunkX) lastChunkX = obj.x;
-    }
-    const LEVEL_END_PADDING = 100;
-    const computedLevelEndX = lastChunkX + LEVEL_END_PADDING;
+function computeLevelEndX(objects) {
+    let last = 0;
+    for (let i = 0; i < objects.length; i++) if (objects[i].x > last) last = objects[i].x;
+    return last;
+}
 
+function makeBoss(levelEndX, speeds) {
     const boss = new Endboss();
-    boss.x = computedLevelEndX - 450;
-    boss.walkSpeed = ENEMY_SPEEDS.bossWalk;
+    boss.x = levelEndX - 450;
+    boss.walkSpeed = speeds.bossWalk;
     boss.alertSpeed = 0.8;
-    boss.attackSpeed = ENEMY_SPEEDS.bossAttack;
+    boss.attackSpeed = speeds.bossAttack;
     boss.alertDistance = 520;
     boss.attackDistance = 260;
+    return boss;
+}
 
-    const enemiesChickenCfg = [
+function buildEnemies(boss, speeds) {
+    const chickens = [
         { x: 1564, y: 430, patrol: [1116, 1564] },
         { x: 1800, y: 430, patrol: [1700, 2360] },
         { x: 2060, y: 430, patrol: [2000, 2870] },
         { x: 3060, y: 430, patrol: [3000, 3660] },
         { x: 3320, y: 430, patrol: [3560, 3900] }
-    ];
-    const enemiesChickenSmallCfg = [
+    ].map(e => new Chicken(e.x, { patrol: e.patrol, y: e.y }));
+    const smalls = [
         { x: 1180, y: 560, patrol: [1116, 1564] },
         { x: 1860, y: 290, patrol: [1720, 2260] },
         { x: 2320, y: 290, patrol: [2320, 2560] },
         { x: 3000, y: 290, patrol: [3020, 3360] },
         { x: 3400, y: 290, patrol: [3400, 3880] }
-    ];
-    const enemies = [
-        ...enemiesChickenCfg.map(e => new Chicken(e.x, { patrol: e.patrol, y: e.y })),
-        ...enemiesChickenSmallCfg.map(e => new ChickenSmall(e.x, { patrol: e.patrol, y: e.y })),
-        boss
-    ];
+    ].map(e => new ChickenSmall(e.x, { patrol: e.patrol, y: e.y }));
+    const all = [...chickens, ...smalls, boss];
+    for (let i = 0; i < all.length; i++) applyWalkSpeed(all[i], speeds);
+    return all;
+}
 
-    const setWalk = (o, v) => {
-        if (typeof o.walkSpeed === 'number') o.walkSpeed = v;
-        if (typeof o.speed === 'number') o.speed = v;
-        if (typeof o.speedX === 'number') o.speedX = v;
-    };
-    for (const e of enemies) {
-        if (e instanceof Chicken) setWalk(e, ENEMY_SPEEDS.chickenWalk);
-        else if (e instanceof ChickenSmall) setWalk(e, ENEMY_SPEEDS.chickenSmallWalk);
+function applyWalkSpeed(enemy, speeds) {
+    const walk = enemy instanceof Chicken ? speeds.chickenWalk : enemy instanceof ChickenSmall ? speeds.chickenSmallWalk : null;
+    if (walk !== null) {
+        if (typeof enemy.walkSpeed === 'number') enemy.walkSpeed = walk;
+        if (typeof enemy.speed === 'number') enemy.speed = walk;
+        if (typeof enemy.speedX === 'number') enemy.speedX = walk;
     }
+}
 
-    const platformsCfg = [
+function buildPlatforms() {
+    const cfg = [
         { x: 1700, y: 350, segmentWidth: 180, height: 80 },
         { x: 3000, y: 350, segmentWidth: 180, height: 80 }
     ];
-    const platforms = platformsCfg.map(p => new Platform(p.x, p.y, p.segmentWidth, p.height));
+    return cfg.map(p => new Platform(p.x, p.y, p.segmentWidth, p.height));
+}
 
-    const barrelsCfg = [
-        { x: 1000, y: 490 },
-        { x: 1570, y: 490 },
-        { x: 2870, y: 490 },
-        { x: 3900, y: 490 }
-    ];
-    const barrels = barrelsCfg.map(b => {
-        const o = new Barrel(b.x);
-        if (typeof b.y === 'number') o.y = b.y;
-        return o;
-    });
+function buildBarrels() {
+    const cfg = [{ x: 1000, y: 490 }, { x: 1570, y: 490 }, { x: 2870, y: 490 }, { x: 3900, y: 490 }];
+    return cfg.map(b => { const o = new Barrel(b.x); if (typeof b.y === 'number') o.y = b.y; return o; });
+}
 
-    const bottlesCfg = [
+function buildBottles() {
+    const cfg = [
         { img: 'img/6_salsa_bottle/1_salsa_bottle_on_ground.png', x: 1020, y: 450 },
         { img: 'img/6_salsa_bottle/2_salsa_bottle_on_ground.png', x: 1760, y: 300 },
         { img: 'img/6_salsa_bottle/1_salsa_bottle_on_ground.png', x: 2260, y: 300 },
         { img: 'img/6_salsa_bottle/2_salsa_bottle_on_ground.png', x: 3020, y: 300 },
         { img: 'img/6_salsa_bottle/1_salsa_bottle_on_ground.png', x: 3460, y: 300 }
     ];
-    const bottles = bottlesCfg.map(p => new BottlePickup(p.img, p.x, p.y));
+    return cfg.map(p => new BottlePickup(p.img, p.x, p.y));
+}
 
-    const coinsCfg = [
-        { x: 1120, y: 220 },
-        { x: 1820, y: 100 },
-        { x: 2100, y: 120 },
-        { x: 3060, y: 120 },
-        { x: 3500, y: 120 }
-    ];
-    const coins = coinsCfg.map(p => {
+function buildCoins() {
+    const cfg = [{ x: 1120, y: 220 }, { x: 1820, y: 100 }, { x: 2100, y: 120 }, { x: 3060, y: 100 }, { x: 3500, y: 120 }];
+    return cfg.map(p => {
         const c = new CoinPickup(p.x);
-        if (typeof p.y === 'number') {
-            if (typeof c.baseY === 'number') {
-                c.baseY = p.y;
-                c.y = p.y;
-            } else {
-                c.y = p.y;
-            }
-        }
+        if (typeof p.y === 'number') { if (typeof c.baseY === 'number') { c.baseY = p.y; c.y = p.y; } else c.y = p.y; }
         return c;
     });
+}
 
-    const CLOUD_IMAGES = [
-        'img/5_background/layers/4_clouds/1.png',
-        'img/5_background/layers/4_clouds/2.png'
-    ];
-    const CLOUD_WIDTH = 450;
-
+function buildClouds(backgroundObjects, chunkWidth) {
+    const images = ['img/5_background/layers/4_clouds/1.png', 'img/5_background/layers/4_clouds/2.png'];
+    const cloudWidth = 450;
     const chunkXs = [];
-    for (let i = 0; i < backgroundObjects.length; i += 4) {
-        chunkXs.push(backgroundObjects[i].x);
-    }
-
-    const clouds = chunkXs.map(chunkX => {
-        const img = CLOUD_IMAGES[Math.floor(Math.random() * CLOUD_IMAGES.length)];
-        const xCentered = chunkX + (CHUNK_WIDTH - CLOUD_WIDTH) / 2;
-        return new Cloud(xCentered, img);
+    for (let i = 0; i < backgroundObjects.length; i += 4) chunkXs.push(backgroundObjects[i].x);
+    return chunkXs.map(x => {
+        const img = images[Math.floor(Math.random() * images.length)];
+        const cx = x + (chunkWidth - cloudWidth) / 2;
+        return new Cloud(cx, img);
     });
-
-    const startCfg = { characterX: 100 };
-
-    const level = new Level(
-        enemies,
-        clouds,
-        backgroundObjects,
-        platforms,
-        barrels,
-        bottles,
-        coins,
-        startCfg
-    );
-    level.level_end_x = computedLevelEndX;
-    return level;
 }

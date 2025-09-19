@@ -1,7 +1,16 @@
 function wireInstructionsOverlay(app) {
+    initializeInstructionsState(app);
+    const elements = getInstructionsElements();
+    if (!elements) return;
+    attachInstructionsHandlers(app, elements);
+}
+
+function initializeInstructionsState(app) {
     app.instructionsPages = app.buildInstructionsPages();
     app.currentInstructionsPage = 0;
+}
 
+function getInstructionsElements() {
     const overlay = document.getElementById('instructions-overlay');
     const box = overlay ? overlay.querySelector('.overlay-box') : null;
     const content = document.getElementById('instructions-content');
@@ -9,81 +18,107 @@ function wireInstructionsOverlay(app) {
     const nextBtn = document.getElementById('instructions-next');
     const pageIndicator = document.getElementById('instructions-page-indicator');
     const closeBtn = document.getElementById('instructions-close');
+    if (!overlay || !box || !content || !prevBtn || !nextBtn || !pageIndicator || !closeBtn) return null;
+    return { overlay, content, prevBtn, nextBtn, pageIndicator, closeBtn };
+}
 
-    if (!overlay || !box || !content || !prevBtn || !nextBtn || !pageIndicator || !closeBtn) {
-        return;
-    }
+function renderInstructionsPage(app, elements, index) {
+    const total = app.instructionsPages.length;
+    const target = Math.max(0, Math.min(index, total - 1));
+    app.currentInstructionsPage = target;
+    elements.content.innerHTML = app.instructionsPages[target];
+    elements.pageIndicator.textContent = 'Page ' + (target + 1) + ' of ' + total;
+    elements.prevBtn.disabled = target === 0;
+    elements.nextBtn.disabled = target === total - 1;
+    elements.overlay.scrollTop = 0;
+}
 
-    const renderPage = (index) => {
-        const total = app.instructionsPages.length;
-        const target = Math.max(0, Math.min(index, total - 1));
-        app.currentInstructionsPage = target;
-        content.innerHTML = app.instructionsPages[target];
-        pageIndicator.textContent = 'Page ' + (target + 1) + ' of ' + total;
-        prevBtn.disabled = target === 0;
-        nextBtn.disabled = target === total - 1;
-        overlay.scrollTop = 0;
-    };
-
-    const ensureExclusiveOpen = () => {
-        app.hideWinLoseOverlays();
-        const others = [
-            document.getElementById('leaderboard-overlay'),
-            document.getElementById('settings-overlay'),
-            document.getElementById('start-screen')
-        ];
-        for (const el of others) { if (el) el.classList.add('hidden'); }
-    };
-
-    const openOverlay = () => {
-        ensureExclusiveOpen();
-        app.suppressWinLose();
-        if (typeof app.closeHamburgerMenu === 'function') app.closeHamburgerMenu();
-        overlay.classList.remove('hidden');
-        renderPage(0);
-    };
-
-    const closeOverlay = () => {
-        overlay.classList.add('hidden');
-        app.restoreWinLoseActionsOnly();
-        if (app.state === GameState.MENU) {
-            const start = document.getElementById('start-screen');
-            if (start) start.classList.remove('hidden');
-        }
-    };
-
-    const goPrev = () => {
-        if (app.currentInstructionsPage > 0) renderPage(app.currentInstructionsPage - 1);
-    };
-
-    const goNext = () => {
-        if (app.currentInstructionsPage < app.instructionsPages.length - 1) renderPage(app.currentInstructionsPage + 1);
-    };
-
-    const openLinks = [
-        document.getElementById('btn-instructions-go'),
-        document.getElementById('btn-instructions-victory'),
-        document.getElementById('menu-instructions'),
-        document.getElementById('btn-instructions-home')
+function ensureExclusiveOpen(app) {
+    app.hideWinLoseOverlays();
+    const others = [
+        document.getElementById('leaderboard-overlay'),
+        document.getElementById('settings-overlay'),
+        document.getElementById('start-screen')
     ];
-    openLinks.forEach(link => {
-        if (link) {
-            link.addEventListener('click', (event) => {
-                event.preventDefault();
-                openOverlay();
-            });
+    for (let i = 0; i < others.length; i++) {
+        const el = others[i];
+        if (el) el.classList.add('hidden');
+    }
+}
+
+function openInstructionsOverlay(app, elements) {
+    ensureExclusiveOpen(app);
+    app.suppressWinLose();
+    if (typeof app.closeHamburgerMenu === 'function') app.closeHamburgerMenu();
+    elements.overlay.classList.remove('hidden');
+    renderInstructionsPage(app, elements, 0);
+}
+
+function closeInstructionsOverlay(app, elements) {
+    elements.overlay.classList.add('hidden');
+    app.restoreWinLoseActionsOnly();
+    if (app.state === GameState.MENU) {
+        const start = document.getElementById('start-screen');
+        if (start) start.classList.remove('hidden');
+    }
+}
+
+function goToPreviousPage(app, elements) {
+    if (app.currentInstructionsPage > 0) {
+        renderInstructionsPage(app, elements, app.currentInstructionsPage - 1);
+    }
+}
+
+function goToNextPage(app, elements) {
+    if (app.currentInstructionsPage < app.instructionsPages.length - 1) {
+        renderInstructionsPage(app, elements, app.currentInstructionsPage + 1);
+    }
+}
+
+function attachInstructionsHandlers(app, elements) {
+    wireOpenLinks(app, elements);
+    wireNavigationButtons(app, elements);
+    wireOverlayClickToClose(app, elements);
+    wireEscapeKeyToClose(app, elements);
+}
+
+function wireOpenLinks(app, elements) {
+    const openIds = ['btn-instructions-go', 'btn-instructions-victory', 'menu-instructions', 'btn-instructions-home'];
+    for (let i = 0; i < openIds.length; i++) {
+        const link = document.getElementById(openIds[i]);
+        if (!link) continue;
+        link.addEventListener('click', function (event) {
+            event.preventDefault();
+            openInstructionsOverlay(app, elements);
+        });
+    }
+}
+
+function wireNavigationButtons(app, elements) {
+    elements.prevBtn.addEventListener('click', function () {
+        goToPreviousPage(app, elements);
+    });
+    elements.nextBtn.addEventListener('click', function () {
+        goToNextPage(app, elements);
+    });
+    elements.closeBtn.addEventListener('click', function () {
+        closeInstructionsOverlay(app, elements);
+    });
+}
+
+function wireOverlayClickToClose(app, elements) {
+    elements.overlay.addEventListener('click', function (event) {
+        if (event.target === elements.overlay) {
+            closeInstructionsOverlay(app, elements);
         }
     });
+}
 
-    prevBtn.addEventListener('click', goPrev);
-    nextBtn.addEventListener('click', goNext);
-    closeBtn.addEventListener('click', closeOverlay);
-
-    overlay.addEventListener('click', function (event) {
-        if (event.target === overlay) closeOverlay();
-    });
-
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && !overlay.classList.contains('hidden')) closeOverlay();
+function wireEscapeKeyToClose(app, elements) {
+    document.addEventListener('keydown', function (event) {
+        const isOpen = !elements.overlay.classList.contains('hidden');
+        if (event.key === 'Escape' && isOpen) {
+            closeInstructionsOverlay(app, elements);
+        }
     });
 }

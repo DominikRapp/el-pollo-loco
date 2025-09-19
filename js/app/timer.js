@@ -1,28 +1,26 @@
-function timerShow(app, visible) {
-    const el = document.getElementById('hud-timer');
-    if (!el) return;
-    el.style.display = visible ? 'block' : 'none';
+function showTimerElement(app, isVisible) {
+    const timerElement = document.getElementById('hud-timer');
+    if (!timerElement) return;
+    timerElement.style.display = isVisible ? 'block' : 'none';
 }
 
-function timerLoop(app) {
-    if (!app.timerRunning) {
-        return;
+function runTimerLoop(app) {
+    if (!app.timerRunning) return;
+    const timerElement = document.getElementById('hud-timer');
+    if (timerElement) {
+        timerElement.textContent = app.formatMs(Date.now() - app.timerStart);
     }
-    const el = document.getElementById('hud-timer');
-    if (el) {
-        el.textContent = app.formatMs(Date.now() - app.timerStart);
-    }
-    requestAnimationFrame(() => app.loopTimer());
+    requestAnimationFrame(function () { app.loopTimer(); });
 }
 
-function timerStop(app) {
+function stopTimer(app) {
     app.timerRunning = false;
     app.showTimer(false);
     app.lastElapsedMs = Date.now() - app.timerStart;
 }
 
 function attachTimer(app) {
-    app.showTimer = function (visible) { timerShow(app, visible); };
-    app.loopTimer = function () { timerLoop(app); };
-    app.stopTimer = function () { timerStop(app); };
+    app.showTimer = function (isVisible) { showTimerElement(app, isVisible); };
+    app.loopTimer = function () { runTimerLoop(app); };
+    app.stopTimer = function () { stopTimer(app); };
 }

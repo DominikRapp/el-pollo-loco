@@ -32,7 +32,6 @@ class StatusBar extends DrawableObject {
         this.img = this.imageCache[imagePath];
     }
 
-
     resolveImageIndex() {
         if (this.percentage == 100) {
             return 5;
