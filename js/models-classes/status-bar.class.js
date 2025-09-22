@@ -1,3 +1,8 @@
+/**
+ * UI status bar that displays the player's health as a series of images.
+ * Uses preloaded frames for 0, 20, 40, 60, 80, and 100 percent.
+ * Class fields above define images and default percentage.
+ */
 class StatusBar extends DrawableObject {
 
     IMAGES_HEALTH = [
@@ -11,6 +16,9 @@ class StatusBar extends DrawableObject {
 
     percentage = 100;
 
+    /**
+     * Sets up size/position, preloads images, and shows full health.
+     */
     constructor() {
         super();
         this.loadImages(this.IMAGES_HEALTH);
@@ -21,6 +29,11 @@ class StatusBar extends DrawableObject {
         this.setPercentage(100);
     }
 
+    /**
+     * Updates health value and switches to the matching image frame.
+     * Skips work if the frame didn't change since last render.
+     * @param {number} percentage - Health value (0–100) in steps of 20
+     */
     setPercentage(percentage) {
         this.percentage = percentage;
         const imageIndex = this.resolveImageIndex();
@@ -32,6 +45,10 @@ class StatusBar extends DrawableObject {
         this.img = this.imageCache[imagePath];
     }
 
+    /**
+     * Translates the current percentage to an image array index.
+     * @returns {number} Index within IMAGES_HEALTH
+     */
     resolveImageIndex() {
         if (this.percentage == 100) {
             return 5;

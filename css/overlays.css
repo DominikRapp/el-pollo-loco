@@ -1,0 +1,114 @@
+/* ==========================================================================
+   Overlay Components
+   Purpose: Modal-like overlay container, header, close button, content area, and variants
+   Notes:
+   - Fixed sizing (960×640) with centered flex layout inside the box
+   - Close button draws an “X” with two bars; subtle hover feedback
+   - Content area is scrollable with soft background for readability
+   ========================================================================== */
+
+/* Main overlay container: card-like panel with depth and balanced spacing */
+.overlay-box {
+    background: rgb(255, 213, 142);
+    border-radius: 16px;
+    padding: 20px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+    gap: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    height: 640px;
+    width: 960px;
+    position: relative;
+}
+
+/* Overlay heading: bold, large, and legible with subtle shadow */
+.overlay-box h2 {
+    margin: 0;
+    font-size: 40px;
+    font-weight: 700;
+    color: #332c0f;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, .4);
+}
+
+/* Close button: circular control anchored to the top-right corner */
+.overlay-closebutton {
+    all: unset;
+    cursor: pointer;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #fffbea;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+/* Close icon bars: two rounded bars forming the “X” */
+.overlay-closebutton .xbar {
+    position: absolute;
+    width: 24px;
+    height: 3px;
+    background: #f59e0b;
+    border-radius: 2px;
+}
+
+/* First diagonal bar */
+.overlay-closebutton .xbar.one {
+    transform: rotate(45deg);
+}
+
+/* Second diagonal bar */
+.overlay-closebutton .xbar.two {
+    transform: rotate(-45deg);
+}
+
+/* Close button hover: slight dim for tactile feedback */
+.overlay-closebutton:hover {
+    filter: brightness(0.97);
+}
+
+/* Footer label: fixed near bottom-left for subtle status or branding */
+.overlay-footer {
+    position: absolute;
+    left: 20px;
+    bottom: 14px;
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+/* Content area: padded, scrollable pane with neutral text styling */
+.overlay-content {
+    position: absolute;
+    left: 80px;
+    right: 80px;
+    top: 72px;
+    bottom: 64px;
+    overflow: auto;
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 12px;
+    padding: 18px;
+    color: #333;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.45;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
+}
+
+/* Overlay variants: themed background for specific overlay contexts */
+#instructions-overlay,
+#leaderboard-overlay,
+#settings-overlay,
+#instructions-overlay.home-context,
+#leaderboard-overlay.home-context,
+#settings-overlay.home-context {
+    background: #fbbf24;
+}

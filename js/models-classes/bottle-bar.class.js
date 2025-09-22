@@ -1,5 +1,9 @@
+/**
+ * Bottle status bar that switches images based on a percentage value.
+ * Uses cached images and remembers the last rendered index to avoid redundant updates.
+ */
 class BottleBar extends DrawableObject {
-    
+
     IMAGES = [
         'img/7_statusbars/1_statusbar/3_statusbar_bottle/blue/0.png',
         'img/7_statusbars/1_statusbar/3_statusbar_bottle/blue/20.png',
@@ -11,6 +15,9 @@ class BottleBar extends DrawableObject {
 
     percentage = 0;
 
+    /**
+     * Loads images, sets default position/size, and initializes to 0%.
+     */
     constructor() {
         super();
         this.loadImages(this.IMAGES);
@@ -21,6 +28,11 @@ class BottleBar extends DrawableObject {
         this.setPercentage(0);
     }
 
+    /**
+     * Updates the percentage and swaps the image if the index changed.
+     * Expects a value from 0 to 100 (no clamping here).
+     * @param {number} percentage
+     */
     setPercentage(percentage) {
         this.percentage = percentage;
         const imageIndex = this.resolveImageIndex();
@@ -32,6 +44,10 @@ class BottleBar extends DrawableObject {
         this.img = this.imageCache[imagePath];
     }
 
+    /**
+     * Maps the current percentage to an image index (0..5).
+     * @returns {number}
+     */
     resolveImageIndex() {
         if (this.percentage >= 100) return 5;
         if (this.percentage >= 80) return 4;

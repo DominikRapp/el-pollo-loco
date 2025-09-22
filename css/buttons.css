@@ -1,0 +1,42 @@
+/* ==========================================================================
+   Buttons
+   Purpose: Base button styling with hover/active/disabled states
+   Notes:
+   - Uses a warm gradient background and soft shadows
+   ========================================================================== */
+
+/* Base button: size, typography, visuals, and transitions */
+button {
+    min-width: 140px;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
+    color: #fffbea;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .4);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, .3);
+    transition: background 0.25s ease, transform 0.15s ease;
+}
+
+/* Hover state: slightly darker gradient and subtle lift */
+button:hover {
+    background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+    transform: translateY(-2px);
+}
+
+/* Active state: remove lift and tighten shadow */
+button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, .4);
+}
+
+/* Disabled state: reduce emphasis and block interaction */
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}

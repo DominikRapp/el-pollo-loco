@@ -1,5 +1,9 @@
+/**
+ * Central audio manager: loads/controls sound pools, applies master/bus volumes,
+ * handles mute state, one-shot playback, loops, and crossfading between music tracks.
+ * Class fields above hold defaults, manifest entries, and internal state.
+ */
 class SoundManager {
-
     master = 0.1;
     volumes = { music: 0.1, system: 0.1, characters: 0.1, objects: 0.1 };
     muted = false;
@@ -22,9 +26,9 @@ class SoundManager {
         'boss.step': { src: 'audio/boss/step.mp3', bus: 'characters', loop: false, gain: 0.4, pool: 3 },
         'boss.hit': { src: 'audio/boss/hit.mp3', bus: 'characters', loop: false, gain: 0.4, pool: 2 },
         'boss.dead': { src: 'audio/boss/dead.mp3', bus: 'characters', loop: false, gain: 0.4, pool: 1 },
-        'chicken.step': { src: 'audio/chicken/step.mp3', bus: 'characters', loop: false, gain: 0.1, pool: 3 },
+        'chicken.step': { src: 'audio/chicken/step.mp3', bus: 'characters', loop: false, gain: 0.05, pool: 3 },
         'chicken.dead': { src: 'audio/chicken/dead.mp3', bus: 'characters', loop: false, gain: 0.4, pool: 2 },
-        'chicken-small.step': { src: 'audio/chicken-small/step.mp3', bus: 'characters', loop: false, gain: 0.1, pool: 3 },
+        'chicken-small.step': { src: 'audio/chicken-small/step.mp3', bus: 'characters', loop: false, gain: 0.05, pool: 3 },
         'chicken-small.dead': { src: 'audio/chicken-small/dead.mp3', bus: 'characters', loop: false, gain: 0.4, pool: 2 },
         'obj.bottle.pick': { src: 'audio/objects/bottle_pick.mp3', bus: 'objects', loop: false, gain: 0.4, pool: 3 },
         'obj.bottle.splash': { src: 'audio/objects/bottle_splash.mp3', bus: 'objects', loop: false, gain: 0.4, pool: 3 },
@@ -34,138 +38,122 @@ class SoundManager {
     loopHold = new Map();
     currentMusicId = null;
     fadeHandle = null;
+    ready = false;
+    support = null;
 
+    /**
+     * Builds audio pools, applies mute state, and signals readiness.
+     */
     init() {
-        this.createAllPools();
-        this.applyMuteState();
+        this.support = new SoundSupport(this);
+        this.support.createAllPools();
+        this.support.applyMuteState();
         this.attachMuteListener();
         this.markReady();
     }
 
-    createAllPools() {
-        const ids = Object.keys(this.manifest || {});
-        for (const id of ids) {
-            const spec = this.manifest[id];
-            this.createPoolFor(id, spec);
-        }
-    }
-
-    createPoolFor(id, spec) {
-        const n = Math.max(1, spec?.pool || 1);
-        const list = [];
-        for (let i = 0; i < n; i++) {
-            list.push(this.makeAudioEntry(id, spec.src));
-        }
-        this.pools.set(id, list);
-    }
-
-    makeAudioEntry(id, src) {
-        const a = new Audio(src);
-        a.preload = 'auto';
-        a.loop = false;
-        a.volume = 0;
-        return { audio: a, busy: false, id };
-    }
-
+    /**
+     * Subscribes to a custom mute event from the app shell.
+     */
     attachMuteListener() {
         window.addEventListener('app-mute-changed', e => {
             this.setMuted(!!(e && e.detail && e.detail.muted));
         });
     }
 
+    /**
+     * Marks the system ready and emits a 'sfx-ready' event.
+     */
     markReady() {
         this.ready = true;
         window.dispatchEvent(new CustomEvent('sfx-ready'));
     }
 
+    /**
+     * Toggles global mute and reapplies volumes.
+     * @param {boolean} on
+     */
     setMuted(on) {
         this.muted = !!on;
-        this.applyVolumes();
+        this.support.applyVolumes();
     }
 
+    /**
+     * Sets master volume [0..1] and reapplies volumes.
+     * @param {number} value
+     */
     setMaster(value) {
-        this.master = this.clamp01(value);
-        this.applyVolumes();
+        this.master = this.support.clamp01(value);
+        this.support.applyVolumes();
     }
 
+    /**
+     * Sets per-bus volume [0..1] and reapplies volumes.
+     * @param {'music'|'system'|'characters'|'objects'} bus
+     * @param {number} value
+     */
     setBusVolume(bus, value) {
         if (!this.volumes.hasOwnProperty(bus)) return;
-        this.volumes[bus] = this.clamp01(value);
-        this.applyVolumes();
+        this.volumes[bus] = this.support.clamp01(value);
+        this.support.applyVolumes();
     }
 
+    /**
+     * Plays a one-shot sound by id.
+     * @param {string} id - Key from the manifest
+     * @param {object} [opts]
+     * @param {number} [opts.gain] - Extra gain multiplier
+     * @param {number} [opts.rate] - Playback rate
+     * @param {boolean} [opts.loop] - Force loop override
+     * @returns {object|undefined} instance handle or undefined if unavailable
+     */
     play(id, opts = {}) {
         const spec = this.manifest[id];
         if (!spec) return;
-        const inst = this.acquire(id);
+        const inst = this.support.acquire(id);
         if (!inst) return;
         const a = inst.audio;
-        this.applyPlaybackOptions(a, spec, opts);
-        this.resetCurrentTime(a);
-        const g = this.effectiveVolume(id, spec, opts.gain);
-        this.applyGainMute(a, g);
-        this.markBusy(inst, true);
-        this.attachOnEnd(a, inst);
-        this.startPlayback(a, inst);
+        this.support.applyPlaybackOptions(a, spec, opts);
+        this.support.resetCurrentTime(a);
+        const g = this.support.effectiveVolume(id, spec, opts.gain);
+        this.support.applyGainMute(a, g);
+        this.support.markBusy(inst, true);
+        this.support.attachOnEnd(a, inst);
+        this.support.startPlayback(a, inst);
         return inst;
     }
 
-    applyPlaybackOptions(a, spec, opts) {
-        a.loop = !!opts.loop && !!spec.loop;
-        a.playbackRate = typeof opts.rate === 'number' ? opts.rate : 1;
-    }
-
-    resetCurrentTime(a) {
-        try { a.currentTime = 0; } catch { }
-    }
-
-    applyGainMute(a, g) {
-        a.volume = g;
-        a.muted = (this.muted === true) || (g === 0);
-    }
-
-    markBusy(inst, flag) {
-        inst.busy = !!flag;
-    }
-
-    attachOnEnd(a, inst) {
-        const onEnd = () => {
-            inst.busy = false;
-            a.removeEventListener('ended', onEnd);
-        };
-        a.addEventListener('ended', onEnd);
-    }
-
-    startPlayback(a, inst) {
-        a.play().catch(() => { inst.busy = false; });
-    }
-
+    /**
+     * Starts (or resumes) a looping sound and keeps a reference.
+     * @param {string} id
+     * @param {object} [opts]
+     * @returns {object|undefined} loop instance
+     */
     loop(id, opts = {}) {
-        const spec = this.manifest[id];
-        if (!spec) return;
-        const existing = this.loopHold.get(id);
-        if (existing && existing.audio && !existing.audio.paused) return existing;
-        const inst = this.play(id, { loop: true, rate: opts.rate, gain: opts.gain });
-        if (inst) this.loopHold.set(id, inst);
-        return inst;
+        return this.support.loop(id, opts);
     }
 
+    /**
+     * Stops a specific sound (all instances for that id).
+     * @param {string} id
+     */
     stop(id) {
-        const list = this.pools.get(id) || [];
-        list.forEach(inst => {
-            try { inst.audio.pause(); } catch { }
-            try { inst.audio.currentTime = 0; } catch { }
-            inst.busy = false;
-        });
-        this.loopHold.delete(id);
-        if (this.currentMusicId === id) this.currentMusicId = null;
+        this.support.stop(id);
     }
 
+    /**
+     * Stops all sounds, optionally only those whose id starts with a prefix.
+     * @param {string|null} [prefix]
+     */
     stopAll(prefix = null) {
-        const ids = prefix ? Object.keys(this.manifest).filter(k => k.startsWith(prefix)) : Object.keys(this.manifest);
-        ids.forEach(id => this.stop(id));
+        this.support.stopAll(prefix);
     }
 
+    /**
+     * Crossfades from current music track to another.
+     * @param {string} id - Target music id
+     * @param {number} [fadeMs=400] - Fade duration in ms
+     */
     musicTo(id, fadeMs = 400) {
         if (this.currentMusicId === id) return;
         const prev = this.currentMusicId;
@@ -179,6 +167,11 @@ class SoundManager {
         this.fadeHandle = requestAnimationFrame(ts => this.stepCrossfade(state, ts));
     }
 
+    /**
+     * Ensures unrelated music ids are fully stopped.
+     * @param {string|null} prev
+     * @param {string} id
+     */
     stopOtherMusic(prev, id) {
         const ids = Object.keys(this.manifest).filter(k => k.startsWith('music.'));
         for (const mid of ids) {
@@ -186,163 +179,72 @@ class SoundManager {
         }
     }
 
+    /**
+     * Retrieves audio elements for previous and next tracks.
+     * @param {string|null} prev
+     * @param {string} id
+     * @returns {{aPrev: HTMLAudioElement|null, aNext: HTMLAudioElement|null}}
+     */
     getPrevNextAudio(prev, id) {
-        const aPrev = prev ? this.peekLoopAudio(prev) : null;
+        const aPrev = prev ? this.support.peekLoopAudio(prev) : null;
         const instNext = this.loop(id);
         const aNext = instNext ? instNext.audio : null;
         return { aPrev, aNext };
     }
 
+    /**
+     * Performs one crossfade animation step.
+     * @param {object} state
+     * @param {number} now
+     */
     stepCrossfade(state, now) {
-        const t = this.clamp01((now - state.t0) / state.dur);
-        const ctx = this.buildFadeContext(state);
-        this.applyFadeVolumes(ctx, t);
-        this.applyFadeMutes(ctx);
+        const t = this.support.clamp01((now - state.t0) / state.dur);
+        const ctx = this.support.buildFadeContext(state);
+        this.support.applyFadeVolumes(ctx, t);
+        this.support.applyFadeMutes(ctx);
         if (t < 1) {
             this.fadeHandle = requestAnimationFrame(ts => this.stepCrossfade(state, ts));
         } else {
-            this.finishFade(ctx);
+            this.support.finishFade(ctx);
         }
     }
 
-    buildFadeContext(state) {
-        const nextSpec = this.manifest[state.id];
-        const prevSpec = state.prev ? this.manifest[state.prev] : null;
-        const nextTarget = this.effectiveVolume(state.id, nextSpec, 1);
-        const prevTarget = prevSpec ? this.effectiveVolume(state.prev, prevSpec, 1) : 0;
-        const nextBusZero = this.clamp01(this.volumes[nextSpec?.bus] ?? 1) === 0;
-        const prevBusZero = prevSpec ? this.clamp01(this.volumes[prevSpec.bus] ?? 1) === 0 : false;
-        return { ...state, nextSpec, prevSpec, nextTarget, prevTarget, nextBusZero, prevBusZero };
-    }
-
-    applyFadeVolumes(ctx, t) {
-        if (ctx.aPrev) ctx.aPrev.volume = this.clamp01(ctx.prevTarget * (1 - t));
-        ctx.aNext.volume = this.clamp01(ctx.nextTarget * t);
-    }
-
-    applyFadeMutes(ctx) {
-        if (ctx.aPrev) ctx.aPrev.muted = (this.muted === true) || ctx.prevBusZero || (ctx.aPrev.volume === 0);
-        ctx.aNext.muted = (this.muted === true) || ctx.nextBusZero || (ctx.aNext.volume === 0);
-    }
-
-    finishFade(ctx) {
-        if (ctx.aPrev) {
-            try { ctx.aPrev.pause(); } catch { }
-            try { ctx.aPrev.currentTime = 0; } catch { }
-        }
-        this.fadeHandle = null;
-    }
-
-    acquire(id) {
-        const list = this.pools.get(id);
-        if (!list || list.length === 0) return null;
-        for (let i = 0; i < list.length; i++) {
-            if (!list[i].busy && list[i].audio.paused) return list[i];
-        }
-        return list[0];
-    }
-
-    effectiveVolume(id, spec, gainOverride) {
-        if (this.muted === true) return 0;
-        const bus = spec.bus;
-        const busVol = this.clamp01(this.volumes[bus] ?? 1);
-        if (busVol === 0) return 0;
-        const base = typeof spec.gain === 'number' ? spec.gain : 1;
-        const g = typeof gainOverride === 'number' ? gainOverride : 1;
-        const v = this.master * busVol * base * g;
-        return this.clamp01(v);
-    }
-
+    /**
+     * Reapplies computed volumes to all active audio.
+     */
     applyVolumes() {
-        Object.keys(this.manifest).forEach(id => {
-            const spec = this.manifest[id];
-            const list = this.pools.get(id) || [];
-            const g = this.effectiveVolume(id, spec, 1);
-            const busVol = this.clamp01(this.volumes[spec.bus] ?? 1);
-            list.forEach(inst => {
-                const a = inst.audio;
-                a.volume = g;
-                a.muted = (this.muted === true) || (busVol === 0) || (g === 0);
-            });
-        });
+        this.support.applyVolumes();
     }
 
+    /**
+     * Reapplies mute state to all active audio.
+     */
     applyMuteState() {
-        Object.keys(this.manifest).forEach(id => {
-            const list = this.pools.get(id) || [];
-            list.forEach(inst => {
-                inst.audio.muted = this.muted === true;
-            });
-        });
+        this.support.applyMuteState();
     }
 
+    /**
+     * Unlocks audio on first user gesture and pre-warms buffers.
+     */
     unlock() {
         if (this.unlocked) return;
         this.unlocked = true;
-        this.warmAllAudio();
+        this.support.warmAllAudio();
     }
 
-    warmAllAudio() {
-        const ids = Object.keys(this.manifest || {});
-        for (const id of ids) {
-            const list = this.pools.get(id) || [];
-            this.warmList(list);
-        }
+    /**
+     * Prepares pools or decodes sounds ahead of time.
+     */
+    warmup() {
+        this.support.warmup();
     }
 
-    warmList(list) {
-        for (const inst of list) {
-            this.warmInstance(inst);
-        }
-    }
-
-    warmInstance(inst) {
-        const a = inst.audio;
-        const wasMuted = a.muted;
-        const wasVol = a.volume;
-        a.muted = true;
-        try {
-            const p = a.play();
-            this.handlePlayResult(p, a, wasMuted, wasVol);
-        } catch {
-            this.restoreAudio(a, wasMuted, wasVol);
-        }
-    }
-
-    handlePlayResult(p, a, wasMuted, wasVol) {
-        if (p && typeof p.then === 'function') {
-            p.then(() => this.afterPlay(a, wasMuted, wasVol))
-                .catch(() => this.restoreAudio(a, wasMuted, wasVol));
-        } else {
-            this.afterPlay(a, wasMuted, wasVol);
-        }
-    }
-
-    afterPlay(a, wasMuted, wasVol) {
-        try { a.pause(); a.currentTime = 0; } catch { }
-        this.restoreAudio(a, wasMuted, wasVol);
-    }
-
-    restoreAudio(a, wasMuted, wasVol) {
-        a.muted = wasMuted;
-        a.volume = wasVol;
-    }
-
-    peekLoopAudio(id) {
-        const h = this.loopHold.get(id);
-        return h ? h.audio : null;
-    }
-
+    /**
+     * Returns cross-bus scaling factor for a sound id.
+     * @param {string} id
+     * @returns {number}
+     */
     crossBusScale(id) {
-        const spec = this.manifest[id];
-        if (!spec) return 1;
-        const bus = spec.bus;
-        return this.clamp01(this.master * (this.volumes[bus] || 1) * (spec.gain || 1));
-    }
-
-    clamp01(x) {
-        if (x < 0) return 0;
-        if (x > 1) return 1;
-        return x;
+        return this.support.crossBusScale(id);
     }
 }

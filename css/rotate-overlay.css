@@ -1,0 +1,106 @@
+/* ==========================================================================
+   Rotate Overlay
+   Purpose: Fullscreen overlay prompting users to rotate their device
+   Notes:
+   - Hidden by default; shown on touch devices in portrait via media query
+   - Uses blurred background image with scrim and a glassy card
+   ========================================================================== */
+
+/* Fullscreen overlay container: centered content with high stacking order */
+#rotate-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: #fffbea;
+    text-align: center;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+/* Background layer: covers screen with blurred/saturated image */
+#rotate-overlay .rotate-bg {
+    position: absolute;
+    inset: 0;
+    background-image: var(--rotate-bg-img);
+    background-size: cover;
+    background-position: center;
+    filter: blur(var(--rotate-blur)) saturate(1.1) brightness(0.9);
+    transform: scale(1.05);
+    z-index: 100;
+}
+
+/* Scrim layer: dark radial + warm gradient for contrast */
+#rotate-overlay .rotate-scrim {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(60% 60% at 50% 45%, rgba(0, 0, 0, .55) 0%, rgba(0, 0, 0, .88) 100%), linear-gradient(180deg, rgba(255, 186, 36, .92) 0%, rgba(255, 122, 0, .96) 100%);
+    z-index: 10;
+}
+
+/* Message card: glassmorphism panel with blur and accent shadow */
+#rotate-overlay .rotate-card {
+    position: relative;
+    padding: 22px 26px;
+    border-radius: 16px;
+    background: rgba(0, 0, 0, .35);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, .45), inset 0 0 0 1px rgba(255, 255, 255, .1);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    max-width: min(90vw, 520px);
+    z-index: 1000;
+}
+
+/* Icon wrapper: centered icon with accent color */
+#rotate-overlay .rotate-icon {
+    display: block;
+    margin: 0 auto 10px;
+    color: var(--accent, #ff7a00);
+}
+
+/* Heading: responsive size with soft shadow for readability */
+#rotate-overlay h2 {
+    margin: 0 0 6px 0;
+    font-size: clamp(20px, 3.6vw, 28px);
+    letter-spacing: .01em;
+    color: #fff;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, .45);
+}
+
+/* Message text: compact, responsive label style */
+#rotate-overlay p {
+    margin: 0;
+    font-weight: 600;
+    font-size: clamp(14px, 2.8vw, 18px);
+    color: rgba(255, 255, 255, .95);
+}
+
+/* Icon animation: gentle pulsing to draw attention */
+.rotate-icon {
+    display: inline-block;
+    animation: rotateHint 1.8s ease-in-out infinite;
+}
+
+/* Keyframes for the pulsing scale effect */
+@keyframes rotateHint {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.06);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Show overlay only on touch devices in portrait orientation */
+@media (hover: none) and (pointer: coarse) and (orientation: portrait) {
+    #rotate-overlay {
+        display: flex;
+    }
+}

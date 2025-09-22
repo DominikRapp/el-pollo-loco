@@ -1,11 +1,15 @@
 let LeaderboardAPI = createLeaderboardApiMain();
 
+/**
+ * Creates the public API for the leaderboard module.
+ * @returns {object} API with all available leaderboard methods
+ */
 function createLeaderboardApiMain() {
     return {
         init: leaderboardInit,
-        formatTime: formatMillisecondsAsClock,
-        calculatePoints: calculateScorePoints,
-        buildSortKey: buildSortableKeyMain,
+        formatTime: LeaderboardCore.formatTime,
+        calculatePoints: LeaderboardCore.calculatePoints,
+        buildSortKey: LeaderboardCore.buildSortKey,
         fetchTop10: fetchTopTenEntries,
         qualifiesForTop10: qualifiesForTopTen,
         submitIfTop10: submitIfQualifiesForTopTen,
@@ -14,6 +18,13 @@ function createLeaderboardApiMain() {
     };
 }
 
+/**
+ * Initializes the leaderboard with Firebase.
+ * @param {object} initOptions - Initialization options
+ * @param {object} initOptions.appConfig - Firebase app configuration
+ * @param {string} initOptions.databaseURL - Firebase Realtime Database URL
+ * @throws {Error} If Firebase SDK is not loaded
+ */
 function leaderboardInit(initOptions) {
     ensureFirebaseSdkLoaded();
     const options = normalizeInitOptions(initOptions);
@@ -22,84 +33,76 @@ function leaderboardInit(initOptions) {
     setRootDatabaseUrl(options.databaseURL);
 }
 
-function formatMillisecondsAsClock(millisecondsValue) {
-    const numericMilliseconds = Number(millisecondsValue);
-    if (!Number.isFinite(numericMilliseconds)) return '–';
-    if (numericMilliseconds >= 9999999999) return '00:00';
-    const totalSeconds = Math.max(0, Math.floor(numericMilliseconds / 1000));
-    const totalMinutes = Math.floor(totalSeconds / 60);
-    const remainingSeconds = totalSeconds % 60;
-    const minutesText = String(totalMinutes).padStart(2, '0');
-    const secondsText = String(remainingSeconds).padStart(2, '0');
-    return minutesText + ':' + secondsText;
-}
-
-function calculateScorePoints(countsObject = {}) {
-    const {
-        levelComplete = 0,
-        boss = 0,
-        chicken = 0,
-        chickenSmall = 0,
-        bottle = 0,
-        coin = 0
-    } = countsObject || {};
-    const totalPoints =
-        levelComplete * 10 +
-        boss * 5 +
-        chicken * 4 +
-        chickenSmall * 3 +
-        bottle * 2 +
-        coin * 1;
-    return totalPoints;
-}
-
-function buildSortableKeyMain(pointsValue, timeMilliseconds, createdAtMilliseconds) {
-    const paddedPoints = padNonNegativeInteger(pointsValue, 6);
-    const paddedInvertedTime = invertAndPad(timeMilliseconds, 9999999999, 10);
-    const paddedInvertedCreated = invertAndPad(createdAtMilliseconds, 9999999999999, 13);
-    return paddedPoints + ':' + paddedInvertedTime + ':' + paddedInvertedCreated;
-}
-
+/**
+ * Fetches the top 10 leaderboard entries.
+ * @param {'total'|'level'} kind - Type of leaderboard
+ * @param {string} [levelIdentifier] - Level ID if kind is 'level'
+ * @returns {Promise<object[]>} List of up to 10 leaderboard entries
+ */
 async function fetchTopTenEntries(kind, levelIdentifier) {
     const reference = getDatabaseReference(kind, levelIdentifier)
         .orderByChild('sortKey')
         .limitToLast(10);
     const snapshot = await reference.get();
     if (!snapshot.exists()) return [];
-    const timeFieldName = getTimeFieldName(kind);
-    const entryList = normalizeEntriesTimes(Object.values(snapshot.val() || {}), timeFieldName);
-    const sortedList = entryList.sort((a, b) => compareEntries(a, b, timeFieldName));
+    const timeFieldName = LeaderboardCore.getTimeFieldName(kind);
+    const entryList = LeaderboardCore.normalizeEntriesTimes(Object.values(snapshot.val() || {}), timeFieldName);
+    const sortedList = entryList.sort((a, b) => LeaderboardCore.compareEntries(a, b, timeFieldName));
     return sortedList.slice(0, 10);
 }
 
+/**
+ * Checks if a new entry qualifies for the top 10.
+ * @param {'total'|'level'} kind - Type of leaderboard
+ * @param {object} candidateEntry - Entry to check
+ * @param {string} [levelIdentifier] - Level ID if kind is 'level'
+ * @returns {Promise<boolean>} True if entry qualifies
+ */
 async function qualifiesForTopTen(kind, candidateEntry, levelIdentifier) {
     const currentTopTen = await fetchTopTenEntries(kind, levelIdentifier);
     if (currentTopTen.length < 10) return true;
     const worstEntry = currentTopTen[currentTopTen.length - 1];
-    const timeFieldName = getTimeFieldName(kind);
-    const candidateTime = resolveComparableTime(candidateEntry, timeFieldName);
-    const worstTime = resolveComparableTime(worstEntry, timeFieldName);
+    const timeFieldName = LeaderboardCore.getTimeFieldName(kind);
+    const candidateTime = LeaderboardCore.resolveComparableTime(candidateEntry, timeFieldName);
+    const worstTime = LeaderboardCore.resolveComparableTime(worstEntry, timeFieldName);
     if (candidateEntry.points > worstEntry.points) return true;
     if (candidateEntry.points === worstEntry.points && candidateTime < worstTime) return true;
     return false;
 }
 
+/**
+ * Submits an entry if it qualifies for the top 10.
+ * @param {'total'|'level'} kind - Type of leaderboard
+ * @param {object} candidateEntry - Entry data
+ * @param {string} [levelIdentifier] - Level ID if kind is 'level'
+ * @returns {Promise<{saved: boolean, rec: boolean, top: object[]}>}
+ * Updated leaderboard information
+ */
 async function submitIfQualifiesForTopTen(kind, candidateEntry, levelIdentifier) {
     const createdAtMilliseconds = Date.now();
-    const timeFieldName = getTimeFieldName(kind);
-    const timeValue = resolveTimeValueForKind(kind, candidateEntry);
-    const pointsValue = resolvePointsValue(candidateEntry);
-    const sortKey = buildSortableKeyMain(pointsValue, timeValue, createdAtMilliseconds);
-    const payloadToSave = buildSavedPayload(candidateEntry, pointsValue, timeFieldName, timeValue, createdAtMilliseconds, sortKey);
+    const timeFieldName = LeaderboardCore.getTimeFieldName(kind);
+    const timeValue = LeaderboardCore.resolveTimeValueForKind(kind, candidateEntry);
+    const pointsValue = LeaderboardCore.resolvePointsValue(candidateEntry);
+    const sortKey = LeaderboardCore.buildSortKey(pointsValue, timeValue, createdAtMilliseconds);
+    const payloadToSave = LeaderboardCore.buildSavedPayload(candidateEntry, pointsValue, timeFieldName, timeValue, createdAtMilliseconds, sortKey);
     await getDatabaseReference(kind, levelIdentifier).push(payloadToSave);
     const updatedTopTen = await fetchTopTenEntries(kind, levelIdentifier);
     return { saved: true, rec: true, top: updatedTopTen };
 }
 
+/**
+ * Creates a leaderboard entry payload for a single level.
+ * @param {object} input - Entry input
+ * @param {string} input.name - Player name
+ * @param {string} input.level - Level identifier
+ * @param {number} input.timeMs - Time in milliseconds
+ * @param {object} input.counts - Object with score counts
+ * @returns {object} Level entry payload
+ */
 function createLevelEntryPayload(input) {
-    const pointsForEntry = calculateScorePoints(input.counts);
+    const pointsForEntry = LeaderboardCore.calculatePoints(input.counts);
     const createdAtMilliseconds = Date.now();
-    const sortKey = buildSortableKeyMain(pointsForEntry, input.timeMs, createdAtMilliseconds);
+    const sortKey = LeaderboardCore.buildSortKey(pointsForEntry, input.timeMs, createdAtMilliseconds);
     return {
         name: input.name,
         level: input.level,
@@ -111,12 +114,21 @@ function createLevelEntryPayload(input) {
     };
 }
 
+/**
+ * Creates a leaderboard entry payload for total progress.
+ * @param {object} input - Entry input
+ * @param {string} input.name - Player name
+ * @param {string} input.highestLevel - Highest level reached
+ * @param {number} [input.totalTimeMs] - Total time (optional)
+ * @param {object} [input.counts] - Object with score counts
+ * @returns {object} Total entry payload
+ */
 function createTotalEntryPayload(input) {
-    const resolvedTotalTime = resolveTotalTimeFromInput(input);
+    const resolvedTotalTime = LeaderboardCore.resolveTotalTimeFromInput(input);
     const safeCounts = input.counts || {};
-    const pointsForEntry = calculateScorePoints(safeCounts);
+    const pointsForEntry = LeaderboardCore.calculatePoints(safeCounts);
     const createdAtMilliseconds = Date.now();
-    const sortKey = buildSortableKeyMain(pointsForEntry, resolvedTotalTime, createdAtMilliseconds);
+    const sortKey = LeaderboardCore.buildSortKey(pointsForEntry, resolvedTotalTime, createdAtMilliseconds);
     return {
         name: input.name,
         highestLevel: input.highestLevel,
@@ -128,11 +140,20 @@ function createTotalEntryPayload(input) {
     };
 }
 
+/**
+ * Ensures Firebase SDK is available.
+ * @throws {Error} If SDK is not loaded
+ */
 function ensureFirebaseSdkLoaded() {
     const isLoaded = typeof window !== 'undefined' && typeof window.firebase !== 'undefined';
     if (!isLoaded) throw new Error('Firebase SDK not loaded');
 }
 
+/**
+ * Normalizes initialization options.
+ * @param {object} initOptions - User provided options
+ * @returns {{appConfig: object, databaseURL: string}}
+ */
 function normalizeInitOptions(initOptions) {
     const options = initOptions || {};
     return {
@@ -141,103 +162,40 @@ function normalizeInitOptions(initOptions) {
     };
 }
 
+/**
+ * Ensures a Firebase app is initialized.
+ * @param {object} appConfig - Firebase app config
+ */
 function ensureFirebaseApp(appConfig) {
     if (!firebase.apps.length) firebase.initializeApp(appConfig);
-}
-
-function padNonNegativeInteger(value, width) {
-    const integerValue = Math.max(0, Math.floor(value || 0));
-    return String(integerValue).padStart(width, '0');
-}
-
-function invertAndPad(rawValue, maxValue, width) {
-    const bounded = Math.min(maxValue, Math.max(0, Math.floor(rawValue || 0)));
-    const inverted = maxValue - bounded;
-    return padNonNegativeInteger(inverted, width);
-}
-
-function getTimeFieldName(kind) {
-    return kind === 'total' ? 'totalTimeMs' : 'timeMs';
-}
-
-function normalizeEntriesTimes(entryArray, timeFieldName) {
-    return entryArray.map((entryObject) => {
-        const preferredTime = resolveComparableTime(entryObject, timeFieldName);
-        return {
-            ...entryObject,
-            [timeFieldName]: preferredTime,
-            timeMs: typeof entryObject.timeMs === 'number' ? entryObject.timeMs : preferredTime,
-            totalTimeMs: typeof entryObject.totalTimeMs === 'number' ? entryObject.totalTimeMs : preferredTime
-        };
-    });
-}
-
-function compareEntries(leftEntry, rightEntry, timeFieldName) {
-    if (rightEntry.points !== leftEntry.points) return rightEntry.points - leftEntry.points;
-    const leftTime = leftEntry[timeFieldName];
-    const rightTime = rightEntry[timeFieldName];
-    if (leftTime !== rightTime) return leftTime - rightTime;
-    const leftCreated = typeof leftEntry.createdAt === 'number' ? leftEntry.createdAt : Number.MAX_SAFE_INTEGER;
-    const rightCreated = typeof rightEntry.createdAt === 'number' ? rightEntry.createdAt : Number.MAX_SAFE_INTEGER;
-    return leftCreated - rightCreated;
-}
-
-function resolveComparableTime(entryObject, timeFieldName) {
-    if (typeof entryObject[timeFieldName] === 'number') return entryObject[timeFieldName];
-    if (typeof entryObject.timeMs === 'number') return entryObject.timeMs;
-    if (typeof entryObject.totalTimeMs === 'number') return entryObject.totalTimeMs;
-    return Number.MAX_SAFE_INTEGER;
-}
-
-function resolveTimeValueForKind(kind, candidateEntry) {
-    if (kind === 'total') {
-        if (typeof candidateEntry.totalTimeMs === 'number') return candidateEntry.totalTimeMs;
-        if (typeof candidateEntry.timeMs === 'number') return candidateEntry.timeMs;
-        if (typeof candidateEntry.totalMs === 'number') return candidateEntry.totalMs;
-        if (typeof candidateEntry.durationMs === 'number') return candidateEntry.durationMs;
-        if (typeof candidateEntry.elapsedMs === 'number') return candidateEntry.elapsedMs;
-        return 0;
-    }
-    if (typeof candidateEntry.timeMs === 'number') return candidateEntry.timeMs;
-    if (typeof candidateEntry.totalTimeMs === 'number') return candidateEntry.totalTimeMs;
-    return 0;
-}
-
-function resolvePointsValue(candidateEntry) {
-    if (typeof candidateEntry.points === 'number') return candidateEntry.points;
-    return calculateScorePoints(candidateEntry.counts || {});
-}
-
-function buildSavedPayload(candidateEntry, pointsValue, timeFieldName, timeValue, createdAtMilliseconds, sortKey) {
-    return {
-        ...candidateEntry,
-        points: pointsValue,
-        [timeFieldName]: timeValue,
-        createdAt: createdAtMilliseconds,
-        sortKey: sortKey
-    };
-}
-
-function resolveTotalTimeFromInput(input) {
-    if (typeof input.totalTimeMs === 'number') return input.totalTimeMs;
-    if (typeof input.timeMs === 'number') return input.timeMs;
-    if (typeof input.totalMs === 'number') return input.totalMs;
-    if (typeof input.durationMs === 'number') return input.durationMs;
-    if (typeof input.elapsedMs === 'number') return input.elapsedMs;
-    return 0;
 }
 
 let internalDatabaseInstance = null;
 let internalRootDatabaseUrl = '';
 
+/**
+ * Sets the internal database instance.
+ * @param {object} databaseInstance - Firebase database instance
+ */
 function setDatabaseInstance(databaseInstance) {
     internalDatabaseInstance = databaseInstance;
 }
 
+/**
+ * Sets the root database URL.
+ * @param {string} databaseUrl - Database root URL
+ */
 function setRootDatabaseUrl(databaseUrl) {
     internalRootDatabaseUrl = databaseUrl || '';
 }
 
+/**
+ * Returns the correct database reference.
+ * @param {'total'|'level'} kind - Leaderboard type
+ * @param {string} [levelIdentifier] - Level ID if kind is 'level'
+ * @returns {object} Firebase database reference
+ * @throws {Error} If database is not initialized or kind is invalid
+ */
 function getDatabaseReference(kind, levelIdentifier) {
     if (!internalDatabaseInstance) throw new Error('Database not initialized');
     if (kind === 'total') return internalDatabaseInstance.ref('leaderboards/total');

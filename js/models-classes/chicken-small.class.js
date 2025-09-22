@@ -1,5 +1,14 @@
+/**
+ * Small chicken enemy with preset size, speed, offsets, walk/dead frames, and optional patrol.
+ * Extends BaseChicken and forwards configuration to the base class.
+ */
 class ChickenSmall extends BaseChicken {
 
+    /**
+     * Creates a small chicken at a given X, with optional Y and patrol bounds.
+     * @param {number} x - Horizontal start position
+     * @param {{ y?: number, patrol?: [number, number] }} [options={}] - Optional vertical position and patrol range
+     */
     constructor(x, options = {}) {
         super({
             x,

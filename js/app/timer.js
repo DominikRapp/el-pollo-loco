@@ -1,9 +1,21 @@
+/**
+ * Shows or hides the HUD timer element.
+ * @param {object} app - The application context
+ * @param {boolean} isVisible - Whether the timer should be visible
+ * @returns {void}
+ */
 function showTimerElement(app, isVisible) {
     const timerElement = document.getElementById('hud-timer');
     if (!timerElement) return;
     timerElement.style.display = isVisible ? 'block' : 'none';
 }
 
+/**
+ * Updates the timer text each animation frame while the timer is running.
+ * Uses app.formatMs to render elapsed time since app.timerStart.
+ * @param {object} app - The application context
+ * @returns {void}
+ */
 function runTimerLoop(app) {
     if (!app.timerRunning) return;
     const timerElement = document.getElementById('hud-timer');
@@ -13,12 +25,25 @@ function runTimerLoop(app) {
     requestAnimationFrame(function () { app.loopTimer(); });
 }
 
+/**
+ * Stops the running timer, hides the HUD timer and records the last elapsed ms.
+ * @param {object} app - The application context
+ * @returns {void}
+ */
 function stopTimer(app) {
     app.timerRunning = false;
     app.showTimer(false);
     app.lastElapsedMs = Date.now() - app.timerStart;
 }
 
+/**
+ * Attaches timer helpers to the app context:
+ * - app.showTimer(isVisible)
+ * - app.loopTimer()
+ * - app.stopTimer()
+ * @param {object} app - The application context to extend
+ * @returns {void}
+ */
 function attachTimer(app) {
     app.showTimer = function (isVisible) { showTimerElement(app, isVisible); };
     app.loopTimer = function () { runTimerLoop(app); };

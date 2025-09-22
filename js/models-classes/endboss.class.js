@@ -1,3 +1,8 @@
+/**
+ * Boss enemy with state-based animations (walk, alert, attack, hurt, dead) and simple AI.
+ * The class fields above define sprites, size/position, hitbox offset, health,
+ * state/animation control, distances, speeds, timers, and flags used by the boss.
+ */
 class Endboss extends MovableObject {
 
     IMAGES_WALK = [
@@ -58,6 +63,9 @@ class Endboss extends MovableObject {
     lastStepAt = 0;
     stepIntervalMs = 380;
 
+    /**
+     * Preloads animation sequences and sets the initial sprite/state.
+     */
     constructor() {
         super().loadImage('img/4_enemie_boss_chicken/1_walk/G1.png');
         this.loadImages(this.IMAGES_WALK);
@@ -69,6 +77,10 @@ class Endboss extends MovableObject {
         this.img = this.imageCache[this.IMAGES_ALERT[0]];
     }
 
+    /**
+     * Starts a new animation for the given state and plays its SFX.
+     * @param {'walk'|'alert'|'attack'|'hurt'|'dead'} state
+     */
     setAnimation(state) {
         this.resetAnimationState(state);
         const { seq, delay } = this.selectAnimation(state);
@@ -77,6 +89,10 @@ class Endboss extends MovableObject {
         this.beginAnimationLoop(seq, delay);
     }
 
+    /**
+     * Resets frame counters and clears previous interval.
+     * @param {string} state
+     */
     resetAnimationState(state) {
         this.currentState = state;
         this.currentFrame = 0;
@@ -86,6 +102,11 @@ class Endboss extends MovableObject {
         }
     }
 
+    /**
+     * Picks the frame sequence and delay for a given state.
+     * @param {string} state
+     * @returns {{seq:string[],delay:number}}
+     */
     selectAnimation(state) {
         let seq = [];
         let delay = 120;
@@ -97,6 +118,10 @@ class Endboss extends MovableObject {
         return { seq, delay };
     }
 
+    /**
+     * Plays matching sound effects and music transitions per state.
+     * @param {string} state
+     */
     triggerSfxForState(state) {
         if (!window.sfx) return;
         if (state === 'alert') {
@@ -111,18 +136,31 @@ class Endboss extends MovableObject {
         }
     }
 
+    /**
+     * Shows the first frame of the chosen sequence.
+     * @param {string[]} seq
+     */
     setInitialFrame(seq) {
         if (Array.isArray(seq) && seq.length > 0) {
             this.img = this.imageCache[seq[0]];
         }
     }
 
+    /**
+     * Begins the interval loop that advances frames.
+     * @param {string[]} seq
+     * @param {number} delay
+     */
     beginAnimationLoop(seq, delay) {
         this.animationInterval = setInterval(() => {
             this.tickAnimation(seq);
         }, delay);
     }
 
+    /**
+     * Advances animation by one frame; handles alert completion and dead routing.
+     * @param {string[]} seq
+     */
     tickAnimation(seq) {
         if (this.currentState === 'dead') {
             this.tickDead(seq);
@@ -136,6 +174,10 @@ class Endboss extends MovableObject {
         }
     }
 
+    /**
+     * Plays death sequence once; then disables collisions and marks finished.
+     * @param {string[]} seq
+     */
     tickDead(seq) {
         if (this.currentFrame < seq.length) {
             this.img = this.imageCache[seq[this.currentFrame]];
@@ -148,6 +190,9 @@ class Endboss extends MovableObject {
         }
     }
 
+    /**
+     * Ends the alert once its sequence finishes and transitions into walking.
+     */
     finishAlert() {
         clearInterval(this.animationInterval);
         this.animationInterval = null;
@@ -155,6 +200,9 @@ class Endboss extends MovableObject {
         this.setAnimation('walk');
     }
 
+    /**
+     * Stops animation and movement speeds (e.g., on pause).
+     */
     freeze() {
         if (this.animationInterval) {
             clearInterval(this.animationInterval);
@@ -165,6 +213,10 @@ class Endboss extends MovableObject {
         this.attackSpeed = 0;
     }
 
+    /**
+     * Simple AI: chooses states based on distance to player and timers.
+     * @param {object} world - Contains character and game state.
+     */
     updateAI(world) {
         if (this.shouldSkipAI(world)) return;
         const { player, dirToPlayer, now } = this.aiContext(world);
@@ -177,6 +229,11 @@ class Endboss extends MovableObject {
         this.handleApproach(dist, dirToPlayer);
     }
 
+    /**
+     * Skips AI when dead, game over, or missing character.
+     * @param {object} world
+     * @returns {boolean}
+     */
     shouldSkipAI(world) {
         if (this.currentState === 'dead') return true;
         if (world && world.gameOver) return true;
@@ -184,6 +241,11 @@ class Endboss extends MovableObject {
         return false;
     }
 
+    /**
+     * Collects player, direction to player, and current time.
+     * @param {object} world
+     * @returns {{player:object,dirToPlayer:number,now:number}}
+     */
     aiContext(world) {
         const player = world.character;
         const dirToPlayer = (player.x >= this.x) ? 1 : -1;
@@ -191,6 +253,12 @@ class Endboss extends MovableObject {
         return { player, dirToPlayer, now };
     }
 
+    /**
+     * While hurt timer is active: play hurt anim and apply small knockback.
+     * @param {number} now
+     * @param {number} dirToPlayer
+     * @returns {boolean}
+     */
     handleHurt(now, dirToPlayer) {
         if (now < this.hurtUntil) {
             if (this.currentState !== 'hurt') this.setAnimation('hurt');
@@ -200,12 +268,21 @@ class Endboss extends MovableObject {
         return false;
     }
 
+    /**
+     * If energy is zero: ensure dead state is set.
+     * @returns {boolean}
+     */
     handleDead() {
         if (!this.isDead()) return false;
         if (this.currentState !== 'dead') this.setAnimation('dead');
         return true;
     }
 
+    /**
+     * Triggers alert once when player enters alert distance.
+     * @param {number} dist
+     * @returns {boolean}
+     */
     handleAlert(dist) {
         if (this.alertPlayed === false && dist <= this.alertDistance) {
             if (this.currentState !== 'alert') this.setAnimation('alert');
@@ -214,6 +291,12 @@ class Endboss extends MovableObject {
         return false;
     }
 
+    /**
+     * Attacks when in range; moves toward player at attack speed.
+     * @param {number} dist
+     * @param {number} dirToPlayer
+     * @returns {boolean}
+     */
     handleAttack(dist, dirToPlayer) {
         if (dist > this.attackDistance) return false;
         if (this.currentState !== 'attack') this.setAnimation('attack');
@@ -222,6 +305,11 @@ class Endboss extends MovableObject {
         return true;
     }
 
+    /**
+     * Approaches the player (faster inside alert distance, otherwise patrol-walks left).
+     * @param {number} dist
+     * @param {number} dirToPlayer
+     */
     handleApproach(dist, dirToPlayer) {
         if (dist <= this.alertDistance) {
             if (this.currentState !== 'walk') this.setAnimation('walk');
@@ -234,6 +322,9 @@ class Endboss extends MovableObject {
         this.playStepIfDue();
     }
 
+    /**
+     * Plays a step sound at intervals to avoid overlap.
+     */
     playStepIfDue() {
         const t = Date.now();
         if (t - this.lastStepAt >= this.stepIntervalMs) {
@@ -242,6 +333,10 @@ class Endboss extends MovableObject {
         }
     }
 
+    /**
+     * Applies damage, transitions to hurt/dead when appropriate.
+     * @param {number} damage
+     */
     hit(damage) {
         if (typeof damage !== 'number') damage = 20;
         if (this.currentState === 'dead') return;

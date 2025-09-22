@@ -1,5 +1,15 @@
+/**
+ * Collision helper for the world: blocks character/enemies on barrels,
+ * resolves ground standing, handles enemy contact (stomp/damage/knockback),
+ * and detects bottle collisions with obstacles. Methods are documented briefly
+ * for quick orientation; fields/locals are not commented individually.
+ */
 class WorldCollider {
 
+    /**
+     * Prevents the character from overlapping barrels horizontally.
+     * @param {object} world
+     */
     blockCharacterByBarrels(world) {
         const c = world.character;
         const barrels = world.level.barrels || [];
@@ -12,6 +22,11 @@ class WorldCollider {
         }
     }
 
+    /**
+     * Builds an axis-aligned rectangle from an object using its offsets.
+     * @param {object} o
+     * @returns {{left:number, top:number, right:number, bottom:number}}
+     */
     rectWithOffsets(o) {
         const off = o?.offset || {};
         const left = o.x + (off.left || 0);
@@ -21,16 +36,34 @@ class WorldCollider {
         return { left, top, right, bottom };
     }
 
+    /**
+     * Checks rectangle overlap on X and Y axes.
+     * @param {{left:number, top:number, right:number, bottom:number}} a
+     * @param {{left:number, top:number, right:number, bottom:number}} b
+     * @returns {boolean}
+     */
     rectsOverlap(a, b) {
         const overlapX = a.right > b.left && a.left < b.right;
         const overlapY = a.bottom > b.top && a.top < b.bottom;
         return overlapX && overlapY;
     }
 
+    /**
+     * Returns true if character center is left of barrel center.
+     * @param {object} c
+     * @param {object} b
+     * @returns {boolean}
+     */
     fromLeft(c, b) {
         return (c.x + c.width / 2) < (b.x + b.width / 2);
     }
 
+    /**
+     * Pushes the character to the proper side of the barrel when overlapping.
+     * @param {object} c
+     * @param {object} b
+     * @param {{left:number, right:number}} bRect
+     */
     resolveHorizontal(c, b, bRect) {
         if (this.fromLeft(c, b)) {
             const desiredRight = bRect.left - 1;
@@ -41,6 +74,10 @@ class WorldCollider {
         }
     }
 
+    /**
+     * Recomputes the character's ground Y based on platforms and barrels.
+     * @param {object} world
+     */
     updateCharacterGround(world) {
         let ground = world.baseGroundTopY;
         const c = world.character;
@@ -49,6 +86,13 @@ class WorldCollider {
         c.groundTopY = ground;
     }
 
+    /**
+     * Returns the best (highest) ground candidate from a list for the character.
+     * @param {Array} list
+     * @param {object} c
+     * @param {number} ground
+     * @returns {number}
+     */
     updateGroundFromList(list, c, ground) {
         for (const o of (list || [])) {
             if (!this.canStandOn(c, o)) continue;
@@ -58,6 +102,12 @@ class WorldCollider {
         return ground;
     }
 
+    /**
+     * True if character is horizontally over the object, above its top, and falling.
+     * @param {object} c
+     * @param {object} o
+     * @returns {boolean}
+     */
     canStandOn(c, o) {
         const cLeft = c.x + (c.offset?.left || 0);
         const cRight = c.x + c.width - (c.offset?.right || 0);
@@ -71,11 +121,21 @@ class WorldCollider {
         return overlapX && aboveTop && falling;
     }
 
+    /**
+     * Calculates the Y position where character should stand on the object.
+     * @param {object} c
+     * @param {object} o
+     * @returns {number}
+     */
     groundCandidate(c, o) {
         const oTop = o.y + (o.offset?.top || 0);
         return oTop - c.height + (c.offset?.bottom || 0);
     }
 
+    /**
+     * Top-level enemy collision handling (blocking, stomp, contact damage).
+     * @param {object} world
+     */
     checkCollisions(world) {
         this.blockEnemiesByBarrels(world);
         const now = Date.now();
@@ -84,6 +144,10 @@ class WorldCollider {
         }
     }
 
+    /**
+     * Stops chickens at barrels and flips their direction.
+     * @param {object} world
+     */
     blockEnemiesByBarrels(world) {
         const enemies = world.level.enemies || [];
         const barrels = world.level.barrels || [];
@@ -101,6 +165,12 @@ class WorldCollider {
         }
     }
 
+    /**
+     * Handles stomp kills and contact damage with cooldowns.
+     * @param {object} world
+     * @param {object} enemy
+     * @param {number} now
+     */
     handleEnemyCollision(world, enemy, now) {
         if (!enemy.canCollide) return;
         const c = world.character;
@@ -113,10 +183,20 @@ class WorldCollider {
         this.applyDamageFlow(world, enemy, now);
     }
 
+    /**
+     * True if the enemy is a chicken type.
+     * @param {object} e
+     * @returns {boolean}
+     */
     isChicken(e) {
         return (e instanceof Chicken) || (e instanceof ChickenSmall);
     }
 
+    /**
+     * Builds a compact rect {l,t,r,b} from an object using offsets.
+     * @param {object} o
+     * @returns {{l:number,t:number,r:number,b:number}}
+     */
     getRect(o) {
         const off = o?.offset || {};
         const l = o.x + (off.left || 0);
@@ -126,12 +206,23 @@ class WorldCollider {
         return { l, t, r, b };
     }
 
+    /**
+     * Overlap test for compact rects from getRect().
+     * @param {{l:number,t:number,r:number,b:number}} a
+     * @param {{l:number,t:number,r:number,b:number}} b
+     * @returns {boolean}
+     */
     rectsOverlap(a, b) {
         const ox = a.r > b.l && a.l < b.r;
         const oy = a.b > b.t && a.t < b.b;
         return ox && oy;
     }
 
+    /**
+     * Resolves a stomp: place character on enemy, bounce up, kill enemy, update stats.
+     * @param {object} world
+     * @param {object} enemy
+     */
     handleStomp(world, enemy) {
         const c = world.character;
         const eTop = enemy.y + (enemy.offset?.top || 0);
@@ -146,6 +237,13 @@ class WorldCollider {
         }
     }
 
+    /**
+     * Checks if damage can be applied (invuln states / boss cooldown).
+     * @param {object} world
+     * @param {object} enemy
+     * @param {number} now
+     * @returns {boolean}
+     */
     canApplyDamage(world, enemy, now) {
         const c = world.character;
         if (c.isHurt() || c.isDead()) return false;
@@ -156,6 +254,13 @@ class WorldCollider {
         return true;
     }
 
+    /**
+     * Applies contact damage, updates HUD, sets cooldowns, and adds knockback.
+     * Also triggers game over when energy reaches 0.
+     * @param {object} world
+     * @param {object} enemy
+     * @param {number} now
+     */
     applyDamageFlow(world, enemy, now) {
         const c = world.character;
         const dmg = (enemy instanceof Endboss)
@@ -164,13 +269,49 @@ class WorldCollider {
         c.applyDamage(dmg);
         world.statusBar.setPercentage(c.energy);
         if (enemy instanceof Endboss) world.lastBossHitTime = now;
-        const push = 40;
-        c.x += (c.x < enemy.x) ? -push : push;
+        const dir = (c.x < enemy.x) ? -1 : 1;
+        this.knockbackAgainstBarrels(world, dir * 40);
         c.speedY = 15;
         if (typeof c.energy === 'number' && c.energy <= 0) {
             world.gameOver = true;
             world.freezeAll();
         }
+    }
+
+    /**
+     * Moves the character horizontally by dx but prevents clipping into barrels.
+     * @param {object} world
+     * @param {number} dx
+     */
+    knockbackAgainstBarrels(world, dx) {
+        const c = world.character, cRect = this.rectWithOffsets(c);
+        let move = dx;
+        for (const b of (world.level.barrels || [])) {
+            const r = this.rectWithOffsets(b);
+            if (!(cRect.bottom > r.top && cRect.top < r.bottom)) continue;
+            if (dx > 0 && cRect.right <= r.left) {
+                move = Math.min(move, Math.max(0, (r.left - 1) - cRect.right));
+            } else if (dx < 0 && cRect.left >= r.right) {
+                move = Math.max(move, Math.min(0, (r.right + 1) - cRect.left));
+            }
+        }
+        c.x += move; this.blockCharacterByBarrels(world);
+    }
+
+    /**
+     * Returns the first obstacle (platform/barrel) the bottle hits, or null.
+     * @param {object} world
+     * @param {object} bottle
+     * @returns {object|null}
+     */
+    bottleObstacleCollision(world, bottle) {
+        const obs = [...(world.level.platforms || []), ...(world.level.barrels || [])];
+        const bRect = this.rectWithOffsets(bottle);
+        for (const o of obs) {
+            const oRect = this.rectWithOffsets(o);
+            if (this.rectsOverlap(bRect, oRect)) return o;
+        }
+        return null;
     }
 
 }

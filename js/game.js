@@ -1,8 +1,32 @@
+/**
+ * Main render canvas element.
+ * @type {HTMLCanvasElement|undefined}
+ */
 let canvas;
+
+/**
+ * Current game world instance.
+ * @type {object|undefined}
+ */
 let world;
+
+/**
+ * Global keyboard state used by input handlers.
+ * @type {Keyboard}
+ */
 let keyboard = new Keyboard();
+
+/**
+ * Global sound manager instance (also exposed as window.sfx).
+ * @type {SoundManager|null}
+ */
 let sfx = null;
 
+/**
+ * Initializes canvas, audio (including mute state), and the App instance.
+ * Should be called once on page load.
+ * @returns {void}
+ */
 function init() {
     canvas = document.getElementById('canvas');
     sfx = new SoundManager();
@@ -18,11 +42,16 @@ function init() {
     app.init(canvas, keyboard);
 }
 
+/**
+ * One-time unlock handler for audio on first user interaction,
+ * and stops intro music if still on INTRO state.
+ * Removes its own event listeners after running once.
+ * @returns {void}
+ */
 const onFirstInteract = () => {
     if (window.sfx && typeof window.sfx.unlock === 'function') window.sfx.unlock();
     if (window.app && app.state === GameState.INTRO && window.sfx) {
         window.sfx.stopAll('music.');
-        window.sfx.play('music.intro');
     }
     window.removeEventListener('pointerdown', onFirstInteract);
     window.removeEventListener('keydown', onFirstInteract);
@@ -31,6 +60,12 @@ const onFirstInteract = () => {
 window.addEventListener('pointerdown', onFirstInteract);
 window.addEventListener('keydown', onFirstInteract);
 
+/**
+ * Global keydown handler: maps keys to the keyboard state and triggers shortcuts.
+ * Honors areGameShortcutsEnabled() before acting on gameplay keys.
+ * @param {KeyboardEvent} event - Keydown event
+ * @returns {void}
+ */
 document.addEventListener('keydown', (event) => {
     if (event.repeat) return;
     const k = event.key || '';
@@ -77,6 +112,12 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
+/**
+ * Global keyup handler: releases keys in the keyboard state.
+ * Honors areGameShortcutsEnabled() before acting on gameplay keys.
+ * @param {KeyboardEvent} event - Keyup event
+ * @returns {void}
+ */
 document.addEventListener('keyup', (event) => {
     const k = event.key || '';
     const kc = event.keyCode || 0;
@@ -95,6 +136,10 @@ document.addEventListener('keyup', (event) => {
     if (kc === 70 || lower === 'f') keyboard.FULLSCREEN = false;
 });
 
+/**
+ * Clears all gameplay-related key flags on the global keyboard state.
+ * @returns {void}
+ */
 function clearKeys() {
     keyboard.LEFT = false;
     keyboard.RIGHT = false;
@@ -108,6 +153,11 @@ function clearKeys() {
     keyboard.FULLSCREEN = false;
 }
 
+/**
+ * Checks whether the given event target is an editable field.
+ * @param {EventTarget|Element|null|undefined} t - Event target
+ * @returns {boolean} True if INPUT, TEXTAREA, or contentEditable
+ */
 function isEditableTarget(t) {
     if (!t) return false;
     if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA') return true;
@@ -115,14 +165,27 @@ function isEditableTarget(t) {
     return false;
 }
 
+/**
+ * Whether gameplay shortcuts should be active (only in GAME state).
+ * @returns {boolean} True if app exists and state is GameState.GAME
+ */
 function areGameShortcutsEnabled() {
     return !!(typeof app !== 'undefined' && app && app.state === GameState.GAME);
 }
 
+/**
+ * Convenience alias for checking in-game state.
+ * @returns {boolean} True if app is in GameState.GAME
+ */
 function isInGame() {
     return !!(window.app && app.state === GameState.GAME);
 }
 
+/**
+ * Performs a full restart to level 1, hiding overlays and clearing intervals.
+ * Safe no-op if app is missing.
+ * @returns {void}
+ */
 function performRestart() {
     if (!app) return;
     const go = document.getElementById('gameover-actions');
@@ -134,6 +197,10 @@ function performRestart() {
     app.restartToLevel1();
 }
 
+/**
+ * Opens the instructions overlay by simulating a click on the first available trigger.
+ * @returns {void}
+ */
 function openInstructions() {
     const btns = [
         document.getElementById('menu-instructions'),
@@ -144,6 +211,11 @@ function openInstructions() {
     for (const b of btns) { if (b) { b.click(); return; } }
 }
 
+/**
+ * Opens the leaderboard overlay by simulating a click on a known trigger,
+ * or directly unhides the overlay as a fallback.
+ * @returns {void}
+ */
 function openLeaderboard() {
     const btns = [
         document.getElementById('btn-leaderboard-home'),
@@ -155,6 +227,10 @@ function openLeaderboard() {
     if (ov) ov.classList.remove('hidden');
 }
 
+/**
+ * Opens the settings overlay by simulating a click on the first available trigger.
+ * @returns {void}
+ */
 function openSettings() {
     const btns = [
         document.getElementById('menu-settings'),
@@ -165,6 +241,11 @@ function openSettings() {
     for (const b of btns) { if (b) { b.click(); return; } }
 }
 
+/**
+ * Returns the UI to the home/menu state: clears keys, hides overlays, shows menu.
+ * Safe no-op if app is missing.
+ * @returns {void}
+ */
 function goHome() {
     if (!app) return;
     clearKeys();
@@ -173,13 +254,14 @@ function goHome() {
     app.showMenu();
 }
 
+/**
+ * Toggles fullscreen mode for the #game-root element (with vendor fallbacks).
+ * @returns {void}
+ */
 function toggleFullscreen() {
     const root = document.getElementById('game-root');
     if (!root) return;
-    const isFs =
-        document.fullscreenElement === root ||
-        document.webkitFullscreenElement === root ||
-        document.msFullscreenElement === root;
+    const isFs = document.fullscreenElement === root || document.webkitFullscreenElement === root || document.msFullscreenElement === root;
     if (isFs) {
         if (document.exitFullscreen) document.exitFullscreen();
         else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
@@ -191,37 +273,70 @@ function toggleFullscreen() {
     }
 }
 
+/**
+ * Checks whether the start screen is currently visible.
+ * @returns {boolean} True if #start-screen exists and is not hidden
+ */
 function startScreenVisible() {
     const s = document.getElementById('start-screen');
     return !!s && !s.classList.contains('hidden');
 }
 
+/**
+ * Handles Enter on the start screen: clicks the Start button if enabled.
+ * @returns {void}
+ */
 function handleEnterOnStart() {
     if (!startScreenVisible()) return;
     const btn = document.getElementById('btn-start');
     if (btn && !btn.disabled) btn.click();
 }
 
+/**
+ * Checks if an overlay by id is open (element exists and is not hidden).
+ * @param {string} id - Element id of the overlay root
+ * @returns {boolean} True if overlay is open
+ */
 function overlayOpen(id) {
     const el = document.getElementById(id);
     return !!el && !el.classList.contains('hidden');
 }
 
+/**
+ * Clicks an element by id if it exists.
+ * @param {string} id - Element id to click
+ * @returns {void}
+ */
 function clickIfExists(id) {
     const el = document.getElementById(id);
     if (el) el.click();
 }
 
+/**
+ * Handles Escape to close any open overlay (instructions, leaderboard, settings).
+ * @returns {void}
+ */
 function handleEscCloseOverlays() {
     if (overlayOpen('instructions-overlay')) { clickIfExists('instructions-close'); return; }
     if (overlayOpen('leaderboard-overlay')) { clickIfExists('leaderboard-close'); return; }
     if (overlayOpen('settings-overlay')) { clickIfExists('settings-close'); return; }
 }
 
+/**
+ * Reads the global muted state from localStorage.
+ * @returns {boolean} True if muted
+ */
 function isMuted() {
     return localStorage.getItem('muted') === '1';
 }
 
+/**
+ * Sets the global muted state: updates localStorage, mutes all <audio>,
+ * emits an 'app-mute-changed' event, and forwards to window.sfx if present.
+ * @param {boolean} on - True to mute, false to unmute
+ * @fires window#app-mute-changed
+ * @returns {void}
+ */
 function setMuted(on) {
     localStorage.setItem('muted', on ? '1' : '0');
     window.__muted = !!on;
@@ -232,6 +347,10 @@ function setMuted(on) {
     if (window.sfx) window.sfx.setMuted(!!on);
 }
 
+/**
+ * Convenience toggle for the global mute state.
+ * @returns {void}
+ */
 function toggleMuteGlobal() {
     setMuted(!isMuted());
 }

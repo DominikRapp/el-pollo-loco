@@ -1,3 +1,7 @@
+/**
+ * Shows the "You Win" overlay after ensuring the scene is calm and wires all actions.
+ * @param {object} app - Game application object
+ */
 function showYouWin(app) {
     setVictoryState(app);
     if (app.world && app.world.character) app.world.character.canControl = false;
@@ -12,6 +16,15 @@ function showYouWin(app) {
     });
 }
 
+/**
+ * Begins the win sequence once the scene is calm: freeze world, set UI, play sounds, show image, schedule reveal.
+ * @param {object} app - Game application object
+ * @param {HTMLElement} imageElement - The "You Win" overlay image element
+ * @param {HTMLElement} actionsElement - The actions container element
+ * @param {HTMLElement|null} nextButton - Next level button (may be null)
+ * @param {HTMLElement|null} homeButton - Home/menu button (may be null)
+ * @param {HTMLElement|null} restartButton - Restart button (may be null)
+ */
 function startWinAfterCalm(app, imageElement, actionsElement, nextButton, homeButton, restartButton) {
     freezeWorldIfAvailable(app);
     setupWinButtonsVisibility(app, nextButton, homeButton);
@@ -21,6 +34,10 @@ function startWinAfterCalm(app, imageElement, actionsElement, nextButton, homeBu
     scheduleWinReveal(app, imageElement, actionsElement, nextButton, homeButton, restartButton);
 }
 
+/**
+ * Sets the app into VICTORY state and hides gameplay UI.
+ * @param {object} app - Game application object
+ */
 function setVictoryState(app) {
     app.state = GameState.VICTORY;
     app.setMobileControlsVisible(false);
@@ -28,6 +45,11 @@ function setVictoryState(app) {
     app.stopTimer();
 }
 
+/**
+ * Polls until boss death animation is done and throwable items are settled, then calls the callback.
+ * @param {object} app - Game application object
+ * @param {Function} callback - Function to invoke once calm
+ */
 function waitUntilCalm(app, callback) {
     function poll() {
         if (isBossAnimationDone(app) && areBottlesCalm(app)) {
@@ -39,11 +61,21 @@ function waitUntilCalm(app, callback) {
     poll();
 }
 
+/**
+ * Checks whether the boss death animation has finished (or no boss exists).
+ * @param {object} app - Game application object
+ * @returns {boolean} True if boss is done or absent
+ */
 function isBossAnimationDone(app) {
     if (!app.world || !app.world.boss) return true;
     return app.world.boss.deathAnimFinished === true;
 }
 
+/**
+ * Verifies that thrown bottle objects are no longer moving or splashing.
+ * @param {object} app - Game application object
+ * @returns {boolean} True if all bottles are calm
+ */
 function areBottlesCalm(app) {
     const list = (app.world && app.world.throwableObjects) ? app.world.throwableObjects : [];
     for (const bottleObject of list) {
@@ -53,11 +85,21 @@ function areBottlesCalm(app) {
     return true;
 }
 
+/**
+ * Freezes the game world if available by invoking freezeAll() when present.
+ * @param {object} app - Game application object
+ */
 function freezeWorldIfAvailable(app) {
     if (!app.world) return;
     if (typeof app.world.freezeAll === 'function') app.world.freezeAll();
 }
 
+/**
+ * Controls the visibility of "Next" and "Home" buttons based on progression.
+ * @param {object} app - Game application object
+ * @param {HTMLElement|null} nextButton - Next level button (may be null)
+ * @param {HTMLElement|null} homeButton - Home/menu button (may be null)
+ */
 function setupWinButtonsVisibility(app, nextButton, homeButton) {
     if (homeButton) {
         homeButton.classList.remove('hidden');
@@ -68,6 +110,9 @@ function setupWinButtonsVisibility(app, nextButton, homeButton) {
     else nextButton.classList.add('hidden');
 }
 
+/**
+ * Stops gameplay music and plays the win sting if SFX is present.
+ */
 function playVictorySounds() {
     const sfxInstance = window.sfx;
     if (!sfxInstance) return;
@@ -76,6 +121,10 @@ function playVictorySounds() {
     sfxInstance.play('sys.win.sting');
 }
 
+/**
+ * Reveals the win image with visible styles.
+ * @param {HTMLElement} imageElement - The "You Win" overlay image element
+ */
 function showWinImage(imageElement) {
     imageElement.classList.remove('hidden');
     imageElement.style.display = 'block';
@@ -83,6 +132,15 @@ function showWinImage(imageElement) {
     imageElement.style.transform = 'translate(-50%, -50%) scale(1)';
 }
 
+/**
+ * After a short delay, finishes the win reveal and wires buttons.
+ * @param {object} app - Game application object
+ * @param {HTMLElement} imageElement - "You Win" image element
+ * @param {HTMLElement} actionsElement - Actions container element
+ * @param {HTMLElement|null} nextButton - Next level button (may be null)
+ * @param {HTMLElement|null} homeButton - Home button (may be null)
+ * @param {HTMLElement|null} restartButton - Restart button (may be null)
+ */
 function scheduleWinReveal(app, imageElement, actionsElement, nextButton, homeButton, restartButton) {
     const startTime = performance.now();
     const waitMilliseconds = 2000;
@@ -96,6 +154,15 @@ function scheduleWinReveal(app, imageElement, actionsElement, nextButton, homeBu
     requestAnimationFrame(onFrame);
 }
 
+/**
+ * Finalizes the win sequence: hide image, show actions, submit results, switch music, and wire buttons.
+ * @param {object} app - Game application object
+ * @param {HTMLElement} imageElement - "You Win" image element
+ * @param {HTMLElement} actionsElement - Actions container element
+ * @param {HTMLElement|null} nextButton - Next level button (may be null)
+ * @param {HTMLElement|null} homeButton - Home button (may be null)
+ * @param {HTMLElement|null} restartButton - Restart button (may be null)
+ */
 function finishWinReveal(app, imageElement, actionsElement, nextButton, homeButton, restartButton) {
     hideWinImage(imageElement);
     actionsElement.classList.remove('hidden');
@@ -107,6 +174,10 @@ function finishWinReveal(app, imageElement, actionsElement, nextButton, homeButt
     wireHomeButton(app, actionsElement, homeButton);
 }
 
+/**
+ * Hides the win image with hidden styles.
+ * @param {HTMLElement} imageElement - The "You Win" overlay image element
+ */
 function hideWinImage(imageElement) {
     imageElement.classList.add('hidden');
     imageElement.style.display = 'none';
@@ -114,24 +185,23 @@ function hideWinImage(imageElement) {
     imageElement.style.transform = 'translate(-50%, -50%) scale(0.6)';
 }
 
+/**
+ * Builds the victory summary, records the level result, and renders leaderboard views.
+ * @param {object} app - Game application object
+ * @param {HTMLElement} actionsElement - Actions container element
+ */
 function submitWinResults(app, actionsElement) {
-    const summary = buildVictorySummary(app);
+    const s = buildVictorySummary(app);
     ensureVictoryResultsContainer(actionsElement);
-    LeaderboardFlow.showLevelIntermediate({
-        containerId: 'victory-results',
-        name: summary.playerName,
-        level: summary.levelNumber,
-        timeMs: summary.timeMilliseconds,
-        counts: summary.levelCounts
-    });
-    LeaderboardFlow.showTotalFinal({
-        name: summary.playerName,
-        highestLevel: summary.levelNumber,
-        totalTimeMs: app.totalTimeMs,
-        counts: app.totalCounts
-    });
+    LeaderboardFlow.showLevelIntermediate({ containerId: 'victory-results', name: s.playerName, level: s.levelNumber, timeMs: s.timeMilliseconds, counts: s.levelCounts });
+    LeaderboardFlow.showTotalFinal({ name: s.playerName, highestLevel: s.levelNumber, totalTimeMs: app.totalTimeMs, counts: app.totalCounts });
 }
 
+/**
+ * Gathers player name, level number, elapsed time, and counts; also adds the level result to the run.
+ * @param {object} app - Game application object
+ * @returns {{playerName:string, levelNumber:number, timeMilliseconds:number, levelCounts:object}} Summary data
+ */
 function buildVictorySummary(app) {
     const playerName = app.userName || localStorage.getItem('playerName') || 'Player';
     const levelNumber = app.getCurrentLevelNumber();
@@ -141,6 +211,10 @@ function buildVictorySummary(app) {
     return { playerName, levelNumber, timeMilliseconds, levelCounts };
 }
 
+/**
+ * Ensures there is a #victory-results container inside the overlay box to render results into.
+ * @param {HTMLElement} actionsElement - Actions container element
+ */
 function ensureVictoryResultsContainer(actionsElement) {
     const boxRoot = actionsElement.querySelector('.overlay-box');
     if (!boxRoot) return;
@@ -153,6 +227,9 @@ function ensureVictoryResultsContainer(actionsElement) {
     else boxRoot.appendChild(results);
 }
 
+/**
+ * Crossfades/changes music to the menu loop if supported by the SFX API.
+ */
 function switchToMenuMusic() {
     const sfxInstance = window.sfx;
     if (sfxInstance && typeof sfxInstance.musicTo === 'function') {
@@ -160,6 +237,12 @@ function switchToMenuMusic() {
     }
 }
 
+/**
+ * Wires the Restart button: hides UI, clears intervals, resets energy, restarts to level 1.
+ * @param {object} app - Game application object
+ * @param {HTMLElement} actionsElement - Actions container element
+ * @param {HTMLElement|null} restartButton - Restart button (may be null)
+ */
 function wireRestartButton(app, actionsElement, restartButton) {
     if (!restartButton) return;
     restartButton.onclick = function () {
@@ -170,6 +253,12 @@ function wireRestartButton(app, actionsElement, restartButton) {
     };
 }
 
+/**
+ * Wires the Next button: hides UI, clears intervals, carries over current energy, starts the next level.
+ * @param {object} app - Game application object
+ * @param {HTMLElement} actionsElement - Actions container element
+ * @param {HTMLElement|null} nextButton - Next button (may be null)
+ */
 function wireNextButton(app, actionsElement, nextButton) {
     if (!nextButton) return;
     nextButton.onclick = function () {
@@ -180,6 +269,12 @@ function wireNextButton(app, actionsElement, nextButton) {
     };
 }
 
+/**
+ * Wires the Home button: hides UI, clears intervals, resets energy/totals, and shows the menu.
+ * @param {object} app - Game application object
+ * @param {HTMLElement} actionsElement - Actions container element
+ * @param {HTMLElement|null} homeButton - Home button (may be null)
+ */
 function wireHomeButton(app, actionsElement, homeButton) {
     if (!homeButton) return;
     homeButton.onclick = function () {

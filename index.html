@@ -6,7 +6,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>El pollo loco</title>
     <link rel="icon" type="image/png" sizes="48x48" href="img/4_enemie_boss_chicken/3_attack/G18.png">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/fonts.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/buttons.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/overlays.css">
+    <link rel="stylesheet" href="css/scrollbar.css">
+    <link rel="stylesheet" href="css/utilities.css">
+    <link rel="stylesheet" href="css/start-screen.css">
+    <link rel="stylesheet" href="css/instructions.css">
+    <link rel="stylesheet" href="css/leaderboard.css">
+    <link rel="stylesheet" href="css/settings.css">
+    <link rel="stylesheet" href="css/hamburger.css">
+    <link rel="stylesheet" href="css/circle-nav.css">
+    <link rel="stylesheet" href="css/mobile-controls.css">
+    <link rel="stylesheet" href="css/rotate-overlay.css">
+    <link rel="stylesheet" href="css/hud.css">
+    <link rel="stylesheet" href="css/countdown.css">
+    <link rel="stylesheet" href="css/gameover.css">
+    <link rel="stylesheet" href="css/victory.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/fullscreen.css">
 </head>
 
 <body onload="init()">
@@ -120,7 +141,7 @@
         <div id="countdown" class="hidden">3</div>
         <div id="start-screen" class="hidden">
             <div class="overlay-box home-box">
-                <h2 class="home-title">El Pollo Loco</h2>
+                <h1 class="home-title">El Pollo Loco</h1>
                 <div id="name-step">
                     <input id="player-name" placeholder="Name" />
                     <div id="name-error" class="hidden"></div>
@@ -151,84 +172,88 @@
             </div>
         </div>
     </div>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script src="js/api/leaderboard-api.js"></script>
-    <script src="js/api/init-firebase.js"></script>
-    <script src="js/flow/leaderboard-flow.js"></script>
-    <script src="js/ui/leaderboard-view.js"></script>
-    <script src="js/models-classes/drawable-object.class.js"></script>
-    <script src="js/models-classes/movable-object.class.js"></script>
-    <script src="js/models-classes/character.class.js"></script>
-    <script src="js/models-classes/base-chicken.class.js"></script>
-    <script src="js/models-classes/chicken.class.js"></script>
-    <script src="js/models-classes/chicken-small.class.js"></script>
-    <script src="js/models-classes/endboss.class.js"></script>
-    <script src="js/models-classes/status-bar.class.js"></script>
-    <script src="js/models-classes/bottle-bar.class.js"></script>
-    <script src="js/models-classes/coin-bar.class.js"></script>
-    <script src="js/models-classes/boss-bar.class.js"></script>
-    <script src="js/models-classes/cloud.class.js"></script>
-    <script src="js/models-classes/background-object.class.js"></script>
-    <script src="js/models-classes/throwable-object.class.js"></script>
-    <script src="js/models-classes/bottle-pickup.class.js"></script>
-    <script src="js/models-classes/coin-pickup.class.js"></script>
-    <script src="js/models-classes/platform.class.js"></script>
-    <script src="js/models-classes/barrel.class.js"></script>
-    <script src="js/models-classes/keyboard.class.js"></script>
-    <script src="js/models-classes/sound-manager.class.js"></script>
-    <script src="js/api/audio-prefs.js"></script>
-    <script src="js/models-classes/interval-tracker.class.js"></script>
-    <script src="js/models-classes/level.class.js"></script>
-    <script src="levels/level1.js"></script>
-    <script src="levels/level2.js"></script>
-    <script src="levels/level3.js"></script>
-    <script src="levels/level4.js"></script>
-    <script src="levels/level5.js"></script>
-    <script src="js/models-classes/world-freezer.class.js"></script>
-    <script src="js/models-classes/world-renderer.class.js"></script>
-    <script src="js/models-classes/world-collider.class.js"></script>
-    <script src="js/models-classes/world-items.class.js"></script>
-    <script src="js/models-classes/world-cleaner.class.js"></script>
-    <script src="js/models-classes/world-runner.class.js"></script>
-    <script src="js/models-classes/world-drawer.class.js"></script>
-    <script src="js/models-classes/world.class.js"></script>
-    <script src="js/app/preload-overlays.js"></script>
-    <script src="js/app/game-state.js"></script>
-    <script src="js/models-classes/intro-pepe.class.js"></script>
-    <script src="js/app.js"></script>
-    <script src="js/app/instructions-pages.js"></script>
-    <script src="js/app/player-name.js"></script>
-    <script src="js/app/reset-overlays.js"></script>
-    <script src="js/app/wire-mobile-buttons.js"></script>
-    <script src="js/app/wire-start-screen.js"></script>
-    <script src="js/app/template.js"></script>
-    <script src="js/app/wire-hamburger.js"></script>
-    <script src="js/app/wire-settings.js"></script>
-    <script src="js/app/wire-instructions.js"></script>
-    <script src="js/app/leaderboard-pages.js"></script>
-    <script src="js/app/wire-leaderboard.js"></script>
-    <script src="js/app/wire-fullscreen.js"></script>
-    <script src="js/app/wire-home-actions.js"></script>
-    <script src="js/app/winlose-utils.js"></script>
-    <script src="js/app/show-gameover.js"></script>
-    <script src="js/app/show-victory.js"></script>
-    <script src="js/app/winlose-watch.js"></script>
-    <script src="js/app/start-sequence.js"></script>
-    <script src="js/app/intro-flow.js"></script>
-    <script src="js/app/run-countdown.js"></script>
-    <script src="js/app/start-game.js"></script>
-    <script src="js/app/start-level.js"></script>
-    <script src="js/app/restart.js"></script>
-    <script src="js/app/timer.js"></script>
-    <script src="js/app/time-format.js"></script>
-    <script src="js/app/dom-utils.js"></script>
-    <script src="js/app/hamburger-utils.js"></script>
-    <script src="js/app/hud-utils.js"></script>
-    <script src="js/app/app-helpers.js"></script>
-    <script src="js/app/show-menu.js"></script>
-    <script src="js/app/run-stats.js"></script>
-    <script src="js/game.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js" defer></script>
+    <script src="js/app/interval-tracker.js" defer></script>
+    <script src="js/api/leaderboard-core.js" defer></script>
+    <script src="js/api/leaderboard-api.js" defer></script>
+    <script src="js/api/init-firebase.js" defer></script>
+    <script src="js/flow/leaderboard-flow.js" defer></script>
+    <script src="js/ui/leaderboard-view.js" defer></script>
+    <script src="js/models-classes/drawable-object.class.js" defer></script>
+    <script src="js/models-classes/movable-object.class.js" defer></script>
+    <script src="js/models-classes/character.helper.js" defer></script>
+    <script src="js/models-classes/character.class.js" defer></script>
+    <script src="js/models-classes/base-chicken.class.js" defer></script>
+    <script src="js/models-classes/chicken.class.js" defer></script>
+    <script src="js/models-classes/chicken-small.class.js" defer></script>
+    <script src="js/models-classes/endboss.class.js" defer></script>
+    <script src="js/models-classes/status-bar.class.js" defer></script>
+    <script src="js/models-classes/bottle-bar.class.js" defer></script>
+    <script src="js/models-classes/coin-bar.class.js" defer></script>
+    <script src="js/models-classes/boss-bar.class.js" defer></script>
+    <script src="js/models-classes/cloud.class.js" defer></script>
+    <script src="js/models-classes/background-object.class.js" defer></script>
+    <script src="js/models-classes/throwable-object.class.js" defer></script>
+    <script src="js/models-classes/bottle-pickup.class.js" defer></script>
+    <script src="js/models-classes/coin-pickup.class.js" defer></script>
+    <script src="js/models-classes/platform.class.js" defer></script>
+    <script src="js/models-classes/barrel.class.js" defer></script>
+    <script src="js/models-classes/keyboard.class.js" defer></script>
+    <script src="js/models-classes/sound-support.class.js" defer></script>
+    <script src="js/models-classes/sound-manager.class.js" defer></script>
+    <script src="js/app/preload-game.js" defer></script>
+    <script src="js/api/audio-prefs.js" defer></script>
+    <script src="js/models-classes/level.class.js" defer></script>
+    <script src="levels/level1.js" defer></script>
+    <script src="levels/level2.js" defer></script>
+    <script src="levels/level3.js" defer></script>
+    <script src="levels/level4.js" defer></script>
+    <script src="levels/level5.js" defer></script>
+    <script src="js/models-classes/world-freezer.class.js" defer></script>
+    <script src="js/models-classes/world-renderer.class.js" defer></script>
+    <script src="js/models-classes/world-collider.class.js" defer></script>
+    <script src="js/models-classes/world-items.class.js" defer></script>
+    <script src="js/models-classes/world-cleaner.class.js" defer></script>
+    <script src="js/models-classes/world-runner.class.js" defer></script>
+    <script src="js/models-classes/world-drawer.class.js" defer></script>
+    <script src="js/models-classes/world.class.js" defer></script>
+    <script src="js/app/preload-overlays.js" defer></script>
+    <script src="js/app/game-state.js" defer></script>
+    <script src="js/models-classes/intro-pepe.class.js" defer></script>
+    <script src="js/app.js" defer></script>
+    <script src="js/app/instructions-pages.js" defer></script>
+    <script src="js/app/player-name.js" defer></script>
+    <script src="js/app/reset-overlays.js" defer></script>
+    <script src="js/app/wire-mobile-buttons.js" defer></script>
+    <script src="js/app/wire-start-screen.js" defer></script>
+    <script src="js/app/template.js" defer></script>
+    <script src="js/app/wire-hamburger.js" defer></script>
+    <script src="js/app/wire-settings.js" defer></script>
+    <script src="js/app/wire-instructions.js" defer></script>
+    <script src="js/app/leaderboard-pages.js" defer></script>
+    <script src="js/app/wire-leaderboard.js" defer></script>
+    <script src="js/app/wire-fullscreen.js" defer></script>
+    <script src="js/app/wire-home-actions.js" defer></script>
+    <script src="js/app/winlose-utils.js" defer></script>
+    <script src="js/app/show-gameover.js" defer></script>
+    <script src="js/app/show-victory.js" defer></script>
+    <script src="js/app/winlose-watch.js" defer></script>
+    <script src="js/app/start-sequence.js" defer></script>
+    <script src="js/app/intro-flow.js" defer></script>
+    <script src="js/app/run-countdown.js" defer></script>
+    <script src="js/app/start-game.js" defer></script>
+    <script src="js/app/start-level.js" defer></script>
+    <script src="js/app/restart.js" defer></script>
+    <script src="js/app/timer.js" defer></script>
+    <script src="js/app/time-format.js" defer></script>
+    <script src="js/app/dom-utils.js" defer></script>
+    <script src="js/app/hamburger-utils.js" defer></script>
+    <script src="js/app/hud-utils.js" defer></script>
+    <script src="js/app/app-helpers.js" defer></script>
+    <script src="js/app/show-menu.js" defer></script>
+    <script src="js/app/run-stats.js" defer></script>
+    <script src="js/game.js" defer></script>
     <script>
         (function () {
             const overlay = document.getElementById('rotate-overlay');

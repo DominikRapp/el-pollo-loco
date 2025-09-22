@@ -1,5 +1,9 @@
+/**
+ * HUD coin status bar that swaps images based on the current percentage.
+ * Uses a discrete set of sprites (0–100%) and only updates the image when needed.
+ */
 class CoinBar extends DrawableObject {
-    
+
     IMAGES = [
         'img/7_statusbars/1_statusbar/1_statusbar_coin/blue/0.png',
         'img/7_statusbars/1_statusbar/1_statusbar_coin/blue/20.png',
@@ -11,6 +15,9 @@ class CoinBar extends DrawableObject {
 
     percentage = 0;
 
+    /**
+     * Loads sprites, positions the bar on screen, sets size and initial state.
+     */
     constructor() {
         super();
         this.loadImages(this.IMAGES);
@@ -21,6 +28,11 @@ class CoinBar extends DrawableObject {
         this.setPercentage(0);
     }
 
+    /**
+     * Sets and clamps the percentage (0–100), then updates the displayed sprite.
+     * Skips work if the sprite index didn’t change.
+     * @param {number} percentage
+     */
     setPercentage(percentage) {
         let clamped = percentage;
         if (clamped < 0) clamped = 0;
@@ -35,6 +47,10 @@ class CoinBar extends DrawableObject {
         this.img = this.imageCache[imagePath];
     }
 
+    /**
+     * Maps the current percentage to the corresponding sprite index.
+     * @returns {number}
+     */
     resolveImageIndex() {
         if (this.percentage >= 100) return 5;
         if (this.percentage >= 80) return 4;

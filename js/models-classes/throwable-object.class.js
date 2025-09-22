@@ -1,3 +1,8 @@
+/**
+ * Throwable salsa bottle with parabolic flight, rotation, ground splash animation,
+ * and self-removal after the splash completes. Class fields above define images,
+ * size, state flags, frame counters, timers, and ground alignment.
+ */
 class ThrowableObject extends MovableObject {
 
     IMAGES_ROTATION = [
@@ -25,6 +30,12 @@ class ThrowableObject extends MovableObject {
     splashInterval = null;
     groundBottomY = 655;
 
+    /**
+     * Creates a bottle at (x, y) moving in the given horizontal direction.
+     * @param {number} x - Start X
+     * @param {number} y - Start Y
+     * @param {number} [direction=1] - 1 for right, -1 for left
+     */
     constructor(x, y, direction = 1) {
         super().loadImage('img/6_salsa_bottle/salsa_bottle.png');
         this.loadImages(this.IMAGES_ROTATION);
@@ -37,6 +48,9 @@ class ThrowableObject extends MovableObject {
         this.startRotation();
     }
 
+    /**
+     * Applies initial vertical speed, gravity, and starts horizontal motion.
+     */
     throw() {
         this.speedY = 20;
         this.applyGravity();
@@ -46,6 +60,9 @@ class ThrowableObject extends MovableObject {
         }, 1000 / 60);
     }
 
+    /**
+     * Detects ground contact and triggers splash animation.
+     */
     checkGroundHit() {
         if (this.isSplashing) return;
         const groundTopY = this.groundBottomY - this.height;
@@ -55,6 +72,9 @@ class ThrowableObject extends MovableObject {
         }
     }
 
+    /**
+     * Cycles rotation frames while the bottle flies.
+     */
     startRotation() {
         this.rotationInterval = setInterval(() => {
             if (!this.isFlying || this.isSplashing) return;
@@ -64,6 +84,9 @@ class ThrowableObject extends MovableObject {
         }, 80);
     }
 
+    /**
+     * Switches from flight to splash animation with sound.
+     */
     splash() {
         if (this.isSplashing) return;
         this.beginSplashSetup();
@@ -72,6 +95,9 @@ class ThrowableObject extends MovableObject {
         this.startSplashLoop();
     }
 
+    /**
+     * Sets splash state and resets movement/animation counters.
+     */
     beginSplashSetup() {
         this.isFlying = false;
         this.isSplashing = true;
@@ -80,15 +106,24 @@ class ThrowableObject extends MovableObject {
         this.splashFrame = 0;
     }
 
+    /**
+     * Stops movement and rotation timers.
+     */
     stopMotion() {
         if (this.moveInterval) { clearInterval(this.moveInterval); this.moveInterval = null; }
         if (this.rotationInterval) { clearInterval(this.rotationInterval); this.rotationInterval = null; }
     }
 
+    /**
+     * Plays the splash sound effect if available.
+     */
     playSplashSfx() {
         if (window.sfx) window.sfx.play('obj.bottle.splash');
     }
 
+    /**
+     * Advances splash frames until finished, then cleans up.
+     */
     startSplashLoop() {
         this.splashInterval = setInterval(() => {
             if (this.stepSplashFrame()) return;
@@ -97,6 +132,10 @@ class ThrowableObject extends MovableObject {
         }, 60);
     }
 
+    /**
+     * Renders the next splash frame.
+     * @returns {boolean} True if a frame was shown; false if animation ended
+     */
     stepSplashFrame() {
         if (this.splashFrame < this.IMAGES_SPLASH.length) {
             const path = this.IMAGES_SPLASH[this.splashFrame++];
@@ -106,11 +145,17 @@ class ThrowableObject extends MovableObject {
         return false;
     }
 
+    /**
+     * Finalizes the splash: freezes and marks object for removal.
+     */
     finishSplash() {
         this.freeze();
         this.markForRemoval = true;
     }
 
+    /**
+     * Clears all timers, stops physics, and calls the base freeze.
+     */
     freeze() {
         if (this.moveInterval) { clearInterval(this.moveInterval); this.moveInterval = null; }
         if (this.rotationInterval) { clearInterval(this.rotationInterval); this.rotationInterval = null; }

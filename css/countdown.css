@@ -1,0 +1,42 @@
+/* ==========================================================================
+   Countdown Overlay
+   Purpose: Full-screen numeric countdown overlay with glossy gold text effect
+   Notes:
+   - Hidden by default; center-aligned and non-interactive (pointer-events: none)
+   - Large responsive type via clamp() and scalable stroke width
+   - Text fill uses background-clip with radial gradient; shadow adds glow
+   - Uses translateZ(0) and backface-visibility for smoother rendering
+   ========================================================================== */
+
+/* Container: layout, typography, visual styling, and performance hints */
+#countdown {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1200;
+    line-height: .9;
+    font-weight: 900;
+    letter-spacing: -.02em;
+    font-size: clamp(48px, calc(112px * var(--ui-scale)), 180px);
+    -webkit-text-stroke: clamp(2px, 0.6vw, 6px) rgba(0, 0, 0, .7);
+    background-image: radial-gradient(100% 100% at 50% 0%, #ffffff 0%, #ffe08a 35%, #f5b301 65%, #c97a00 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 .06em .1em rgba(0, 0, 0, .25), 0 0 .35em rgba(255, 204, 0, .6);
+    animation: none;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+}
+
+/* Overlay pseudo-element to reserve the layer for effects if needed */
+#countdown::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+}

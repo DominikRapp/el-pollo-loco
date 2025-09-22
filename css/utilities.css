@@ -1,0 +1,30 @@
+/* ==========================================================================
+   Utilities & Animations
+   Purpose: Simple visibility helper and a pop-in entrance animation
+   Notes:
+   - `.hidden` removes elements from layout flow
+   - `.pop-in` applies a quick scale+fade entrance
+   ========================================================================== */
+
+/* Utility: hide element completely */
+.hidden {
+    display: none;
+}
+
+/* Apply entrance animation */
+.pop-in {
+    animation: popIn 220ms ease-out forwards;
+}
+
+/* Keyframes: scale up from 60% and fade in */
+@keyframes popIn {
+    from {
+        transform: scale(.6);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}

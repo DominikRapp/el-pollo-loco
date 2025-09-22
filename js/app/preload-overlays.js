@@ -1,3 +1,9 @@
+/**
+ * Immediately preloads overlay images (win/lose) into the browser cache.
+ * Uses HTMLImageElement to hint the browser to fetch these assets early.
+ * @function preloadOverlays
+ * @returns {void}
+ */
 (function preloadOverlays() {
     const sources = [
         'img/You won, you lost/Game over A.png',

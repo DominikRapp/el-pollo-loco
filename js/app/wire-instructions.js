@@ -1,3 +1,10 @@
+/**
+ * Initializes and wires the Instructions overlay UI:
+ * builds pages, caches elements, and attaches all handlers.
+ * No-op if required elements are missing.
+ * @param {object} app - The application context
+ * @returns {void}
+ */
 function wireInstructionsOverlay(app) {
     initializeInstructionsState(app);
     const elements = getInstructionsElements();
@@ -5,11 +12,23 @@ function wireInstructionsOverlay(app) {
     attachInstructionsHandlers(app, elements);
 }
 
+/**
+ * Prepares the instructions state on the app:
+ * - app.instructionsPages from app.buildInstructionsPages()
+ * - app.currentInstructionsPage = 0
+ * @param {object} app - The application context
+ * @returns {void}
+ */
 function initializeInstructionsState(app) {
     app.instructionsPages = app.buildInstructionsPages();
     app.currentInstructionsPage = 0;
 }
 
+/**
+ * Queries and returns all required DOM elements for the overlay,
+ * or null if any are missing.
+ * @returns {{overlay: HTMLElement, content: HTMLElement, prevBtn: HTMLButtonElement, nextBtn: HTMLButtonElement, pageIndicator: HTMLElement, closeBtn: HTMLButtonElement} | null}
+ */
 function getInstructionsElements() {
     const overlay = document.getElementById('instructions-overlay');
     const box = overlay ? overlay.querySelector('.overlay-box') : null;
@@ -22,6 +41,14 @@ function getInstructionsElements() {
     return { overlay, content, prevBtn, nextBtn, pageIndicator, closeBtn };
 }
 
+/**
+ * Renders a specific instructions page by index, clamps the index,
+ * updates controls and scroll position.
+ * @param {object} app - The application context
+ * @param {{overlay: HTMLElement, content: HTMLElement, prevBtn: HTMLButtonElement, nextBtn: HTMLButtonElement, pageIndicator: HTMLElement, closeBtn: HTMLButtonElement}} elements - Required overlay elements
+ * @param {number} index - Target page index (0-based)
+ * @returns {void}
+ */
 function renderInstructionsPage(app, elements, index) {
     const total = app.instructionsPages.length;
     const target = Math.max(0, Math.min(index, total - 1));
@@ -33,6 +60,12 @@ function renderInstructionsPage(app, elements, index) {
     elements.overlay.scrollTop = 0;
 }
 
+/**
+ * Ensures the Instructions overlay is the only open overlay by hiding
+ * others and suppressing win/lose overlays.
+ * @param {object} app - The application context
+ * @returns {void}
+ */
 function ensureExclusiveOpen(app) {
     app.hideWinLoseOverlays();
     const others = [
@@ -46,6 +79,13 @@ function ensureExclusiveOpen(app) {
     }
 }
 
+/**
+ * Opens the Instructions overlay, suppresses win/lose overlays,
+ * optionally closes the hamburger menu, and renders the first page.
+ * @param {object} app - The application context
+ * @param {{overlay: HTMLElement, content: HTMLElement, prevBtn: HTMLButtonElement, nextBtn: HTMLButtonElement, pageIndicator: HTMLElement, closeBtn: HTMLButtonElement}} elements - Required overlay elements
+ * @returns {void}
+ */
 function openInstructionsOverlay(app, elements) {
     ensureExclusiveOpen(app);
     app.suppressWinLose();
@@ -54,6 +94,13 @@ function openInstructionsOverlay(app, elements) {
     renderInstructionsPage(app, elements, 0);
 }
 
+/**
+ * Closes the Instructions overlay and restores win/lose actions.
+ * If currently in MENU state, re-show the start screen.
+ * @param {object} app - The application context
+ * @param {{overlay: HTMLElement, content: HTMLElement, prevBtn: HTMLButtonElement, nextBtn: HTMLButtonElement, pageIndicator: HTMLElement, closeBtn: HTMLButtonElement}} elements - Required overlay elements
+ * @returns {void}
+ */
 function closeInstructionsOverlay(app, elements) {
     elements.overlay.classList.add('hidden');
     app.restoreWinLoseActionsOnly();
@@ -63,18 +110,36 @@ function closeInstructionsOverlay(app, elements) {
     }
 }
 
+/**
+ * Navigates to the previous instructions page if possible.
+ * @param {object} app - The application context
+ * @param {{overlay: HTMLElement, content: HTMLElement, prevBtn: HTMLButtonElement, nextBtn: HTMLButtonElement, pageIndicator: HTMLElement, closeBtn: HTMLButtonElement}} elements - Required overlay elements
+ * @returns {void}
+ */
 function goToPreviousPage(app, elements) {
     if (app.currentInstructionsPage > 0) {
         renderInstructionsPage(app, elements, app.currentInstructionsPage - 1);
     }
 }
 
+/**
+ * Navigates to the next instructions page if possible.
+ * @param {object} app - The application context
+ * @param {{overlay: HTMLElement, content: HTMLElement, prevBtn: HTMLButtonElement, nextBtn: HTMLButtonElement, pageIndicator: HTMLElement, closeBtn: HTMLButtonElement}} elements - Required overlay elements
+ * @returns {void}
+ */
 function goToNextPage(app, elements) {
     if (app.currentInstructionsPage < app.instructionsPages.length - 1) {
         renderInstructionsPage(app, elements, app.currentInstructionsPage + 1);
     }
 }
 
+/**
+ * Attaches all handlers for opening, navigating, and closing the overlay.
+ * @param {object} app - The application context
+ * @param {{overlay: HTMLElement, content: HTMLElement, prevBtn: HTMLButtonElement, nextBtn: HTMLButtonElement, pageIndicator: HTMLElement, closeBtn: HTMLButtonElement}} elements - Required overlay elements
+ * @returns {void}
+ */
 function attachInstructionsHandlers(app, elements) {
     wireOpenLinks(app, elements);
     wireNavigationButtons(app, elements);
@@ -82,6 +147,13 @@ function attachInstructionsHandlers(app, elements) {
     wireEscapeKeyToClose(app, elements);
 }
 
+/**
+ * Wires all open-entry points that should display the instructions overlay.
+ * Prevents default navigation and opens the overlay.
+ * @param {object} app - The application context
+ * @param {{overlay: HTMLElement, content: HTMLElement, prevBtn: HTMLButtonElement, nextBtn: HTMLButtonElement, pageIndicator: HTMLElement, closeBtn: HTMLButtonElement}} elements - Required overlay elements
+ * @returns {void}
+ */
 function wireOpenLinks(app, elements) {
     const openIds = ['btn-instructions-go', 'btn-instructions-victory', 'menu-instructions', 'btn-instructions-home'];
     for (let i = 0; i < openIds.length; i++) {
@@ -94,6 +166,12 @@ function wireOpenLinks(app, elements) {
     }
 }
 
+/**
+ * Wires the Previous/Next/Close buttons for page navigation and closing.
+ * @param {object} app - The application context
+ * @param {{overlay: HTMLElement, content: HTMLElement, prevBtn: HTMLButtonElement, nextBtn: HTMLButtonElement, pageIndicator: HTMLElement, closeBtn: HTMLButtonElement}} elements - Required overlay elements
+ * @returns {void}
+ */
 function wireNavigationButtons(app, elements) {
     elements.prevBtn.addEventListener('click', function () {
         goToPreviousPage(app, elements);
@@ -106,6 +184,12 @@ function wireNavigationButtons(app, elements) {
     });
 }
 
+/**
+ * Closes the overlay if the user clicks on the shaded backdrop (outside the box).
+ * @param {object} app - The application context
+ * @param {{overlay: HTMLElement, content: HTMLElement, prevBtn: HTMLButtonElement, nextBtn: HTMLButtonElement, pageIndicator: HTMLElement, closeBtn: HTMLButtonElement}} elements - Required overlay elements
+ * @returns {void}
+ */
 function wireOverlayClickToClose(app, elements) {
     elements.overlay.addEventListener('click', function (event) {
         if (event.target === elements.overlay) {
@@ -114,6 +198,12 @@ function wireOverlayClickToClose(app, elements) {
     });
 }
 
+/**
+ * Closes the overlay when the Escape key is pressed while it is open.
+ * @param {object} app - The application context
+ * @param {{overlay: HTMLElement, content: HTMLElement, prevBtn: HTMLButtonElement, nextBtn: HTMLButtonElement, pageIndicator: HTMLElement, closeBtn: HTMLButtonElement}} elements - Required overlay elements
+ * @returns {void}
+ */
 function wireEscapeKeyToClose(app, elements) {
     document.addEventListener('keydown', function (event) {
         const isOpen = !elements.overlay.classList.contains('hidden');

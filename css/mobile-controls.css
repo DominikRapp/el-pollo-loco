@@ -1,0 +1,179 @@
+/* ==========================================================================
+   Mobile Controls
+   Purpose: Responsive on-screen controls for mobile devices with scalable sizing
+   Notes:
+   - Uses CSS custom properties to scale positions/sizes based on viewport
+   - Left cluster uses CSS Grid; right cluster uses Flex column
+   - Buttons use background images via custom properties for icons
+   ========================================================================== */
+
+/* Root control scope: defines scalable custom properties (units adapt via --mc-scale) */
+#mobile-controls {
+    --mc-scale: var(--ui-scale, min(100vw/1080, 100vh/720));
+    --mc-bottom: 56px;
+    --mc-left-inset: 40px;
+    --mc-right-inset: 40px;
+    --mc-btn: 92px;
+    --mc-gap: 16px;
+    --mc-press-scale: .92;
+}
+
+/* Overlay container: covers viewport but is initially hidden and non-interactive */
+.mctrl {
+    position: absolute;
+    inset: 0;
+    z-index: 10000;
+    pointer-events: none;
+    display: none;
+}
+
+/* Touch behavior: prevent native gestures and long-press callouts */
+.mctrl,
+.mctrl-left,
+.mctrl-right {
+    touch-action: none;
+    overscroll-behavior: contain;
+    -webkit-touch-callout: none;
+}
+
+/* Left/right clusters: positioned above bottom inset and re-enable interaction */
+.mctrl-left,
+.mctrl-right {
+    position: absolute;
+    bottom: calc(var(--mc-bottom) * var(--mc-scale));
+    pointer-events: auto;
+}
+
+/* Left cluster: 2-column grid for restart (row 1) and left/right (row 2) */
+.mctrl-left {
+    left: calc(var(--mc-left-inset) * var(--mc-scale));
+    display: grid;
+    grid-template-columns: repeat(2, calc(var(--mc-btn) * var(--mc-scale)));
+    grid-auto-rows: calc(var(--mc-btn) * var(--mc-scale));
+    gap: calc(var(--mc-gap) * var(--mc-scale));
+}
+
+/* Restart button: spans both columns on the first row and centers itself */
+.mctrl-left .is-restart {
+    grid-column: 1 / span 2;
+    grid-row: 1;
+    justify-self: center;
+}
+
+/* Left movement button placement */
+.mctrl-left .is-left {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+/* Right movement button placement */
+.mctrl-left .is-right {
+    grid-column: 2;
+    grid-row: 2;
+}
+
+/* Right cluster: vertical stack for action buttons */
+.mctrl-right {
+    right: calc(var(--mc-right-inset) * var(--mc-scale));
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--mc-gap) * var(--mc-scale));
+}
+
+/* Control button: circular, icon-ready, press-animated visual style */
+.mctrl-btn {
+    min-width: 0;
+    width: calc(var(--mc-btn) * var(--mc-scale));
+    height: calc(var(--mc-btn) * var(--mc-scale));
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    appearance: none;
+    background: linear-gradient(180deg, #fb2424 0%, #d95406 55%, #b48909 100%) !important;
+    color: #fffbea;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .35);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, .28), inset 0 0 0 1px rgba(255, 255, 255, .12);
+    transform-origin: center;
+    transition: transform 90ms ease, filter 90ms ease, box-shadow 90ms ease;
+}
+
+/* Icon layer: pulls icon images from custom properties on specific variants */
+.mctrl-btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 80% auto;
+    pointer-events: none;
+}
+
+/* Icon variants */
+.mctrl-btn.is-left::before {
+    background-image: var(--img-left);
+}
+
+.mctrl-btn.is-right::before {
+    background-image: var(--img-right);
+}
+
+.mctrl-btn.is-restart::before {
+    background-image: var(--img-restart);
+}
+
+.mctrl-btn.is-jump::before {
+    background-image: var(--img-jump);
+}
+
+.mctrl-btn.is-throw::before {
+    background-image: var(--img-throw);
+}
+
+/* Press glow overlay: appears on active/pressing */
+.mctrl-btn::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(0, 0, 0, .0), rgba(0, 0, 0, .16));
+    opacity: 0;
+    transition: opacity 90ms ease;
+    pointer-events: none;
+}
+
+/* Pressed state: scale, contrast, and shadow emphasis; supports real :active and JS-applied class */
+button.mctrl-btn:active,
+.mctrl-btn.is-pressing {
+    transform: scale(var(--mc-press-scale));
+    filter: brightness(.92) contrast(1.06);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .35), inset 0 0 0 2px rgba(255, 255, 255, .16);
+}
+
+/* Press overlay visibility */
+button.mctrl-btn:active::after,
+.mctrl-btn.is-pressing::after {
+    opacity: .22;
+}
+
+/* Hide controls when UI menus or overlays are open */
+body.ui-menu-open .mctrl,
+body.ui-overlay-open .mctrl {
+    display: none !important;
+}
+
+/* Feature query: when :has is supported, also hide controls when specific overlays are visible */
+@supports selector(:has(*)) {
+
+    body:has(#start-screen:not(.hidden)) .mctrl,
+    body:has(#instructions-overlay:not(.hidden)) .mctrl,
+    body:has(#leaderboard-overlay:not(.hidden)) .mctrl,
+    body:has(#settings-overlay:not(.hidden)) .mctrl {
+        display: none !important;
+    }
+}

@@ -1,0 +1,41 @@
+/* ==========================================================================
+   HUD Elements
+   Purpose: In-game heads-up display for timer (top-center) and level badge (bottom-center)
+   Notes:
+   - Scales typography and spacing with --ui-scale
+   - Hidden by default; toggle display via JS when active
+   - High contrast styling with subtle backdrop for readability
+   ========================================================================== */
+
+/* Timer badge: centered at top with glow and pill background */
+#hud-timer {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-weight: 700;
+    font-size: calc(28px * var(--ui-scale));
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, .6);
+    display: none;
+    z-index: 250;
+    background: rgba(0, 0, 0, .6);
+    border-radius: 999px;
+    padding: 6px 10px;
+}
+
+/* Level badge: centered at bottom, fully responsive via --ui-scale */
+#hud-level {
+    position: absolute;
+    left: 50%;
+    bottom: calc(12px * var(--ui-scale));
+    transform: translateX(-50%);
+    padding: calc(6px * var(--ui-scale)) calc(10px * var(--ui-scale));
+    border-radius: calc(999px * var(--ui-scale));
+    font-weight: 700;
+    font-size: calc(18px * var(--ui-scale));
+    color: #fff;
+    background: rgba(0, 0, 0, .6);
+    z-index: 260;
+    display: none;
+}

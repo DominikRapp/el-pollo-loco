@@ -1,3 +1,7 @@
+/**
+ * Builds and returns Level 1 with enemies, items, background, and boundaries.
+ * @returns {Level} Fully configured level instance
+ */
 function createLevel1() {
     const chunkWidth = 1080;
     const enemySpeeds = { chickenWalk: 1, chickenSmallWalk: 1.25, bossWalk: 1.5, bossAttack: 3 };
@@ -16,6 +20,11 @@ function createLevel1() {
     return level;
 }
 
+/**
+ * Creates repeating background objects for the level.
+ * @param {number} chunkWidth - Width of one background chunk in pixels
+ * @returns {BackgroundObject[]} Array of background objects laid out across the level
+ */
 function buildBackgroundObjects(chunkWidth) {
     return [
         new BackgroundObject('img/5_background/layers/air.png', -chunkWidth),
@@ -49,12 +58,23 @@ function buildBackgroundObjects(chunkWidth) {
     ];
 }
 
+/**
+ * Computes the level's end X position based on a list of objects.
+ * @param {{x:number}[]} objects - Objects that have an x position
+ * @returns {number} The maximum x among the objects
+ */
 function computeLevelEndX(objects) {
     let last = 0;
     for (let i = 0; i < objects.length; i++) if (objects[i].x > last) last = objects[i].x;
     return last;
 }
 
+/**
+ * Creates and configures the end boss instance.
+ * @param {number} levelEndX - The right boundary of the level
+ * @param {{bossWalk:number,bossAttack:number}} speeds - Speed configuration for the boss
+ * @returns {Endboss} Configured boss instance
+ */
 function makeBoss(levelEndX, speeds) {
     const boss = new Endboss();
     boss.x = levelEndX - 450;
@@ -66,6 +86,12 @@ function makeBoss(levelEndX, speeds) {
     return boss;
 }
 
+/**
+ * Builds all enemies (small and regular chickens) and applies walk speeds; includes the boss.
+ * @param {Endboss} boss - The boss instance to include
+ * @param {{chickenWalk:number,chickenSmallWalk:number}} speeds - Speed settings for chicken types
+ * @returns {(Chicken|ChickenSmall|Endboss)[]} Array of enemies
+ */
 function buildEnemies(boss, speeds) {
     const chickens = [
         { x: 1564, y: 430, patrol: [1116, 1564] },
@@ -86,6 +112,12 @@ function buildEnemies(boss, speeds) {
     return all;
 }
 
+/**
+ * Applies the correct walking speed to a given enemy instance based on its class.
+ * Safely sets known numeric speed fields if present.
+ * @param {Chicken|ChickenSmall|Endboss} enemy - Enemy to modify
+ * @param {{chickenWalk:number,chickenSmallWalk:number}} speeds - Mapping of speeds
+ */
 function applyWalkSpeed(enemy, speeds) {
     const walk = enemy instanceof Chicken ? speeds.chickenWalk : enemy instanceof ChickenSmall ? speeds.chickenSmallWalk : null;
     if (walk !== null) {
@@ -95,6 +127,10 @@ function applyWalkSpeed(enemy, speeds) {
     }
 }
 
+/**
+ * Builds static platform segments for traversal.
+ * @returns {Platform[]} Array of platform instances
+ */
 function buildPlatforms() {
     const cfg = [
         { x: 1700, y: 350, segmentWidth: 180, height: 80 },
@@ -103,11 +139,19 @@ function buildPlatforms() {
     return cfg.map(p => new Platform(p.x, p.y, p.segmentWidth, p.height));
 }
 
+/**
+ * Creates barrel obstacles positioned along the ground.
+ * @returns {Barrel[]} Array of barrel instances
+ */
 function buildBarrels() {
     const cfg = [{ x: 1000, y: 490 }, { x: 1570, y: 490 }, { x: 2870, y: 490 }, { x: 3900, y: 490 }];
     return cfg.map(b => { const o = new Barrel(b.x); if (typeof b.y === 'number') o.y = b.y; return o; });
 }
 
+/**
+ * Places bottle pickups at specified positions.
+ * @returns {BottlePickup[]} Array of bottle pickup instances
+ */
 function buildBottles() {
     const cfg = [
         { img: 'img/6_salsa_bottle/1_salsa_bottle_on_ground.png', x: 1020, y: 450 },
@@ -119,8 +163,12 @@ function buildBottles() {
     return cfg.map(p => new BottlePickup(p.img, p.x, p.y));
 }
 
+/**
+ * Places coin pickups; preserves baseY when available.
+ * @returns {CoinPickup[]} Array of coin pickup instances
+ */
 function buildCoins() {
-    const cfg = [{ x: 1120, y: 220 }, { x: 1820, y: 100 }, { x: 2100, y: 120 }, { x: 3060, y: 100 }, { x: 3500, y: 120 }];
+    const cfg = [{ x: 1120, y: 220 }, { x: 1820, y: 80 }, { x: 2100, y: 80 }, { x: 3060, y: 80 }, { x: 3500, y: 80 }];
     return cfg.map(p => {
         const c = new CoinPickup(p.x);
         if (typeof p.y === 'number') { if (typeof c.baseY === 'number') { c.baseY = p.y; c.y = p.y; } else c.y = p.y; }
@@ -128,6 +176,12 @@ function buildCoins() {
     });
 }
 
+/**
+ * Builds clouds centered within each background chunk.
+ * @param {BackgroundObject[]} backgroundObjects - Background objects used to infer chunk positions
+ * @param {number} chunkWidth - Width of one background chunk in pixels
+ * @returns {Cloud[]} Array of cloud instances
+ */
 function buildClouds(backgroundObjects, chunkWidth) {
     const images = ['img/5_background/layers/4_clouds/1.png', 'img/5_background/layers/4_clouds/2.png'];
     const cloudWidth = 450;

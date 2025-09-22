@@ -1,0 +1,55 @@
+/* ==========================================================================
+   Typography & Font Faces
+   Purpose: Register custom fonts and define typographic stacks for HTML elements
+   Notes:
+   - Uses font-display: swap for faster perceived load
+   - Includes a variable Roboto font with weight range 100–900
+   - Provides sensible system fallbacks for robustness
+   ========================================================================== */
+
+/* Rye: decorative serif for prominent headings */
+@font-face {
+    font-family: 'Rye';
+    src: url('../fonts/Rye-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Poetsen One: playful sans for subheadings */
+@font-face {
+    font-family: 'Poetsen One';
+    src: url('../fonts/PoetsenOne-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto Variable: primary UI font with broad weight range */
+@font-face {
+    font-family: 'Roboto';
+    src: url('../fonts/Roboto-VariableFont_wdth,wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Base text stack for document body */
+html,
+body {
+    font-family: 'Roboto', Inter, 'Segoe UI', Roboto, Arial, system-ui, sans-serif;
+}
+
+/* Primary page title: use decorative Rye */
+h1 {
+    font-family: 'Rye', Georgia, 'Times New Roman', Times, serif;
+}
+
+/* Subheadings: use Poetsen One with broad sans fallbacks */
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'Poetsen One', 'Trebuchet MS', 'Segoe UI', Tahoma, Geneva, Verdana, Arial, sans-serif;
+}

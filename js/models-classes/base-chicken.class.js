@@ -1,3 +1,8 @@
+/**
+ * Base class for chicken-type enemies with walking, patrol, and death behavior.
+ * Properties like size, ground Y, images, offsets, patrol bounds, and timers
+ * are defined as class fields at the top for clarity and easy tweaking.
+ */
 class BaseChicken extends MovableObject {
 
     groundBottomY = 630;
@@ -10,6 +15,10 @@ class BaseChicken extends MovableObject {
     lastStepAt = 0;
     stepIntervalMs = 300;
 
+    /**
+     * Sets up the chicken using the provided config (position, size, speed, images, patrol).
+     * @param {object} config
+     */
     constructor(config) {
         super();
         const cfg = this.cfg(config);
@@ -23,6 +32,11 @@ class BaseChicken extends MovableObject {
         this.animate();
     }
 
+    /**
+     * Ensures a safe config object.
+     * @param {object} config
+     * @returns {object}
+     */
     cfg(config) {
         if (config && typeof config === 'object') {
             return config;
@@ -30,6 +44,10 @@ class BaseChicken extends MovableObject {
         return {};
     }
 
+    /**
+     * Applies initial X position.
+     * @param {object} cfg
+     */
     setPosition(cfg) {
         if (typeof cfg.x === 'number') {
             this.x = cfg.x;
@@ -38,6 +56,10 @@ class BaseChicken extends MovableObject {
         }
     }
 
+    /**
+     * Applies width and height (defaults if missing).
+     * @param {object} cfg
+     */
     setSize(cfg) {
         if (typeof cfg.width === 'number') {
             this.width = cfg.width;
@@ -51,6 +73,10 @@ class BaseChicken extends MovableObject {
         }
     }
 
+    /**
+     * Applies movement speed (default if missing).
+     * @param {object} cfg
+     */
     setSpeed(cfg) {
         if (typeof cfg.speed === 'number') {
             this.speed = cfg.speed;
@@ -59,6 +85,10 @@ class BaseChicken extends MovableObject {
         }
     }
 
+    /**
+     * Applies collision offsets (defaults to zeros).
+     * @param {object} cfg
+     */
     setOffsets(cfg) {
         if (cfg.offset && typeof cfg.offset === 'object') {
             this.offset = {
@@ -72,6 +102,10 @@ class BaseChicken extends MovableObject {
         }
     }
 
+    /**
+     * Loads walking and dead images; sets initial frame.
+     * @param {object} cfg
+     */
     setImages(cfg) {
         if (Array.isArray(cfg.walkImages) && cfg.walkImages.length > 0) {
             this.IMAGES_WALKING = cfg.walkImages;
@@ -88,6 +122,10 @@ class BaseChicken extends MovableObject {
         }
     }
 
+    /**
+     * Sets patrol min/max X; uses defaults around start X if none given.
+     * @param {object} cfg
+     */
     setPatrol(cfg) {
         if (Array.isArray(cfg.patrol) &&
             cfg.patrol.length === 2 &&
@@ -103,6 +141,10 @@ class BaseChicken extends MovableObject {
         }
     }
 
+    /**
+     * Places the chicken on Y (or aligns to ground by default).
+     * @param {object} cfg
+     */
     setY(cfg) {
         if (typeof cfg.y === 'number') {
             this.y = cfg.y;
@@ -111,11 +153,17 @@ class BaseChicken extends MovableObject {
         }
     }
 
+    /**
+     * Starts movement and animation loops.
+     */
     animate() {
         this.startMoveLoop();
         this.startAnimLoop();
     }
 
+    /**
+     * Handles horizontal movement, step sounds, and patrol turning.
+     */
     startMoveLoop() {
         this.moveInterval = setInterval(() => {
             if (this.isDead) { return; }
@@ -127,6 +175,10 @@ class BaseChicken extends MovableObject {
         }, 1000 / 60);
     }
 
+    /**
+     * Plays a step sound at a fixed interval.
+     * @param {number} now
+     */
     playStepIfDue(now) {
         if (now - this.lastStepAt < this.stepIntervalMs) { return; }
         this.lastStepAt = now;
@@ -135,6 +187,9 @@ class BaseChicken extends MovableObject {
         window.sfx.play(id);
     }
 
+    /**
+     * Keeps within patrol bounds and flips direction at edges.
+     */
     clampAndTurn() {
         if (this.x <= this.patrolMinX) {
             this.x = this.patrolMinX;
@@ -145,6 +200,9 @@ class BaseChicken extends MovableObject {
         }
     }
 
+    /**
+     * Handles sprite animation; switches to dead image if needed.
+     */
     startAnimLoop() {
         this.animInterval = setInterval(() => {
             if (this.isDead) {
@@ -155,6 +213,9 @@ class BaseChicken extends MovableObject {
         }, 120);
     }
 
+    /**
+     * Stops all loops and prevents further movement.
+     */
     freeze() {
         if (this.moveInterval) {
             clearInterval(this.moveInterval);
@@ -167,6 +228,9 @@ class BaseChicken extends MovableObject {
         this.speed = 0;
     }
 
+    /**
+     * Triggers the death flow once.
+     */
     die() {
         if (this.isDead) { return; }
         this.prepareDeath();
@@ -174,6 +238,9 @@ class BaseChicken extends MovableObject {
         this.runDeathSequence();
     }
 
+    /**
+     * Sets dead state and visuals; disables collisions.
+     */
     prepareDeath() {
         this.isDead = true;
         this.speed = 0;
@@ -181,18 +248,27 @@ class BaseChicken extends MovableObject {
         this.img = this.imageCache[this.IMAGE_DEAD];
     }
 
+    /**
+     * Plays the matching death sound if available.
+     */
     playDeadSound() {
         if (!window.sfx) { return; }
         const id = (this instanceof ChickenSmall) ? 'chicken-small.dead' : 'chicken.dead';
         window.sfx.play(id);
     }
 
+    /**
+     * Starts a short blinking sequence before removal.
+     */
     runDeathSequence() {
         this.deathBlinkSteps = [true, false, true];
         this.deathBlinkIndex = 0;
         this.deathBlinkStep();
     }
 
+    /**
+     * Executes one blink step and schedules the next; finally hides and flags for removal.
+     */
     deathBlinkStep() {
         if (this.deathBlinkIndex < this.deathBlinkSteps.length) {
             this.visible = this.deathBlinkSteps[this.deathBlinkIndex++];

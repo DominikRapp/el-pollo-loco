@@ -1,3 +1,8 @@
+/**
+ * Wires the start screen controls: initializes name state, error label,
+ * restores saved name, sets button enablement, and attaches listeners.
+ * @param {object} app - The game/app instance (expects persistName(name) and startLevel(i))
+ */
 function wireStartScreenControls(app) {
     const btnStart = document.getElementById('btn-start');
     const nameInput = document.getElementById('player-name');
@@ -11,12 +16,20 @@ function wireStartScreenControls(app) {
     attachStartClick(app, btnStart, nameInput, nameError);
 }
 
+/**
+ * Resets the in-memory user name state for the start screen.
+ * @param {object} app - The game/app instance with mutable fields
+ */
 function initializeNameState(app) {
     app.showNameErrors = false;
     app.userName = '';
     app.nameValid = false;
 }
 
+/**
+ * Prepares the error label to be visible space-wise but visually soft-hidden.
+ * @param {HTMLElement|null} nameError - The error label element
+ */
 function initializeErrorLabel(nameError) {
     if (!nameError) return;
     nameError.classList.add('soft-hidden');
@@ -24,6 +37,11 @@ function initializeErrorLabel(nameError) {
     if (!nameError.textContent) nameError.textContent = ' ';
 }
 
+/**
+ * Restores a previously saved player name from localStorage and marks it valid.
+ * @param {object} app - The game/app instance
+ * @param {HTMLInputElement|null} nameInput - The name input field
+ */
 function restoreSavedName(app, nameInput) {
     const saved = localStorage.getItem('playerName');
     if (saved && nameInput) {
@@ -33,12 +51,22 @@ function restoreSavedName(app, nameInput) {
     }
 }
 
+/**
+ * Enables or disables the Start button depending on whether a non-empty name exists.
+ * @param {HTMLButtonElement|null} btnStart - The Start button
+ * @param {HTMLInputElement|null} nameInput - The name input field
+ */
 function updateStartButtonEnablement(btnStart, nameInput) {
     if (!btnStart) return;
     const hasName = !!(nameInput && nameInput.value.trim().length > 0);
     btnStart.disabled = !hasName;
 }
 
+/**
+ * Checks whether a name has been used before on this device (localStorage).
+ * @param {string} name - Candidate name
+ * @returns {boolean} True if the lowercase name is found in the local list
+ */
 function isNameTakenLocal(name) {
     const raw = localStorage.getItem('usedNames') || '[]';
     try {
@@ -49,6 +77,12 @@ function isNameTakenLocal(name) {
     }
 }
 
+/**
+ * Updates the error label text and visibility.
+ * @param {HTMLElement|null} nameError - The error label element
+ * @param {string} message - Error message (use single space to preserve layout)
+ * @param {boolean} visible - Whether the error should be visibly shown
+ */
 function setNameError(nameError, message, visible) {
     if (!nameError) return;
     nameError.textContent = message || ' ';
@@ -56,6 +90,15 @@ function setNameError(nameError, message, visible) {
     else nameError.classList.add('soft-hidden');
 }
 
+/**
+ * Validates the player name against syntax and duplicate rules.
+ * Writes validity to app state, updates error label and start button.
+ * @param {object} app - The game/app instance
+ * @param {HTMLInputElement|null} nameInput - Name input field
+ * @param {HTMLElement|null} nameError - Error label element
+ * @param {HTMLButtonElement|null} btnStart - Start button element
+ * @returns {boolean} True if the name is valid
+ */
 function validateName(app, nameInput, nameError, btnStart) {
     const value = (nameInput && nameInput.value ? nameInput.value : '').trim();
     app.userName = value;
@@ -66,12 +109,18 @@ function validateName(app, nameInput, nameError, btnStart) {
     if (!basicOk) message = '3–16 characters, letters/numbers/_ only.';
     else if (taken && value.toLowerCase() !== current) message = 'Name ist bereits vergeben.';
     app.nameValid = message === '';
-    if (app.showNameErrors) setNameError(nameError, app.nameValid ? ' ' : message, !app.nameValid);
-    else setNameError(nameError, ' ', false);
+    setNameError(nameError, app.showNameErrors ? (app.nameValid ? ' ' : message) : ' ', app.showNameErrors ? !app.nameValid : false);
     updateStartButtonEnablement(btnStart, nameInput);
     return app.nameValid;
 }
 
+/**
+ * Attaches input/blur handlers to validate and keep the start button state in sync.
+ * @param {object} app - The game/app instance
+ * @param {HTMLInputElement|null} nameInput - Name input field
+ * @param {HTMLElement|null} nameError - Error label element
+ * @param {HTMLButtonElement|null} btnStart - Start button element
+ */
 function attachNameInputHandlers(app, nameInput, nameError, btnStart) {
     if (!nameInput) return;
     nameInput.addEventListener('input', function () {
@@ -82,6 +131,13 @@ function attachNameInputHandlers(app, nameInput, nameError, btnStart) {
     });
 }
 
+/**
+ * Attaches the Start button click: shows errors if invalid, otherwise saves and starts.
+ * @param {object} app - The game/app instance (expects persistName and startLevel)
+ * @param {HTMLButtonElement|null} btnStart - Start button element
+ * @param {HTMLInputElement|null} nameInput - Name input field
+ * @param {HTMLElement|null} nameError - Error label element
+ */
 function attachStartClick(app, btnStart, nameInput, nameError) {
     if (!btnStart) return;
     btnStart.addEventListener('click', function () {

@@ -1,5 +1,14 @@
+/**
+ * Normal chicken enemy with preset size, speed, offsets, walk/dead frames, and optional patrol.
+ * Extends BaseChicken and forwards configuration to the base class.
+ */
 class Chicken extends BaseChicken {
-    
+
+    /**
+     * Creates a normal chicken at a given X, with optional patrol bounds.
+     * @param {number} x - Horizontal start position
+     * @param {{ patrol?: [number, number] }} [options={}] - Optional patrol range [minX, maxX]
+     */
     constructor(x, options = {}) {
         super({
             x,

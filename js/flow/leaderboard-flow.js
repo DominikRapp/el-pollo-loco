@@ -1,11 +1,26 @@
+/**
+ * Safely creates a text node from any value.
+ * @param {*} value - Value to convert to text
+ * @returns {Text} A DOM Text node
+ */
 function createTextNodeSafe(value) {
     return document.createTextNode(String(value));
 }
 
+/**
+ * Removes all child nodes from a DOM element.
+ * @param {HTMLElement} element - Element to clear
+ * @returns {void}
+ */
 function clearElementChildren(element) {
     while (element.firstChild) element.removeChild(element.firstChild);
 }
 
+/**
+ * Builds a leaderboard row DOM element.
+ * @param {{name:string, level:string|number, points:number|string, time:string}} data - Display data for the row
+ * @returns {HTMLDivElement} The constructed row element
+ */
 function createLeaderboardRow(data) {
     const line = document.createElement('div');
     line.className = 'lb-line';
@@ -17,6 +32,11 @@ function createLeaderboardRow(data) {
     return line;
 }
 
+/**
+ * Builds a local (client-side) leaderboard row for a single level entry.
+ * @param {{name:string, level:number|string, points:number, timeMs:number}} entry - Level entry data
+ * @returns {HTMLDivElement} The constructed row element
+ */
 function createLevelRowLocal(entry) {
     const line = document.createElement('div');
     line.className = 'lb-line';
@@ -28,6 +48,12 @@ function createLevelRowLocal(entry) {
     return line;
 }
 
+/**
+ * Shows an intermediate level result: renders a single row, submits to Top 10,
+ * and returns the saved status plus the entry.
+ * @param {{containerId:string, name:string, level:number|string, timeMs:number, counts:Object}} args - Rendering and entry inputs
+ * @returns {Promise<{saved:boolean, entry:Object|null}>} Result with saved flag and the entry payload
+ */
 async function showLevelIntermediate(args) {
     const container = document.getElementById(args.containerId);
     if (!container) return { saved: false, entry: null };
@@ -40,12 +66,22 @@ async function showLevelIntermediate(args) {
     return { saved: result.saved, entry };
 }
 
+/**
+ * Submits the final total result to the total leaderboard and returns the saved status.
+ * @param {{name:string, highestLevel:number|string, totalTimeMs?:number, counts?:Object}} args - Total entry inputs
+ * @returns {Promise<{saved:boolean, entry:Object}>} Result with saved flag and the total entry payload
+ */
 async function showTotalFinal(args) {
     const entry = LeaderboardAPI.makeTotalEntry({ name: args.name, highestLevel: args.highestLevel, totalTimeMs: args.totalTimeMs, counts: args.counts });
     const result = await LeaderboardAPI.submitIfTop10('total', entry);
     return { saved: result.saved, entry };
 }
 
+/**
+ * Renders a preview of the total result (without submitting) and returns the entry payload.
+ * @param {{containerId:string, name:string, highestLevel:number|string, totalTimeMs?:number, counts?:Object}} args - Preview inputs
+ * @returns {Object|undefined} The total entry payload, or undefined if container not found
+ */
 function previewTotalOnly(args) {
     const container = document.getElementById(args.containerId);
     if (!container) return;
@@ -55,4 +91,8 @@ function previewTotalOnly(args) {
     return entry;
 }
 
+/**
+ * Facade for leaderboard UI flow helpers.
+ * @type {{showLevelIntermediate: Function, showTotalFinal: Function, previewTotalOnly: Function}}
+ */
 const LeaderboardFlow = { showLevelIntermediate, showTotalFinal, previewTotalOnly };

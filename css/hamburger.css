@@ -1,0 +1,110 @@
+/* ==========================================================================
+   Hamburger Menu UI
+   Purpose: Floating hamburger button with animated bars and dropdown menu
+   Notes:
+   - Button morphs into an “X” when open via class toggling
+   - Dropdown uses a warm translucent panel with strong elevation
+   - Hidden state controlled via `.hidden` utility class
+   ========================================================================== */
+
+/* Root container: absolute position in the top-right corner */
+#hamburger-root {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+}
+
+/* Utility: hide root or menu when needed */
+#hamburger-root.hidden,
+#hamburger-menu.hidden {
+    display: none;
+}
+
+/* Circular trigger button with gradient surface and shadow */
+#hamburger-button {
+    all: unset;
+    cursor: pointer;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, .3);
+}
+
+/* Hover: deepen gradient for feedback */
+#hamburger-button:hover {
+    background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+}
+
+/* Three stacked bars representing the hamburger icon */
+.hamburger-bar {
+    position: absolute;
+    width: 22px;
+    height: 3px;
+    background: #fffbea;
+    border-radius: 2px;
+    transition: transform 0.2s ease, opacity 0.2s ease, top 0.2s ease, bottom 0.2s ease;
+}
+
+/* Bar positions */
+.hamburger-bar.top {
+    top: 14px;
+}
+
+.hamburger-bar.middle {
+    top: 20px;
+}
+
+.hamburger-bar.bottom {
+    top: 26px;
+}
+
+/* Open state: morph into an “X” by rotating top/bottom and hiding middle */
+#hamburger-button.open .hamburger-bar.top {
+    transform: rotate(45deg);
+    top: 20px;
+}
+
+#hamburger-button.open .hamburger-bar.middle {
+    opacity: 0;
+}
+
+#hamburger-button.open .hamburger-bar.bottom {
+    transform: rotate(-45deg);
+    top: 20px;
+}
+
+/* Dropdown panel positioned under the button */
+#hamburger-menu {
+    position: absolute;
+    top: 52px;
+    right: 0;
+    background: rgba(245, 158, 11, 0.95);
+    border-radius: 12px;
+    padding: 10px;
+    min-width: 180px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    display: grid;
+    gap: 8px;
+}
+
+/* Menu links: bold, legible, and touch-friendly */
+#hamburger-menu a {
+    text-decoration: none;
+    color: #fffbea;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    display: block;
+}
+
+/* Hover state for links: subtle highlight */
+#hamburger-menu a:hover {
+    background: rgba(255, 255, 255, 0.12);
+}

@@ -1,0 +1,88 @@
+/* ==========================================================================
+   Fullscreen Layout (Game Root)
+   Purpose: Normalize and scale UI layers when #game-root enters fullscreen
+   Notes:
+   - Supports standard :fullscreen and vendor-prefixed variants (-webkit-, -moz-)
+   - Scales to a fixed base resolution via --base-w/--base-h and --ui-scale
+   - Overlays are pinned to top-left; modal overlays are centered and scaled
+   - Canvas expands to fill fullscreen area
+   ========================================================================== */
+
+/* WebKit fullscreen: position and scale primary UI layers */
+#game-root:-webkit-full-screen #start-screen,
+#game-root:-webkit-full-screen #instructions-overlay,
+#game-root:-webkit-full-screen #leaderboard-overlay,
+#game-root:-webkit-full-screen #settings-overlay,
+#game-root:-webkit-full-screen #gameover-actions,
+#game-root:-webkit-full-screen #victory-actions,
+#game-root:-webkit-full-screen #countdown {
+    left: 0;
+    top: 0;
+    width: calc(var(--base-w) * 1px);
+    height: calc(var(--base-h) * 1px);
+    transform: scale(var(--ui-scale));
+    transform-origin: top left;
+}
+
+/* Standard fullscreen: position and scale primary UI layers */
+#game-root:fullscreen #start-screen,
+#game-root:fullscreen #instructions-overlay,
+#game-root:fullscreen #leaderboard-overlay,
+#game-root:fullscreen #settings-overlay,
+#game-root:fullscreen #gameover-actions,
+#game-root:fullscreen #victory-actions,
+#game-root:fullscreen #countdown {
+    left: 0;
+    top: 0;
+    width: calc(var(--base-w) * 1px);
+    height: calc(var(--base-h) * 1px);
+    transform: scale(var(--ui-scale));
+    transform-origin: top left;
+}
+
+/* WebKit fullscreen: center overlays and scale them down slightly */
+#game-root:-webkit-full-screen #overlay-gameover,
+#game-root:-webkit-full-screen #overlay-youwin {
+    transform: translate(-50%, -50%) scale(calc(0.6 * var(--ui-scale)));
+}
+
+/* Standard fullscreen: center overlays and scale them down slightly */
+#game-root:fullscreen #overlay-gameover,
+#game-root:fullscreen #overlay-youwin {
+    transform: translate(-50%, -50%) scale(calc(0.6 * var(--ui-scale)));
+}
+
+/* Fullscreen canvas (WebKit and standard): fill available space */
+#game-root:-webkit-full-screen #canvas,
+#game-root:fullscreen #canvas {
+    width: 100%;
+    height: 100%;
+}
+
+/* Firefox fullscreen: position and scale primary UI layers */
+#game-root:-moz-full-screen #start-screen,
+#game-root:-moz-full-screen #instructions-overlay,
+#game-root:-moz-full-screen #leaderboard-overlay,
+#game-root:-moz-full-screen #settings-overlay,
+#game-root:-moz-full-screen #gameover-actions,
+#game-root:-moz-full-screen #victory-actions,
+#game-root:-moz-full-screen #countdown {
+    left: 0;
+    top: 0;
+    width: calc(var(--base-w) * 1px);
+    height: calc(var(--base-h) * 1px);
+    transform: scale(var(--ui-scale));
+    transform-origin: top left;
+}
+
+/* Firefox fullscreen: center overlays and scale them down slightly */
+#game-root:-moz-full-screen #overlay-gameover,
+#game-root:-moz-full-screen #overlay-youwin {
+    transform: translate(-50%, -50%) scale(calc(0.6 * var(--ui-scale)));
+}
+
+/* Firefox fullscreen canvas: fill available space */
+#game-root:-moz-full-screen #canvas {
+    width: 100%;
+    height: 100%;
+}

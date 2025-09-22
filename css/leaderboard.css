@@ -1,0 +1,161 @@
+/* ==========================================================================
+   Leaderboard Overlay
+   Purpose: Full-screen overlay containing a scrollable leaderboard table and list
+   Notes:
+   - Overlay is flex-centered above game UI
+   - Table header sticks to the top; rows use zebra striping and top-3 highlights
+   - Uses CSS variables: --lb-accent, --lb-surface, --lb-text, --lb-border, --lb-muted
+   ========================================================================== */
+
+/* Overlay container: centers leaderboard panel */
+#leaderboard-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1300;
+}
+
+/* Hidden state for overlay */
+#leaderboard-overlay.hidden {
+    display: none;
+}
+
+/* Scrollable content area with max height */
+#leaderboard-content {
+    max-height: min(65vh, 640px);
+    overflow: auto;
+    display: block;
+    gap: 16px;
+}
+
+/* Section headings inside leaderboard content */
+#leaderboard-content h3 {
+    margin: 16px 0 8px;
+    font-size: 16px;
+    line-height: 1.2;
+    color: var(--lb-accent);
+    letter-spacing: .02em;
+}
+
+/* Inline leaderboard row layout (name, level, points, time) */
+.lb-line {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+/* Minimum widths to keep columns readable */
+.lb-line>.lb-name {
+    min-width: 128px;
+}
+
+.lb-line>.lb-level {
+    min-width: 48px;
+}
+
+.lb-line>.lb-points {
+    min-width: 64px;
+}
+
+.lb-line>.lb-time {
+    min-width: 72px;
+}
+
+/* Compact time cell with icon-friendly spacing; push to the right */
+.lb-line .lb-time {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+/* ==========================================================================
+   Table Styling
+   Purpose: Sticky header, soft-elevated surface, zebra rows, and top-3 emphasis
+   ========================================================================== */
+
+/* Table container with themed surface and elevation */
+.leaderboard-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--lb-surface);
+    color: var(--lb-text);
+    border: 1px solid var(--lb-border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, .25);
+}
+
+/* Sticky header: uppercase labels and subtle gradient */
+.leaderboard-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: linear-gradient(0deg, rgba(255, 122, 0, .12), rgba(255, 122, 0, .16));
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-weight: 700;
+    font-size: 12px;
+    border-bottom: 1px solid var(--lb-border);
+    padding: 12px 14px;
+}
+
+/* Body cells: spacing and numeric alignment helper */
+.leaderboard-table tbody td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--lb-border);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Remove divider on last row */
+.leaderboard-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+/* Row base + hover interactions */
+.leaderboard-table tbody tr {
+    transition: background .2s ease, transform .12s ease, box-shadow .12s ease;
+    background: rgba(255, 255, 255, .02);
+}
+
+.leaderboard-table tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, .04);
+}
+
+.leaderboard-table tbody tr:hover {
+    background: rgba(255, 122, 0, .08);
+}
+
+/* Top-3 highlight gradients */
+.leaderboard-table tbody tr:nth-child(1) {
+    background: linear-gradient(90deg, rgba(255, 122, 0, .14), transparent 45%);
+}
+
+.leaderboard-table tbody tr:nth-child(2) {
+    background: linear-gradient(90deg, rgba(255, 122, 0, .10), transparent 45%);
+}
+
+.leaderboard-table tbody tr:nth-child(3) {
+    background: linear-gradient(90deg, rgba(255, 122, 0, .06), transparent 45%);
+}
+
+/* Column alignment and sizing */
+.leaderboard-table td:nth-child(1) {
+    width: 56px;
+    text-align: center;
+    color: var(--lb-muted);
+    font-weight: 700;
+}
+
+.leaderboard-table td:nth-child(2) {
+    text-align: left;
+    font-weight: 600;
+}
+
+.leaderboard-table td:nth-child(n+3) {
+    text-align: center;
+}

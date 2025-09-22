@@ -1,3 +1,8 @@
+/**
+ * Main playable character with movement, jump, idle/long-idle, throw, hurt, and death handling.
+ * Loads all animation sheets, applies gravity, and runs control + frame loops.
+ * Method comments explain behavior; properties at the top are left undocumented as requested.
+ */
 class Character extends MovableObject {
 
     IMAGES_IDLE = [
@@ -87,7 +92,17 @@ class Character extends MovableObject {
     idleStartDelaySec = 15;
     idleFrameDelayMs = 250;
     lastIdleFrameAt = 0;
+    jumpOnceIndex = 0;
+    jumpOnceActive = false;
+    airborneStartedAt = 0;
+    longAirThresholdMs = 450;
+    longAirActive = false;
+    LONG_AIR_IMAGE = 'img/2_character_pepe/5_dead/D-53.png';
+    longAirPrepared = false;
 
+    /**
+     * Loads default sprite, all animation sheets, sets physics and starts loops.
+     */
     constructor() {
         super().loadImage('img/2_character_pepe/2_walk/W-21.png');
         this.offset = { top: 115, left: 25, right: 35, bottom: 15 };
@@ -97,17 +112,24 @@ class Character extends MovableObject {
         this.loadImages(this.IMAGES_HURT);
         this.loadImages(this.IMAGES_IDLE);
         this.loadImages(this.IMAGES_LONG_IDLE);
+        this.helper = new CharacterHelper(this);
         this.IDLE_FULL = this.IMAGES_IDLE.concat(this.IMAGES_LONG_IDLE);
         this.y = this.groundTopY
         this.applyGravity();
         this.animate();
     }
 
+    /**
+     * Starts the input/control loop and the animation frame loop.
+     */
     animate() {
         this.startControlLoop();
         this.startFrameLoop();
     }
 
+    /**
+     * Handles player input, movement, jump, step sounds, camera, and idle resets.
+     */
     startControlLoop() {
         this.controlInterval = setInterval(() => {
             if (!this.world) return;
@@ -123,6 +145,10 @@ class Character extends MovableObject {
         }, 1000 / 60);
     }
 
+    /**
+     * Locks camera and audio when dead/locked; returns true if handled.
+     * @returns {boolean}
+     */
     handleDeathState() {
         if (!(this.deadLocked || this.deathStarted)) return false;
         if (this.snorePlaying) this.stopSnore();
@@ -130,6 +156,10 @@ class Character extends MovableObject {
         return true;
     }
 
+    /**
+     * Applies left/right input and facing direction; returns movement flag.
+     * @returns {boolean}
+     */
     moveByInput() {
         let moved = false;
         const r = this.canControl && this.world.keyboard.RIGHT && this.x < this.world.level.level_end_x;
@@ -139,6 +169,25 @@ class Character extends MovableObject {
         return r || l || moved;
     }
 
+    /**
+     * Delegates movement to helper (right).
+     * @returns {*}
+     */
+    moveRight() {
+        return this.helper.moveRight();
+    }
+
+    /**
+     * Delegates movement to helper (left).
+     * @returns {*}
+     */
+    moveLeft() {
+        return this.helper.moveLeft();
+    }
+
+    /**
+     * Triggers jump if space is pressed and character is grounded.
+     */
     handleJumpInput() {
         if (this.canControl && this.world.keyboard.SPACE && !this.isAboveGround()) {
             this.jump();
@@ -146,6 +195,10 @@ class Character extends MovableObject {
         }
     }
 
+    /**
+     * Plays periodic step sound while grounded and moving.
+     * @param {boolean} movingHoriz
+     */
     handleStepSound(movingHoriz) {
         const grounded = !this.isAboveGround();
         if (!grounded || !movingHoriz) return;
@@ -156,6 +209,9 @@ class Character extends MovableObject {
         }
     }
 
+    /**
+     * Resets idle state when input is detected and stops snoring if active.
+     */
     handleInputActivity() {
         if (!this.tickHasInput) return;
         this.lastInputTime = Date.now();
@@ -167,6 +223,9 @@ class Character extends MovableObject {
         if (this.snorePlaying) this.stopSnore();
     }
 
+    /**
+     * Detects landing to reset standing/idle state and audio.
+     */
     handleLanding() {
         const inAir = this.isAboveGround();
         if (this.wasInAir && !inAir) {
@@ -182,16 +241,25 @@ class Character extends MovableObject {
         this.wasInAir = inAir;
     }
 
+    /**
+     * Stops snore loop and clears its timer.
+     */
     stopSnore() {
         this.snorePlaying = false;
         if (this.snoreInterval) { clearInterval(this.snoreInterval); this.snoreInterval = null; }
         if (window.sfx) window.sfx.stop('character.snore.loop');
     }
 
+    /**
+     * Keeps the camera following the character.
+     */
     updateCamera() {
         this.world.camera_x = -this.x + 100;
     }
 
+    /**
+     * Chooses the correct animation set each tick (hurt, air, throw, ground) and plays it.
+     */
     startFrameLoop() {
         this.frameInterval = setInterval(() => {
             if (!this.world) return;
@@ -205,38 +273,33 @@ class Character extends MovableObject {
         }, 50);
     }
 
+    /**
+     * Delegates air animation logic (jump/long-air) to helper.
+     * @returns {boolean}
+     */
     handleAirAnimation() {
-        if (!this.isAboveGround()) { this.lastJumpFrameAt = 0; return false; }
-        const now = Date.now();
-        if (now - this.lastJumpFrameAt >= this.jumpFrameDelayMs) {
-            this.playAnimation(this.IMAGES_JUMPING);
-            this.lastJumpFrameAt = now;
-        }
-        return true;
+        return this.helper.handleAirAnimation();
     }
 
+    /**
+     * Delegates throw-frame state check to helper.
+     * @returns {boolean}
+     */
     isThrowFrameActive() {
-        if (!this.world) return false;
-        const t = this.world.lastThrowTime || 0;
-        const dt = Date.now() - t;
-        return dt >= 0 && dt <= 100;
+        return this.helper.isThrowFrameActive();
     }
 
+    /**
+     * Delegates ground animation (walk/idle/long-idle) to helper.
+     * @returns {*}
+     */
     handleGroundAnimation() {
-        const moving = this.world.keyboard.RIGHT || this.world.keyboard.LEFT;
-        if (moving) {
-            this.playAnimation(this.IMAGES_WALKING);
-            return;
-        }
-        const idleTime = (Date.now() - this.lastInputTime) / 1000;
-        if (idleTime > this.idleStartDelaySec) {
-            this.playIdleAnimation();
-        } else {
-            this.setStandingFrame();
-            this.lastIdleFrameAt = 0;
-        }
+        return this.helper.handleGroundAnimation();
     }
 
+    /**
+     * Overrides hit: temporarily disables control; respects death lock.
+     */
     hit() {
         const wasDead = this.isDead();
         super.hit();
@@ -250,6 +313,10 @@ class Character extends MovableObject {
         }
     }
 
+    /**
+     * Applies numeric damage, plays sound, and briefly disables control.
+     * @param {number} amount
+     */
     applyDamage(amount) {
         if (typeof amount !== 'number') amount = 20;
         if (this.isDead()) return;
@@ -263,126 +330,43 @@ class Character extends MovableObject {
         }, this.damageProtectionTime);
     }
 
+    /**
+     * Performs a jump, resets air timers/flags, and primes long-air sprite.
+     */
     jump() {
-        if (!this.canControl) return;
-        if (this.isAboveGround()) return;
-        this.speedY = 30;
+        super.jump();
         if (window.sfx) window.sfx.play('character.jump');
+        this.jumpOnceActive = true;
+        this.jumpOnceIndex = 0;
+        this.lastJumpFrameAt = 0;
+        this.airborneStartedAt = 0;
+        this.longAirActive = false;
+        this.longAirThresholdMs = (this.IMAGES_JUMPING?.length || 9) * this.jumpFrameDelayMs;
+        this.loadImages([this.LONG_AIR_IMAGE]);
     }
 
+    /**
+     * Delegates death sequence start to helper and returns its result.
+     * @returns {*}
+     */
     startDeath() {
-        if (this.deathStarted) return;
-        this.deathStarted = true;
-        this.canControl = false;
-        if (this.snorePlaying) this.stopSnore();
-        this.stopHorizontalMotion();
-        this.playDeathSound();
-        this.beginDeathAnim();
+        return this.helper.startDeath();
     }
 
-    stopHorizontalMotion() {
-        this.speed = 0;
-        if (typeof this.vx === 'number') this.vx = 0;
-        if (typeof this.vy === 'number') this.vy = 0;
-        if (typeof this.ax === 'number') this.ax = 0;
-        if (typeof this.ay === 'number') this.ay = 0;
-    }
-
-    playDeathSound() {
-        if (!window.sfx) return;
-        if (window.sfx.stop) window.sfx.stop('character.snore.loop');
-        window.sfx.play('character.dead');
-    }
-
-    beginDeathAnim() {
-        this.deathFrameIndex = 0;
-        this.deathStepMs = this.deathStepMs || 120;
-        this.runDeathAnimStep();
-    }
-
-    runDeathAnimStep() {
-        const frames = this.IMAGES_DEAD || [];
-        if (this.deathFrameIndex < frames.length) {
-            const p = frames[this.deathFrameIndex++];
-            const img = this.imageCache ? this.imageCache[p] : null;
-            if (img) this.img = img;
-            setTimeout(() => this.runDeathAnimStep(), this.deathStepMs);
-        } else {
-            this.finalizeDeath();
-        }
-    }
-
-    finalizeDeath() {
-        this.deadLocked = true;
-        this.otherDirection = false;
-        if (this.world && typeof this.world.onPlayerDeath === 'function') {
-            this.world.onPlayerDeath(this);
-        }
-    }
-
-    playIdleAnimation() {
-        this.ensureIdleState();
-        if (!this.isIdleFrameDue()) return;
-        const frames = this.pickIdleFrames();
-        this.applyIdleFrame(frames);
-        this.advanceIdleCounters();
-    }
-
-    ensureIdleState() {
-        if (this.idleActive) return;
-        this.idleActive = true;
-        this.currentIdleFrame = 0;
-        this.idlePhase = this.idleIntroPlayed ? 'loop' : 'intro';
-        this.lastIdleFrameAt = 0;
-    }
-
-    isIdleFrameDue() {
-        const now = Date.now();
-        if (now - (this.lastIdleFrameAt || 0) < this.idleFrameDelayMs) return false;
-        this.lastIdleFrameAt = now;
-        return true;
-    }
-
-    pickIdleFrames() {
-        if (this.idlePhase === 'intro') return this.IDLE_FULL;
-        this.ensureSnoreLoop();
-        return this.IMAGES_LONG_IDLE;
-    }
-
-    ensureSnoreLoop() {
-        if (this.snorePlaying) return;
-        this.snorePlaying = true;
-        if (window.sfx) window.sfx.play('character.snore.loop');
-        if (this.snoreInterval) { clearInterval(this.snoreInterval); this.snoreInterval = null; }
-        this.snoreInterval = setInterval(() => {
-            if (!this.snorePlaying) return;
-            if (window.sfx) window.sfx.play('character.snore.loop');
-        }, this.snorePeriodMs);
-    }
-
-    applyIdleFrame(frames) {
-        const idx = this.currentIdleFrame;
-        const path = frames[idx];
-        this.img = this.imageCache[path];
-        this.currentIdleFrame = idx + 1;
-    }
-
-    advanceIdleCounters() {
-        if (this.idlePhase === 'intro' && this.currentIdleFrame >= this.IDLE_FULL.length) {
-            this.idleIntroPlayed = true;
-            this.idlePhase = 'loop';
-            this.currentIdleFrame = 0;
-        } else if (this.idlePhase === 'loop' && this.currentIdleFrame >= this.IMAGES_LONG_IDLE.length) {
-            this.currentIdleFrame = 0;
-        }
-    }
-
+    /**
+     * Sets a neutral standing frame (first idle sprite).
+     */
     setStandingFrame() {
         let path = this.IMAGES_IDLE[0];
         this.img = this.imageCache[path];
         this.currentImage = 0;
     }
 
+    /**
+     * Checks if the character is stomping an enemy from above.
+     * @param {MovableObject} enemy
+     * @returns {boolean}
+     */
     isStomping(enemy) {
         const charBottom = this.y + this.height - (this.offset?.bottom || 0);
         const enemyTop = enemy.y + (enemy.offset?.top || 0);
@@ -391,9 +375,11 @@ class Character extends MovableObject {
         return isFalling && closeToTop;
     }
 
+    /**
+     * Delegates throw-frame rendering to helper.
+     * @returns {*}
+     */
     playThrowFrame() {
-        this.img = this.imageCache[this.throwFrame];
-        this.currentImage = 0;
-        if (window.sfx) window.sfx.play('character.throw');
+        return this.helper.playThrowFrame();
     }
 }

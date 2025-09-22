@@ -1,0 +1,90 @@
+/* ==========================================================================
+   Start Screen Layout
+   Purpose: Structure and styles for the game's start screen and name step
+   Notes:
+   - Grid for name step, flex for actions and legal row
+   - Includes soft-hidden error state and overall start screen container
+   ========================================================================== */
+
+/* Title: centered heading spacing */
+#start-screen .home-title {
+    margin: 0 0 12px 0;
+    text-align: center;
+}
+
+/* Name step: compact vertical grid for input + button + error */
+#start-screen #name-step {
+    display: grid;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+/* Primary actions: center-aligned row of buttons */
+#start-screen .home-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 16px;
+}
+
+/* Legal line: small, centered, slightly faded */
+#start-screen .home-legal {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.8;
+    margin-top: 12px;
+    font-size: 14px;
+}
+
+/* Hidden state for the entire start screen */
+#start-screen.hidden {
+    display: none;
+}
+
+/* Inputs: comfortable padding and readable sizing */
+#start-screen input,
+#name-step input {
+    padding: 8px 12px;
+    font-size: 16px;
+    width: 220px;
+}
+
+/* Buttons: larger click targets with bold text */
+#start-screen button,
+#name-step button {
+    padding: 10px 16px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Name error message: reserved space, animated visibility */
+#name-error {
+    display: block;
+    min-height: 18px;
+    color: #f55;
+    font-weight: 600;
+    font-size: 13px;
+    margin-top: 4px;
+    transition: opacity .15s ease, transform .15s ease;
+}
+
+/* Soft-hidden error: visually hidden but keeps layout from shifting */
+#name-error.soft-hidden {
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-2px);
+}
+
+/* Start screen container: centered overlay with themed background */
+#start-screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1300;
+    background: #fbbf24;
+}

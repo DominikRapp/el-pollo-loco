@@ -1,5 +1,10 @@
+/**
+ * Simple intro animation for Pepe walking in from the left, cycling through frames
+ * and marking itself as done once it passes a target X position.
+ * Class fields above define sprite frames, animation counters/flags, and overlay suppression.
+ */
 class IntroPepe extends DrawableObject {
-    
+
     frames = [
         'img/2_character_pepe/2_walk/W-21.png',
         'img/2_character_pepe/2_walk/W-22.png',
@@ -13,6 +18,11 @@ class IntroPepe extends DrawableObject {
     done = false;
     suppressWinLoseOverlay = false;
 
+    /**
+     * Preloads the frames, sets size, and positions Pepe just off-screen on the left.
+     * Optionally clamps Y to fit the given canvas height.
+     * @param {number} [canvasHeight] - Canvas height used to clamp vertical position.
+     */
     constructor(canvasHeight) {
         super().loadImage(this.frames[0]);
         this.loadImages(this.frames);
@@ -25,6 +35,9 @@ class IntroPepe extends DrawableObject {
         }
     }
 
+    /**
+     * Advances position and animation; sets done when passing the finish X.
+     */
     update() {
         this.x += 6;
         this.tick += 1;

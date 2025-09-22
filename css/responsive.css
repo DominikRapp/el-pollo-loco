@@ -1,0 +1,115 @@
+/* ==========================================================================
+   Screens & Overlays
+   Purpose: Full-viewport start/settings/instructions/leaderboard overlays
+   Notes:
+   - Fixed, centered, with background image and high stacking order
+   ========================================================================== */
+#start-screen,
+#instructions-overlay,
+#leaderboard-overlay,
+#settings-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-image: url(../img/background.png);
+    width: 100% !important;
+    height: 100% !important;
+    transform: none !important;
+    z-index: 1300;
+}
+
+/* ==========================================================================
+   End-state Action Layers
+   Purpose: Centered containers above gameplay for victory / gameover actions
+   Notes:
+   - Slightly lower z-index than main overlays to respect overlay hierarchy
+   ========================================================================== */
+#gameover-actions,
+#victory-actions {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100% !important;
+    height: 100% !important;
+    transform: none !important;
+    z-index: 1250;
+}
+
+/* ==========================================================================
+   Overlay Box Scaling
+   Purpose: Scale overlay content to UI scale while keeping fixed base size
+   ========================================================================== */
+#start-screen .overlay-box,
+#instructions-overlay .overlay-box,
+#leaderboard-overlay .overlay-box,
+#settings-overlay .overlay-box {
+    width: 960px;
+    height: 640px;
+    transform: scale(var(--ui-scale));
+    transform-origin: center;
+}
+
+/* Victory/Gameover overlay box: scaled to match UI scale */
+#gameover-actions .overlay-box,
+#victory-actions .overlay-box {
+    transform: scale(var(--ui-scale));
+    transform-origin: center;
+}
+
+/* ==========================================================================
+   HUD Elements
+   Purpose: Responsive scaling and positioning for timer, menu, and level pill
+   ========================================================================== */
+#hud-timer {
+    top: calc(12px * var(--ui-scale));
+    transform-origin: top center;
+    padding: calc(6px * var(--ui-scale)) calc(10px * var(--ui-scale));
+    border-radius: calc(999px * var(--ui-scale));
+    font-size: calc(28px * var(--ui-scale));
+}
+
+/* Hamburger menu button: top-right anchor with scale */
+#hamburger-root {
+    top: calc(10px * var(--ui-scale)) !important;
+    right: calc(10px * var(--ui-scale)) !important;
+    transform-origin: top right;
+    transform: scale(var(--ui-scale));
+}
+
+/* Level indicator: bottom-center pill with scaled typography */
+#hud-level {
+    bottom: calc(12px * var(--ui-scale));
+    transform-origin: bottom center;
+    padding: calc(6px * var(--ui-scale)) calc(10px * var(--ui-scale));
+    border-radius: calc(999px * var(--ui-scale));
+    font-size: calc(18px * var(--ui-scale));
+}
+
+/* ==========================================================================
+   Mobile Controls Activation (Touch devices)
+   Purpose: Show mobile controls on touch-only devices and ensure root layout
+   ========================================================================== */
+@media (hover: none) and (pointer: coarse) {
+    #game-root {
+        position: relative;
+    }
+
+    .mctrl.is-active {
+        display: block;
+    }
+}
+
+/* ==========================================================================
+   Mobile Controls Activation (Small viewports)
+   Purpose: Show mobile controls when width < 1080px or height < 720px
+   ========================================================================== */
+@media (max-width: 1080px),
+(max-height: 720px) {
+    .mctrl.is-active {
+        display: block;
+    }
+}

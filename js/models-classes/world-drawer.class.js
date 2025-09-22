@@ -1,5 +1,14 @@
+/**
+ * Handles drawing of the game each frame:
+ * updates camera, clears canvas, draws world-space elements (with camera transform),
+ * draws UI-space elements (without camera transform), and queues the next frame.
+ */
 class WorldDrawer {
 
+    /**
+     * Orchestrates one full render pass.
+     * @param {object} world - Game state and rendering context
+     */
     draw(world) {
         if (world.disposed) return;
         this.updateCamera(world);
@@ -9,14 +18,26 @@ class WorldDrawer {
         this.queueNextFrame(world);
     }
 
+    /**
+     * Positions the camera relative to the character.
+     * @param {object} world
+     */
     updateCamera(world) {
         world.camera_x = -world.character.x + 250;
     }
 
+    /**
+     * Clears the entire canvas before drawing.
+     * @param {object} world
+     */
     clearCanvas(world) {
         world.ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
+    /**
+     * Draws all game objects affected by the camera transform.
+     * @param {object} world
+     */
     drawWorldSpace(world) {
         world.ctx.save();
         world.ctx.translate(world.camera_x, 0);
@@ -32,6 +53,10 @@ class WorldDrawer {
         world.ctx.restore();
     }
 
+    /**
+     * Draws UI overlays that should not move with the camera.
+     * @param {object} world
+     */
     drawUiSpace(world) {
         world.ctx.save();
         world.renderer.addToMap(world, world.statusBar);
@@ -41,6 +66,10 @@ class WorldDrawer {
         world.ctx.restore();
     }
 
+    /**
+     * Schedules the next animation frame.
+     * @param {object} world
+     */
     queueNextFrame(world) {
         world.drawRafId = requestAnimationFrame(() => world.draw());
     }

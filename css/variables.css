@@ -1,0 +1,46 @@
+/* ==========================================================================
+   Global CSS Variables
+   Purpose: Theme colors, scrollbars, UI scaling, and image assets
+   Notes:
+   - `--ui-scale` scales UI to fit within base 1080×720 while capping at 1
+   - Includes stable viewport height var for mobile (uses 100svh when supported)
+   - Image URLs for rotate overlay and mobile control icons
+   ========================================================================== */
+:root {
+    --lb-bg: #0f0f0f;
+    --lb-surface: #171717;
+    --lb-border: rgba(255, 255, 255, .08);
+    --lb-text: #fff;
+    --lb-muted: rgba(255, 255, 255, .7);
+    --lb-accent: var(--accent, #ff7a00);
+    --accent: #ff7a00;
+    --scroll-thumb: #ff7a00;
+    --scroll-thumb-hover: #f59e0b;
+    --scroll-thumb-active: #d97706;
+    --scroll-track: rgba(0, 0, 0, .18);
+    --scroll-track-inner: rgba(0, 0, 0, .12);
+    --base-w: 1080;
+    --base-h: 720;
+    --vh-stable: 100svh;
+    --rotate-bg-img: url("../img/2_character_pepe/1_idle/long_idle/I-17.png");
+    --rotate-blur: 12px;
+    --ui-scale: min(100vw / calc(var(--base-w) * 1px),
+            var(--vh-stable) / calc(var(--base-h) * 1px),
+            1);
+    --img-left: url("../img/11_mobile_buttons/left.png");
+    --img-right: url("../img/11_mobile_buttons/right.png");
+    --img-restart: url("../img/11_mobile_buttons/restart.png");
+    --img-jump: url("../img/11_mobile_buttons/jump.png");
+    --img-throw: url("../img/11_mobile_buttons/throw-button.png");
+    --mc-edge: 24px;
+    --mc-btn: 72px;
+    --mc-gap: 12px;
+    --mc-press-scale: 0.94;
+}
+
+/* Fallback for browsers without `100svh` support (e.g., older mobile engines) */
+@supports not (height: 100svh) {
+    :root {
+        --vh-stable: 100vh;
+    }
+}

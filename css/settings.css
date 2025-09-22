@@ -1,0 +1,109 @@
+/* ==========================================================================
+   Settings Overlay & Controls
+   Purpose: Full-screen overlay with centered settings panel and styled range input
+   Notes:
+   - Overlay centers its content and sits above the app
+   - Headings, text, and labels use consistent typography scale
+   - Range slider styled for Chromium/WebKit and Firefox
+   ========================================================================== */
+
+/* Full overlay: fills parent and centers inner content */
+#settings-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1300;
+}
+
+/* Hidden state for the overlay */
+#settings-overlay.hidden {
+    display: none;
+}
+
+/* Section heading inside the settings content */
+#settings-content h3 {
+    margin: 0 0 10px;
+    font-size: 24px;
+    letter-spacing: .02em;
+    color: #111;
+}
+
+/* Supporting paragraph text */
+#settings-content p {
+    margin: 6px 0 18px;
+    font-size: 16.96px;
+    color: #444;
+    max-width: 680px;
+    text-align: center;
+}
+
+/* Field labels above form controls */
+#settings-content label {
+    display: block;
+    margin: 8px 0 6px;
+    font-weight: 600;
+    font-size: 16.96px;
+    color: #222;
+}
+
+/* Base range input track (shared size and colors) */
+#settings-content input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: min(560px, 90%);
+    height: 16px;
+    border-radius: 999px;
+    background: #e9e9e9;
+    border: 1px solid #dadada;
+    outline: none;
+    accent-color: #ff7a00;
+}
+
+/* Chromium/WebKit track */
+#settings-content input[type="range"]::-webkit-slider-runnable-track {
+    height: 16px;
+    border-radius: 999px;
+    background: #e9e9e9;
+}
+
+/* Chromium/WebKit thumb */
+#settings-content input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 26px;
+    height: 26px;
+    margin-top: -5px;
+    border-radius: 999px;
+    background: #fff;
+    border: 2px solid #ff7a00;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .25);
+    cursor: pointer;
+}
+
+/* Firefox track */
+#settings-content input[type="range"]::-moz-range-track {
+    height: 16px;
+    border-radius: 999px;
+    background: #e9e9e9;
+    border: 1px solid #dadada;
+}
+
+/* Firefox filled portion (before thumb) */
+#settings-content input[type="range"]::-moz-range-progress {
+    height: 16px;
+    border-radius: 999px 0 0 999px;
+    background: #ff7a00;
+}
+
+/* Firefox thumb */
+#settings-content input[type="range"]::-moz-range-thumb {
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    background: #fff;
+    border: 2px solid #ff7a00;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .25);
+    cursor: pointer;
+}

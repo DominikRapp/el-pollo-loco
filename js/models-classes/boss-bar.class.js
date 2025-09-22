@@ -1,5 +1,9 @@
+/**
+ * Boss health bar that switches images based on percentage and draws mirrored on the canvas.
+ * Uses preloaded image frames for 0–100% and clamps input to that range.
+ */
 class BossBar extends DrawableObject {
-    
+
     IMAGES = [
         'img/7_statusbars/2_statusbar_endboss/green/green0.png',
         'img/7_statusbars/2_statusbar_endboss/green/green20.png',
@@ -8,9 +12,12 @@ class BossBar extends DrawableObject {
         'img/7_statusbars/2_statusbar_endboss/green/green80.png',
         'img/7_statusbars/2_statusbar_endboss/green/green100.png'
     ];
-    
+
     percentage = 100;
 
+    /**
+     * Loads bar images, sets default size/position, and initializes to 100%.
+     */
     constructor() {
         super();
         this.loadImages(this.IMAGES);
@@ -20,6 +27,10 @@ class BossBar extends DrawableObject {
         this.setPercentage(100);
     }
 
+    /**
+     * Updates the health percentage (clamped 0–100) and selects the matching image.
+     * @param {number} percentage
+     */
     setPercentage(percentage) {
         if (percentage < 0) percentage = 0;
         if (percentage > 100) percentage = 100;
@@ -29,6 +40,10 @@ class BossBar extends DrawableObject {
         this.img = this.imageCache[path];
     }
 
+    /**
+     * Converts the current percentage into an image index (0..5).
+     * @returns {number}
+     */
     resolveImageIndex() {
         if (this.percentage >= 100) return 5;
         if (this.percentage >= 80) return 4;
@@ -38,6 +53,10 @@ class BossBar extends DrawableObject {
         return 0;
     }
 
+    /**
+     * Draws the bar mirrored horizontally (using canvas scale) at the current position.
+     * @param {CanvasRenderingContext2D} ctx
+     */
     draw(ctx) {
         if (!this.img) return;
         ctx.save();
