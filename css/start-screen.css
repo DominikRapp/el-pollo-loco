@@ -35,7 +35,7 @@
     justify-content: center;
     opacity: 0.8;
     margin-top: 12px;
-    font-size: 14px;
+    font-size: 16px;
 }
 
 /* Hidden state for the entire start screen */
@@ -66,7 +66,7 @@
     min-height: 18px;
     color: #f55;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 16px;
     margin-top: 4px;
     transition: opacity .15s ease, transform .15s ease;
 }
@@ -87,4 +87,217 @@
     justify-content: center;
     z-index: 1300;
     background: #fbbf24;
+}
+
+/* ==========================================================================
+   Home Legal Links
+   Purpose: Inline legal/utility links section with pill-shaped anchors
+   Notes:
+   - Flexible row with wrapping for small screens
+   - Light-on-dark default palette with subtle hover glow
+   ========================================================================== */
+
+/* Container: centered, wrapped row with consistent spacing and typography */
+.home-legal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+    font-family: 'Poetsen One', 'Trebuchet MS', 'Segoe UI', Tahoma, Arial, sans-serif;
+    font-size: 16px;
+    color: rgba(255, 255, 255, .72);
+}
+
+/* Inline text emphasis within the legal row */
+.home-legal span {
+    color: rgb(0, 0, 0);
+}
+
+/* Link pills: subtle borders, soft background, and smooth transitions */
+.home-legal a {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, .12);
+    background: rgba(255, 255, 255, .04);
+    color: #000000;
+    text-underline-offset: 3px;
+    transition: transform .12s ease, background .12s ease, border-color .12s ease;
+}
+
+/* Link hover: warm rainbow sheen and micro-lift */
+.home-legal a:hover {
+    background: linear-gradient(90deg, rgba(255, 255, 255, .08) 0%, rgba(255, 241, 118, .16) 25%, rgba(255, 152, 0, .18) 50%, rgba(244, 67, 54, .18) 75%, rgba(156, 39, 176, .20) 100%);
+    border-color: rgba(255, 255, 255, .25);
+    transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   Responsive Tweaks for Legal Section
+   Purpose: Slightly tighter spacing and smaller buttons on small screens
+   ========================================================================== */
+
+@media (max-width: 640px) {
+
+    /* Container adjustments on small screens */
+    .home-legal {
+        gap: 8px;
+        font-size: 16px;
+    }
+
+    /* Smaller pill padding for compact layout */
+    .home-legal a {
+        padding: 6px 10px;
+    }
+}
+
+/* ==========================================================================
+   Start Button (CTA)
+   Purpose: Prominent, glossy call-to-action with interactive states
+   Notes:
+   - Uses layered shadows and gradient background
+   - Scales typography with clamp() for responsiveness
+   ========================================================================== */
+
+/* Base CTA button */
+#btn-start {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 22px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, .18);
+    background: linear-gradient(180deg, #fff6cf 0%, #ffd36a 35%, #f79b34 65%, #c56a2a 100%);
+    color: #1b0f07;
+    font-family: 'Poetsen One', 'Trebuchet MS', 'Segoe UI', Tahoma, Arial, sans-serif;
+    font-size: clamp(16px, 2.6vw, 22px);
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    text-decoration: none;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, .35);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, .35) inset,
+        0 6px 16px rgba(0, 0, 0, .35),
+        0 0 0 2px rgba(255, 255, 255, .06) inset;
+    cursor: pointer;
+    user-select: none;
+    transition: transform .12s ease, box-shadow .12s ease, filter .12s ease, background .2s ease, border-color .12s ease;
+}
+
+/* Hover state: slight saturation boost and deeper shadow */
+#btn-start:hover:not(:disabled) {
+    filter: saturate(1.08);
+    transform: translateY(-1px);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, .45) inset,
+        0 10px 22px rgba(0, 0, 0, .45),
+        0 0 0 2px rgba(255, 255, 255, .08) inset;
+}
+
+/* Active state: pressed look with warmer gradient */
+#btn-start:active:not(:disabled) {
+    transform: translateY(0);
+    background: linear-gradient(180deg, #ffe27d 0%, #ffb74d 40%, #e57333 80%, #9c4c1f 100%);
+    box-shadow:
+        0 0 0 rgba(0, 0, 0, 0),
+        0 4px 12px rgba(0, 0, 0, .35),
+        0 0 0 2px rgba(255, 255, 255, .08) inset;
+}
+
+/* Focus-visible: accessible focus ring with dual halo */
+#btn-start:focus-visible {
+    outline: none;
+    box-shadow:
+        0 0 0 3px rgba(255, 255, 255, .18),
+        0 0 0 6px rgba(255, 152, 0, .35),
+        0 6px 16px rgba(0, 0, 0, .35);
+}
+
+/* Disabled state: muted palette and blocked interactions */
+#btn-start:disabled {
+    cursor: not-allowed;
+    opacity: .55;
+    filter: grayscale(.3) brightness(.9);
+    background: linear-gradient(180deg, #d8d1b3 0%, #cbb480 35%, #b47a4f 65%, #8a5b3b 100%);
+    border-color: rgba(255, 255, 255, .12);
+    text-shadow: none;
+}
+
+/* ==========================================================================
+   Motion Preference
+   Purpose: Gentle pulsing glow animation only when motion is allowed
+   ========================================================================== */
+
+@media (prefers-reduced-motion: no-preference) {
+
+    /* Apply glow animation to enabled button */
+    #btn-start:not(:disabled) {
+        animation: startBtnGlow 2.6s ease-in-out infinite alternate;
+    }
+
+    /* Subtle glow pulse for the CTA */
+    @keyframes startBtnGlow {
+        0% {
+            box-shadow: 0 1px 0 rgba(255, 255, 255, .35) inset, 0 6px 16px rgba(0, 0, 0, .35), 0 0 0 2px rgba(255, 255, 255, .06) inset;
+        }
+
+        100% {
+            box-shadow: 0 1px 0 rgba(255, 255, 255, .45) inset, 0 8px 18px rgba(0, 0, 0, .42), 0 0 0 2px rgba(255, 241, 118, .18) inset;
+        }
+    }
+}
+
+/* ==========================================================================
+   Player Name Input
+   Purpose: Prominent input with soft elevation and bright focus state
+   ========================================================================== */
+
+/* Text input: comfortable sizing, subtle shadow, and responsive font */
+#player-name {
+    display: block;
+    width: min(380px, 90%);
+    margin: 12px auto 0;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(0, 0, 0, .15);
+    background: #ffffff;
+    color: #1b0f07;
+    font-family: 'Roboto', Inter, 'Segoe UI', Arial, system-ui, sans-serif;
+    font-size: clamp(15px, 2.2vw, 18px);
+    letter-spacing: .3px;
+    caret-color: #ff9800;
+    outline: none;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, .0) inset,
+        0 6px 14px rgba(0, 0, 0, .18);
+    transition: background .18s ease, border-color .18s ease, box-shadow .18s ease, transform .12s ease;
+}
+
+/* Placeholder text styling for clarity */
+#player-name::placeholder {
+    color: #666666;
+    letter-spacing: .4px;
+}
+
+/* Focus-visible: bright, layered focus ring and slight lift */
+#player-name:focus-visible {
+    border-color: rgba(255, 152, 0, .55);
+    background: #ffffff;
+    box-shadow:
+        0 0 0 3px rgba(255, 152, 0, .16),
+        0 0 0 6px rgba(255, 241, 118, .28),
+        0 8px 18px rgba(0, 0, 0, .28);
+    transform: translateY(-1px);
+}
+
+/* Disabled: reduced prominence and non-interactive cursor */
+#player-name:disabled {
+    opacity: .6;
+    filter: grayscale(.3);
+    cursor: not-allowed;
 }

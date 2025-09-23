@@ -177,3 +177,43 @@ body.ui-overlay-open .mctrl {
         display: none !important;
     }
 }
+
+@supports (-moz-appearance: none) {
+    #mobile-controls.mctrl {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 999;
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    #mobile-controls.mctrl.is-active {
+        display: flex;
+    }
+}
+
+@supports (-moz-appearance: none) {
+    @media (hover: hover) and (pointer: fine) {
+        #mobile-controls.mctrl {
+            display: none !important;
+        }
+    }
+}
+
+@supports (-moz-appearance: none) {
+    @media (hover: none) and (pointer: coarse) {
+        #mobile-controls.mctrl.is-active {
+            display: flex !important;
+        }
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+        #mobile-controls.mctrl {
+            display: none !important;
+        }
+    }
+}

@@ -109,8 +109,9 @@
                 <a href="#" id="menu-home">Home</a>
                 <a href="#" id="menu-settings">Audio</a>
                 <a href="#" id="menu-instructions">Instructions</a>
-                <a href="legal/terms.html" target="_blank" rel="noopener" id="menu-terms">Terms of Service</a>
-                <a href="legal/impressum.html" target="_blank" rel="noopener" id="menu-imprint">Imprint</a>
+                <a href="legal/terms.html" target="_blank" rel="noopener">Terms</a>
+                <a href="legal/privacy.html" target="_blank" rel="noopener">Privacy</a>
+                <a href="legal/impressum.html" target="_blank" rel="noopener">Imprint</a>
             </nav>
         </div>
         <img id="overlay-gameover" class="hidden" src="img/You won, you lost/Game over A.png" alt="Game Over">
@@ -143,7 +144,7 @@
             <div class="overlay-box home-box">
                 <h1 class="home-title">El Pollo Loco</h1>
                 <div id="name-step">
-                    <input id="player-name" placeholder="Name" />
+                    <input id="player-name" placeholder="Enter nickname" />
                     <div id="name-error" class="hidden"></div>
                     <button id="btn-start" disabled>Start Game</button>
                 </div>
@@ -155,6 +156,8 @@
                 </div>
                 <div class="home-legal">
                     <a href="legal/terms.html" target="_blank" rel="noopener">Terms</a>
+                    <span>•</span>
+                    <a href="legal/privacy.html" target="_blank" rel="noopener">Privacy</a>
                     <span>•</span>
                     <a href="legal/impressum.html" target="_blank" rel="noopener">Imprint</a>
                 </div>
@@ -271,6 +274,26 @@
             document.addEventListener('DOMContentLoaded', updateRotateOverlay);
             window.addEventListener('resize', updateRotateOverlay);
             window.addEventListener('orientationchange', updateRotateOverlay);
+        })();
+    </script>
+    <script>
+        (function () {
+            const isFirefox = /firefox/i.test(navigator.userAgent);
+            if (!isFirefox) return;
+            function applyScale() {
+                const baseW = 1080;
+                const baseH = 720;
+                const vw = window.innerWidth;
+                const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+                let s = vw / baseW;
+                const sh = vh / baseH;
+                if (sh < s) s = sh;
+                if (s > 1) s = 1;
+                document.documentElement.style.setProperty('--ui-scale', String(s));
+            }
+            applyScale();
+            window.addEventListener('resize', applyScale);
+            window.addEventListener('orientationchange', applyScale);
         })();
     </script>
 </body>

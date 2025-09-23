@@ -182,8 +182,14 @@ function isInGame() {
 }
 
 /**
- * Performs a full restart to level 1, hiding overlays and clearing intervals.
- * Safe no-op if app is missing.
+ * Performs a full restart to level 1.
+ * - Hides #gameover-actions and #victory-actions overlays.
+ * - Stops the game timer and hides it.
+ * - Stops an active countdown if available.
+ * - Clears all tracked intervals via IntervalTracker.
+ * - Resets carryOverEnergy to 100.
+ * - Calls app.restartToLevel1().
+ * Safe no-op if the global `app` is missing.
  * @returns {void}
  */
 function performRestart() {
@@ -192,6 +198,9 @@ function performRestart() {
     const vi = document.getElementById('victory-actions');
     if (go) go.classList.add('hidden');
     if (vi) vi.classList.add('hidden');
+    if (typeof app.stopTimer === 'function') app.stopTimer();
+    if (typeof app.showTimer === 'function') app.showTimer(false);
+    if (typeof stopCountdown === 'function') stopCountdown(app);
     IntervalTracker.clearAll();
     app.carryOverEnergy = 100;
     app.restartToLevel1();

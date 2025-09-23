@@ -30,3 +30,70 @@ body {
     background-size: cover;
     background-position: center;
 }
+
+/* ==========================================================================
+   Home Title
+   Purpose: Hero title with gradient-filled text, layered shadows, and 3D tilt
+   Notes:
+   - Uses background-clip:text for the gradient fill (with -webkit- prefix)
+   - Adds layered text-shadow and drop-shadow for depth
+   - Decorative underline rendered via ::after
+   ========================================================================== */
+
+/* Gradient-styled hero title with dimensional effects */
+.home-title {
+    font-family: 'Rye', Georgia, 'Times New Roman', serif;
+    font-size: clamp(42px, 9vw, 110px);
+    line-height: 1;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin: 10px 0 6px 0;
+    background: linear-gradient(180deg, #fff6cf 0%, #ffd36a 35%, #f79b34 60%, #c56a2a 85%, #7b3b15 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+
+    text-shadow:
+        0.5px 0.5px 0 #5b2b12,
+        1px 1px 0 #5b2b12,
+        1.5px 1.5px 0 #5b2b12,
+        2px 2px 0 #5b2b12,
+        3px 3px 6px rgba(0, 0, 0, .35);
+
+    filter: drop-shadow(0 6px 14px rgba(0, 0, 0, .35));
+    transform: perspective(800px) rotateX(2deg);
+}
+
+/* Decorative underline: glossy capsules across a warm gradient rail */
+.home-title::after {
+    content: "";
+    display: block;
+    height: 10px;
+    margin: 10px auto 0;
+    width: min(520px, 80%);
+    border-radius: 999px;
+    background:
+        radial-gradient(circle at 10% 50%, rgba(255, 255, 255, .6) 0 6px, transparent 7px) left/20% 100% repeat-x,
+        linear-gradient(90deg, #ffeb99, #ffb74d, #e57333, #9c4c1f, #6d3316);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .35) inset, 0 6px 14px rgba(0, 0, 0, .25);
+}
+
+/* ==========================================================================
+   Responsive Adjustments
+   Purpose: Tighter letter spacing and softer effects on small screens
+   ========================================================================== */
+
+@media (max-width: 640px) {
+    .home-title {
+        letter-spacing: 1px;
+        text-shadow:
+            0.5px 0.5px 0 #5b2b12,
+            1px 1px 0 #5b2b12,
+            2px 2px 6px rgba(0, 0, 0, .35);
+        filter: drop-shadow(0 4px 10px rgba(0, 0, 0, .3));
+    }
+
+    .home-title::after {
+        height: 8px;
+    }
+}

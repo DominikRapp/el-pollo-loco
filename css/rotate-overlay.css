@@ -10,7 +10,7 @@
 #rotate-overlay {
     position: fixed;
     inset: 0;
-    z-index: 3000;
+    z-index: 99999;
     display: none;
     align-items: center;
     justify-content: center;

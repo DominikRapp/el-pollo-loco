@@ -37,12 +37,29 @@ function hideHudLevel(appInstance) {
 }
 
 /**
- * Shows or hides the mobile controls wrapper by toggling the "is-active" class.
- * @param {object} appInstance - Application instance (unused, reserved for symmetry)
- * @param {boolean} isVisible - Whether mobile controls should be visible
+ * Shows or hides the #mobile-controls wrapper.
+ * - Always toggles the "is-active" class based on the desired visibility.
+ * - In Firefox, visibility is additionally limited to “mobile-like” contexts
+ *   (touch/coarse pointer or small viewport), and the inline style
+ *   display is set to "flex" or "none".
+ * @param {object} appInstance - Application instance (currently unused)
+ * @param {boolean} isVisible - Desired visibility of the mobile controls
  * @returns {void}
  */
 function setMobileControlsVisible(appInstance, isVisible) {
     const element = document.getElementById('mobile-controls');
-    if (element) element.classList.toggle('is-active', !!isVisible);
+    if (!element) return;
+    const isFirefox = /firefox/i.test(navigator.userAgent);
+    const wantsVisible = !!isVisible;
+    if (isFirefox) {
+        const isTouch = navigator.maxTouchPoints > 0;
+        const mqCoarse = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+        const smallViewport = window.innerWidth < 900 || window.innerHeight < 700;
+        const isMobileLike = isTouch || mqCoarse || smallViewport;
+        const show = wantsVisible && isMobileLike;
+        element.classList.toggle('is-active', show);
+        element.style.display = show ? 'flex' : 'none';
+        return;
+    }
+    element.classList.toggle('is-active', wantsVisible);
 }

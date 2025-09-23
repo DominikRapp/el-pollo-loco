@@ -1,0 +1,224 @@
+/* ==========================================================================
+   Legal/Theming Variables & Global Resets
+   Purpose: Define legal page color system and establish consistent box sizing
+   ========================================================================== */
+
+/* Theme tokens for the legal pages */
+:root {
+    --legal-bg: #0b0b10;
+    --legal-surface: #14141a;
+    --legal-text: #ffffff;
+    --legal-muted: rgba(255, 255, 255, .72);
+    --legal-border: rgba(255, 255, 255, .08);
+    --legal-accent: var(--accent, #ff7a00);
+}
+
+/* Universal border-box sizing for predictable layout */
+* {
+    box-sizing: border-box;
+}
+
+/* ==========================================================================
+   Base Document Styles
+   Purpose: Dark gradient background, system font stack, and body defaults
+   ========================================================================== */
+
+/* Root elements: full-height canvas with dark gradient and readable copy */
+html,
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    background: linear-gradient(180deg, #0b0b10 0%, #111118 100%);
+    color: var(--legal-text);
+    font-family: 'Roboto', Inter, 'Segoe UI', Arial, system-ui, sans-serif;
+    line-height: 1.6;
+}
+
+/* Links: accented color with clearer underline offset */
+a {
+    color: var(--legal-accent);
+    text-underline-offset: 3px;
+}
+
+/* Page container: centered column with max width and breathing room */
+.page {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+/* ==========================================================================
+   Header & Branding
+   Purpose: Top bar with brand on the left and utility links on the right
+   ========================================================================== */
+
+/* Header bar: spaced layout with subtle divider */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--legal-border);
+}
+
+/* Brand link: icon + title, inherits theme color */
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--legal-text);
+}
+
+/* Brand mark: multicolor capsule with soft inner stroke */
+.brand-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: radial-gradient(circle at 30% 30%, #fff59d 0%, #fbc02d 22%, #ff8f00 45%, #e53935 70%, #8e24aa 100%);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, .08) inset;
+}
+
+/* Brand text: decorative display face */
+.brand-title {
+    font-family: 'Poetsen One', 'Trebuchet MS', 'Segoe UI', Tahoma, Geneva, Verdana, Arial, sans-serif;
+    font-size: 20px;
+    letter-spacing: .2px;
+}
+
+/* Header links row: wrapped pills */
+.header-links {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* Header link pill: subtle surface and border */
+.header-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid var(--legal-border);
+    border-radius: 999px;
+    text-decoration: none;
+    color: var(--legal-text);
+    background: rgba(255, 255, 255, .03);
+}
+
+/* Header link hover: slightly brighter surface */
+.header-links a:hover {
+    background: rgba(255, 255, 255, .06);
+}
+
+/* ==========================================================================
+   Headings & Lead
+   Purpose: Gradient hero h1 and supportive section headings/lead text
+   ========================================================================== */
+
+/* Hero heading: multicolor gradient text with clip */
+h1 {
+    font-family: 'Rye', Georgia, 'Times New Roman', Times, serif;
+    font-size: clamp(28px, 3.6vw, 44px);
+    line-height: 1.1;
+    margin: 28px 0 10px 0;
+    background: linear-gradient(90deg, #ffffff, #fff176, #ff9800, #f44336, #9c27b0);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* Section heading: bold, friendly display font */
+h2 {
+    font-family: 'Poetsen One', 'Trebuchet MS', 'Segoe UI', Tahoma, Geneva, Verdana, Arial, sans-serif;
+    font-size: clamp(18px, 2.2vw, 26px);
+    margin: 28px 0 10px 0;
+}
+
+/* Lead paragraph: muted tone for introduction */
+.lead {
+    color: var(--legal-muted);
+    margin: 0 0 24px 0;
+}
+
+/* ==========================================================================
+   Content Blocks
+   Purpose: Card-like sections and definition/list patterns
+   ========================================================================== */
+
+/* Section card: elevated surface with rounded corners */
+.section {
+    background: var(--legal-surface);
+    border: 1px solid var(--legal-border);
+    border-radius: 16px;
+    padding: 18px;
+    margin: 18px 0;
+}
+
+/* Key-value grid: label/content pairs */
+.kv {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 10px 18px;
+}
+
+/* Key labels: dimmed color for secondary emphasis */
+.kv div:nth-child(odd) {
+    color: var(--legal-muted);
+}
+
+/* Bulleted list: comfortable vertical spacing */
+.list {
+    display: grid;
+    gap: 6px;
+    padding-left: 18px;
+}
+
+/* Small print: subdued text for disclaimers or footnotes */
+.small {
+    font-size: 14px;
+    color: var(--legal-muted);
+}
+
+/* ==========================================================================
+   Footer
+   Purpose: Balanced footer with muted tone and top divider
+   ========================================================================== */
+
+/* Footer bar: spaced layout and subtle separation */
+footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 22px 0 44px 0;
+    color: var(--legal-muted);
+    border-top: 1px solid var(--legal-border);
+    margin-top: 24px;
+}
+
+/* ==========================================================================
+   Responsive Adjustments
+   Purpose: Stack complex grids and simplify header on small screens
+   ========================================================================== */
+
+@media (max-width: 720px) {
+
+    /* Stack key/value pairs in a single column */
+    .kv {
+        grid-template-columns: 1fr;
+    }
+
+    /* Header becomes a vertical stack with left alignment */
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    /* Allow header links to fill the width when wrapping */
+    .header-links {
+        width: 100%;
+    }
+}

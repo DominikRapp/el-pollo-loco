@@ -5,10 +5,7 @@
  * @returns {boolean} True if the element is the active fullscreen element
  */
 function isFullscreen(root) {
-    return document.fullscreenElement === root
-        || document.webkitFullscreenElement === root
-        || document.msFullscreenElement === root
-        || document.mozFullScreenElement === root;
+    return document.fullscreenElement === root || document.webkitFullscreenElement === root || document.msFullscreenElement === root || document.mozFullScreenElement === root;
 }
 
 /**
