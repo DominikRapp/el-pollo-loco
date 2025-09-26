@@ -94,11 +94,6 @@ class Character extends MovableObject {
     lastIdleFrameAt = 0;
     jumpOnceIndex = 0;
     jumpOnceActive = false;
-    airborneStartedAt = 0;
-    longAirThresholdMs = 450;
-    longAirActive = false;
-    LONG_AIR_IMAGE = 'img/2_character_pepe/5_dead/D-53.png';
-    longAirPrepared = false;
 
     /**
      * Loads default sprite, all animation sheets, sets physics and starts loops.
@@ -331,7 +326,10 @@ class Character extends MovableObject {
     }
 
     /**
-     * Performs a jump, resets air timers/flags, and primes long-air sprite.
+     * Performs a jump and resets per-jump animation state.
+     * - Calls the base jump() implementation.
+     * - Plays the jump sound if available.
+     * - Resets one-shot flags/counters for the jump animation.
      */
     jump() {
         super.jump();
@@ -339,10 +337,6 @@ class Character extends MovableObject {
         this.jumpOnceActive = true;
         this.jumpOnceIndex = 0;
         this.lastJumpFrameAt = 0;
-        this.airborneStartedAt = 0;
-        this.longAirActive = false;
-        this.longAirThresholdMs = (this.IMAGES_JUMPING?.length || 9) * this.jumpFrameDelayMs;
-        this.loadImages([this.LONG_AIR_IMAGE]);
     }
 
     /**

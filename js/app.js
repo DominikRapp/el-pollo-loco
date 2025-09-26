@@ -130,5 +130,6 @@ class App {
         wireHomeActions(this);
         wireFullscreenToggle(this);
         wireMobileButtons(this);
+        wireMuteInline(this);
     }
 }

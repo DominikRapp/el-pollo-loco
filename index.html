@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" translate="no">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>El pollo loco</title>
+    <meta name="google" content="notranslate">
+    <title>El Pollo Loco</title>
     <link rel="icon" type="image/png" sizes="48x48" href="img/4_enemie_boss_chicken/3_attack/G18.png">
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/fonts.css">
@@ -100,6 +101,8 @@
             </div>
         </div>
         <div id="hamburger-root" class="hidden">
+            <button id="btn-mute-inline" aria-label="Mute audio" title="Mute/Unmute"></button>
+            <button id="btn-fullscreen-inline" aria-label="Fullscreen" title="Fullscreen"></button>
             <button id="hamburger-button" aria-label="Menu" aria-expanded="false">
                 <span class="hamburger-bar top"></span>
                 <span class="hamburger-bar middle"></span>
@@ -232,6 +235,7 @@
     <script src="js/app/wire-start-screen.js" defer></script>
     <script src="js/app/template.js" defer></script>
     <script src="js/app/wire-hamburger.js" defer></script>
+    <script src="js/app/wire-mute-inline.js" defer></script>
     <script src="js/app/wire-settings.js" defer></script>
     <script src="js/app/wire-instructions.js" defer></script>
     <script src="js/app/leaderboard-pages.js" defer></script>

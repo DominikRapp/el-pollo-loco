@@ -1,0 +1,85 @@
+{
+  // Root key for all leaderboard data
+  "leaderboards": {
+
+    // ---- AGGREGATED (across all levels) LEADERBOARD ----
+    "total": {
+
+      // ph1 … ph10 are placeholder entries. Replace with real user IDs/keys.
+      "ph1":  {
+        "name": "Name",               // Player display name
+        "highestLevel": 0,            // Highest level reached across the whole game
+        "totalTimeMs": 9999999999,    // Sum of all run times (milliseconds) across all levels/runs
+        "counts": {                   // Various counters collected over time
+          "levelComplete": 0,         // Number of completed levels
+          "boss": 0,                  // Boss kills
+          "chicken": 0,               // Normal chicken kills
+          "chickenSmall": 0,          // Small chicken kills
+          "bottle": 0,                // Bottles thrown / hits (depending on your logic)
+          "coin": 0                   // Coins collected
+        },
+        "points": 0,                  // Final score points (your scoring logic)
+        "sortKey": "000000:0000000000:9999999999999",
+        // sortKey: A lexicographically sortable string you can use to sort records
+        // without extra server-side compute. This is a placeholder that pushes these
+        // dummy entries to the very bottom/top depending on your rule. Replace with
+        // your own format, e.g. "<pointsPadded>:<timePadded>:<createdAtPadded>"
+        // or any convention your client uses.
+        "createdAt": 0                // Unix epoch (ms). 0 = placeholder
+      },
+
+      // ... ph2 … ph10 have the exact same shape as ph1
+      "ph2": { /* same fields as ph1 */ },
+      "ph3": { /* same fields as ph1 */ },
+      "ph4": { /* same fields as ph1 */ },
+      "ph5": { /* same fields as ph1 */ },
+      "ph6": { /* same fields as ph1 */ },
+      "ph7": { /* same fields as ph1 */ },
+      "ph8": { /* same fields as ph1 */ },
+      "ph9": { /* same fields as ph1 */ },
+      "ph10": { /* same fields as ph1 */ }
+    },
+
+    // ---- PER-LEVEL LEADERBOARDS ----
+    "levels": {
+
+      // One child per level: "1", "2", "3", ...
+      "1": {
+        "ph1":  {
+          "name": "Name",             // Player display name
+          "level": 1,                 // This entry refers to level 1
+          "timeMs": 9999999999,       // Best time for THIS level (milliseconds)
+          "counts": {                 // Counters accumulated in THIS level
+            "levelComplete": 0,
+            "boss": 0,
+            "chicken": 0,
+            "chickenSmall": 0,
+            "bottle": 0,
+            "coin": 0
+          },
+          "points": 0,                // Points earned in THIS level
+          "sortKey": "000000:0000000000:9999999999999",
+          // sortKey: same idea as above; choose a format that matches how you sort
+          // (e.g., fastest time first, highest points first, tie-breaker = createdAt)
+          "createdAt": 0              // Unix epoch (ms) when this record was created
+        },
+        // ... ph2 … ph10 follow the same schema
+        "ph2": { /* same fields as ph1 */ },
+        "ph3": { /* same fields as ph1 */ },
+        "ph4": { /* same fields as ph1 */ },
+        "ph5": { /* same fields as ph1 */ },
+        "ph6": { /* same fields as ph1 */ },
+        "ph7": { /* same fields as ph1 */ },
+        "ph8": { /* same fields as ph1 */ },
+        "ph9": { /* same fields as ph1 */ },
+        "ph10": { /* same fields as ph1 */ }
+      },
+
+      // Level 2 … N look the same as level 1, only "level": 2, 3, 4, ...
+      "2": { /* same shape as "1", with level = 2 */ },
+      "3": { /* same shape as "1", with level = 3 */ },
+      "4": { /* same shape as "1", with level = 4 */ },
+      "5": { /* same shape as "1", with level = 5 */ }
+    }
+  }
+}

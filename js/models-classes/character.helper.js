@@ -13,30 +13,29 @@ class CharacterHelper {
     }
 
     /**
-     * Handles airborne animation state machine (jump frames → long-air).
-     * @returns {boolean} True if air handling ran this frame
+     * Handles the airborne animation state machine (jump frames → long-air).
+     * Returns whether an air-handling step ran this frame.
+     *
+     * @returns {boolean} True if air handling ran on this frame
      */
     handleAirAnimation() {
         if (this.resetAirStateIfGrounded()) return false;
         const now = Date.now();
-        this.ensureAirborneStart(now);
-        if (this.tryActivateLongAir(now)) return true;
         this.tryAdvanceJumpFrame(now);
         return true;
     }
 
     /**
-     * Resets air-related flags when touching ground.
-     * @returns {boolean} True if reset happened (i.e., grounded)
+     * Resets air-related flags when the character is grounded.
+     *
+     * @returns {boolean} True if a reset occurred (i.e., character was grounded)
      */
     resetAirStateIfGrounded() {
-        const o = this.o;
+        const o = this; // << vorher stand hier this.o
         if (o.isAboveGround()) return false;
         o.lastJumpFrameAt = 0;
         o.jumpOnceActive = false;
         o.jumpOnceIndex = 0;
-        o.airborneStartedAt = 0;
-        o.longAirActive = false;
         return true;
     }
 
@@ -66,13 +65,14 @@ class CharacterHelper {
     }
 
     /**
-     * Advances one jump frame at a fixed delay until last frame.
-     * @param {number} now - Current time in ms
+     * Advances one jump frame after a fixed delay until the last frame.
+     * Updates the current sprite from the cache if available.
+     *
+     * @param {number} now - Current time in milliseconds
      * @returns {boolean} True if a frame was advanced
      */
     tryAdvanceJumpFrame(now) {
-        const o = this.o;
-        if (o.longAirActive) return false;
+        const o = this;
         if (now - o.lastJumpFrameAt < o.jumpFrameDelayMs) return false;
         const frames = o.IMAGES_JUMPING;
         const i = Math.min(o.jumpOnceIndex, frames.length - 1);

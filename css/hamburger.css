@@ -1,6 +1,6 @@
 /* ==========================================================================
    Hamburger Menu UI
-   Purpose: Floating hamburger button with animated bars and dropdown menu
+   Purpose: Floating hamburger button with animated bars and a dropdown menu
    Notes:
    - Button morphs into an “X” when open via class toggling
    - Dropdown uses a warm translucent panel with strong elevation
@@ -107,4 +107,104 @@
 /* Hover state for links: subtle highlight */
 #hamburger-menu a:hover {
     background: rgba(255, 255, 255, 0.12);
+}
+
+/* Inline button row (hamburger + fullscreen + mute) */
+#hamburger-root {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Shared base styles for circular inline buttons */
+#hamburger-button,
+#btn-fullscreen-inline,
+#btn-mute-inline {
+    all: unset;
+    cursor: pointer;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, .3);
+}
+
+/* Hover/active feedback for inline buttons */
+#btn-fullscreen-inline:hover,
+#btn-mute-inline:hover {
+    filter: brightness(0.98);
+}
+
+#btn-fullscreen-inline:active,
+#btn-mute-inline:active {
+    transform: translateY(1px);
+}
+
+/* Fullscreen button: icon + gradient background (icon layer first) */
+#btn-fullscreen-inline {
+    background-image: url('../img/fullscreen/fullscreen-on.png'), linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
+    background-repeat: no-repeat, no-repeat;
+    background-position: center, center;
+    background-size: 60% 60%, 100% 100%;
+}
+
+/* Fullscreen ON state (exit icon) */
+#btn-fullscreen-inline.is-on {
+    background-image: url('../img/fullscreen/fullscreen-exit.png'), linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
+}
+
+/* Make the fullscreen icon white using a mask on a pseudo-element.
+   The gradient stays as the real background; the mask paints the icon in solid white. */
+#btn-fullscreen-inline::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: #ffffff;
+    -webkit-mask: url('../img/fullscreen/fullscreen-on.png') center/60% 60% no-repeat;
+    mask: url('../img/fullscreen/fullscreen-on.png') center/60% 60% no-repeat;
+    pointer-events: none;
+}
+
+/* Swap mask when fullscreen is active */
+#btn-fullscreen-inline.is-on::after {
+    -webkit-mask: url('../img/fullscreen/fullscreen-exit.png') center/60% 60% no-repeat;
+    mask: url('../img/fullscreen/fullscreen-exit.png') center/60% 60% no-repeat;
+}
+
+/* Mute button: icon + gradient background (icon layer first) */
+#btn-mute-inline {
+    background-image: url('../img/sound/unmute.png'), linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
+    background-repeat: no-repeat, no-repeat;
+    background-position: center, center;
+    background-size: 60% 60%, 100% 100%;
+}
+
+/* Muted state (mute icon) */
+#btn-mute-inline.is-muted {
+    background-image: url('../img/sound/mute.png'), linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
+}
+
+/* Make the mute icon white using a mask on a pseudo-element */
+#btn-mute-inline::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: #ffffff;
+    -webkit-mask: url('../img/sound/unmute.png') center/60% 60% no-repeat;
+    mask: url('../img/sound/unmute.png') center/60% 60% no-repeat;
+    pointer-events: none;
+}
+
+/* Swap mask when muted */
+#btn-mute-inline.is-muted::after {
+    -webkit-mask: url('../img/sound/mute.png') center/60% 60% no-repeat;
+    mask: url('../img/sound/mute.png') center/60% 60% no-repeat;
 }
