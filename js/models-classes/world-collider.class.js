@@ -154,7 +154,7 @@ class WorldCollider {
         for (const e of enemies) {
             if (!this.isChicken(e)) continue;
             for (const b of barrels) {
-                if (!this.rectsOverlap(this.getRect(e), this.getRect(b))) continue;
+                if (!this.rectsOverlapCompact(this.getRect(e), this.getRect(b))) continue;
                 e.direction *= -1;
                 if ((e.x + e.width / 2) < (b.x + b.width / 2)) {
                     e.x = b.x - e.width - 1;
@@ -163,6 +163,18 @@ class WorldCollider {
                 }
             }
         }
+    }
+
+    /**
+     * Overlap test for compact rects from getRect().
+     * @param {{l:number,t:number,r:number,b:number}} a
+     * @param {{l:number,t:number,r:number,b:number}} b
+     * @returns {boolean}
+     */
+    rectsOverlapCompact(a, b) {
+        const ox = a.r > b.l && a.l < b.r;
+        const oy = a.b > b.t && a.t < b.b;
+        return ox && oy;
     }
 
     /**

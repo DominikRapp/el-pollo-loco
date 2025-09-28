@@ -49,21 +49,41 @@ function createLevelRowLocal(entry) {
 }
 
 /**
- * Shows an intermediate level result: renders a single row, submits to Top 10,
- * and returns the saved status plus the entry.
- * @param {{containerId:string, name:string, level:number|string, timeMs:number, counts:Object}} args - Rendering and entry inputs
- * @returns {Promise<{saved:boolean, entry:Object|null}>} Result with saved flag and the entry payload
+ * Zeigt Zwischenstand für Level: Rendern, submit falls Top10, erneut rendern.
+ * @param {{containerId:string, name:string, level:number|string, timeMs:number, counts:Object}} args
+ * @returns {Promise<{saved:boolean, entry:Object|null}>}
  */
 async function showLevelIntermediate(args) {
-    const container = document.getElementById(args.containerId);
-    if (!container) return { saved: false, entry: null };
-    const entry = LeaderboardAPI.makeLevelEntry({ name: args.name, level: args.level, timeMs: args.timeMs, counts: args.counts });
-    clearElementChildren(container);
-    container.appendChild(createLevelRowLocal(entry));
+    const entry = buildLevelEntryFromArgs(args);
+    if (!renderLevelRow(args.containerId, entry)) return { saved: false, entry: null };
     const result = await LeaderboardAPI.submitIfTop10('level', entry, args.level);
+    renderLevelRow(args.containerId, entry);
+    return { saved: result.saved, entry };
+}
+
+/**
+ * Erstellt einen Level-Entry aus Args.
+ * @param {{name:string, level:number|string, timeMs:number, counts:Object}} args
+ * @returns {Object}
+ */
+function buildLevelEntryFromArgs(args) {
+    return LeaderboardAPI.makeLevelEntry({
+        name: args.name, level: args.level, timeMs: args.timeMs, counts: args.counts
+    });
+}
+
+/**
+ * Rendert eine Level-Zeile in einen Container.
+ * @param {string} containerId
+ * @param {Object} entry
+ * @returns {boolean} true wenn gerendert, sonst false
+ */
+function renderLevelRow(containerId, entry) {
+    const container = document.getElementById(containerId);
+    if (!container) return false;
     clearElementChildren(container);
     container.appendChild(createLevelRowLocal(entry));
-    return { saved: result.saved, entry };
+    return true;
 }
 
 /**

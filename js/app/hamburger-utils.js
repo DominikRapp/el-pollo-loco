@@ -26,21 +26,27 @@ function hamburgerClose(app) {
 }
 
 /**
- * Shows or hides the entire hamburger component (root) and ensures the menu is closed.
+ * Sets visibility of the hamburger root element.
+ * @param {HTMLElement|null} root - Root element of hamburger
+ * @param {boolean} visible - Whether root should be visible
+ * @returns {void}
+ */
+function setHamburgerVisibility(root, visible) {
+    if (!root) return;
+    if (visible) root.classList.remove('hidden');
+    else root.classList.add('hidden');
+}
+
+/**
+ * Shows or hides the hamburger UI and ensures the menu is closed.
  * @param {object} app - Application instance with getHamburgerElements() and closeHamburgerMenu()
  * @param {boolean} visible - Whether the hamburger UI should be visible
  * @returns {void}
  */
 function hamburgerShow(app, visible) {
     const { root } = app.getHamburgerElements();
-    if (!root) { return; }
-    if (visible) {
-        root.classList.remove('hidden');
-        app.closeHamburgerMenu();
-    } else {
-        root.classList.add('hidden');
-        app.closeHamburgerMenu();
-    }
+    setHamburgerVisibility(root, visible);
+    app.closeHamburgerMenu();
 }
 
 /**

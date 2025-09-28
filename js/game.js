@@ -61,69 +61,63 @@ window.addEventListener('pointerdown', onFirstInteract);
 window.addEventListener('keydown', onFirstInteract);
 
 /**
- * Global keydown handler: maps keys to the keyboard state and triggers shortcuts.
- * Honors areGameShortcutsEnabled() before acting on gameplay keys.
- * @param {KeyboardEvent} event - Keydown event
+ * Global keydown handler: routes navigation, mute, gameplay flags and actions.
+ * @param {KeyboardEvent} event
  * @returns {void}
  */
-document.addEventListener('keydown', (event) => {
+function handleGlobalKeyDown(event) {
     if (event.repeat) return;
     const k = event.key || '';
     const kc = event.keyCode || 0;
     const lower = k.toLowerCase();
     if (kc === 13 || lower === 'enter') { handleEnterOnStart(); return; }
     if (kc === 27 || lower === 'escape') { handleEscCloseOverlays(); return; }
-    if (kc === 77 || lower === 'm') {
-        keyboard.MUTE = true;
-        if (areGameShortcutsEnabled()) toggleMuteGlobal();
-        return;
-    }
+    if (kc === 77 || lower === 'm') { keyboard.MUTE = true; if (areGameShortcutsEnabled()) toggleMuteGlobal(); return; }
     if (!areGameShortcutsEnabled()) return;
-    if (kc === 65 || lower === 'a' || kc === 37 || lower === 'arrowleft') keyboard.LEFT = true;
-    if (kc === 68 || lower === 'd' || kc === 39 || lower === 'arrowright') keyboard.RIGHT = true;
-    if (kc === 32 || lower === ' ') keyboard.SPACE = true;
-    if (kc === 87 || lower === 'w') {
-        keyboard.THROW = true;
-        if (typeof world !== 'undefined' && world && world.character) world.character.tryThrow();
-    }
-    if (kc === 82 || lower === 'r') {
-        keyboard.RESTART = true;
-        if (typeof performRestart === 'function') performRestart();
-    }
-    if (kc === 66 || lower === 'b') {
-        keyboard.LEADERBOARD = true;
-        if (typeof openLeaderboard === 'function') openLeaderboard();
-    }
-    if (kc === 73 || lower === 'i') {
-        keyboard.INSTRUCTIONS = true;
-        if (typeof openInstructions === 'function') openInstructions();
-    }
-    if (kc === 79 || lower === 'o') {
-        keyboard.SETTINGS = true;
-        if (typeof openSettings === 'function') openSettings();
-    }
-    if (kc === 72 || lower === 'h') {
-        keyboard.HOME = true;
-        if (typeof goHome === 'function') goHome();
-    }
-    if (kc === 70 || lower === 'f') {
-        keyboard.FULLSCREEN = true;
-        if (typeof toggleFullscreen === 'function') toggleFullscreen();
-    }
-});
+    setKeyFlagDown(kc, lower);
+    triggerActionKeysDown(kc, lower);
+}
 
 /**
- * Global keyup handler: releases keys in the keyboard state.
- * Honors areGameShortcutsEnabled() before acting on gameplay keys.
- * @param {KeyboardEvent} event - Keyup event
+ * Global keyup handler: releases gameplay flags.
+ * @param {KeyboardEvent} event
  * @returns {void}
  */
-document.addEventListener('keyup', (event) => {
+function handleGlobalKeyUp(event) {
     const k = event.key || '';
     const kc = event.keyCode || 0;
     const lower = k.toLowerCase();
     if (kc === 77 || lower === 'm') { keyboard.MUTE = false; return; }
     if (!areGameShortcutsEnabled()) return;
+    setKeyFlagUp(kc, lower);
+}
+
+/**
+ * Sets key flags to true for pressed gameplay keys.
+ * @param {number} kc
+ * @param {string} lower
+ * @returns {void}
+ */
+function setKeyFlagDown(kc, lower) {
+    if (kc === 65 || lower === 'a' || kc === 37 || lower === 'arrowleft') keyboard.LEFT = true;
+    if (kc === 68 || lower === 'd' || kc === 39 || lower === 'arrowright') keyboard.RIGHT = true;
+    if (kc === 32 || lower === ' ') keyboard.SPACE = true;
+    if (kc === 87 || lower === 'w') keyboard.THROW = true;
+    if (kc === 82 || lower === 'r') keyboard.RESTART = true;
+    if (kc === 66 || lower === 'b') keyboard.LEADERBOARD = true;
+    if (kc === 73 || lower === 'i') keyboard.INSTRUCTIONS = true;
+    if (kc === 79 || lower === 'o') keyboard.SETTINGS = true;
+    if (kc === 72 || lower === 'h') keyboard.HOME = true;
+    if (kc === 70 || lower === 'f') keyboard.FULLSCREEN = true;
+}
+
+/**
+ * Clears key flags for released gameplay keys.
+ * @param {number} kc
+ * @param {string} lower
+ * @returns {void}
+ */
+function setKeyFlagUp(kc, lower) {
     if (kc === 65 || lower === 'a' || kc === 37 || lower === 'arrowleft') keyboard.LEFT = false;
     if (kc === 68 || lower === 'd' || kc === 39 || lower === 'arrowright') keyboard.RIGHT = false;
     if (kc === 32 || lower === ' ') keyboard.SPACE = false;
@@ -134,7 +128,26 @@ document.addEventListener('keyup', (event) => {
     if (kc === 79 || lower === 'o') keyboard.SETTINGS = false;
     if (kc === 72 || lower === 'h') keyboard.HOME = false;
     if (kc === 70 || lower === 'f') keyboard.FULLSCREEN = false;
-});
+}
+
+/**
+ * Triggers actions for certain keys on keydown.
+ * @param {number} kc
+ * @param {string} lower
+ * @returns {void}
+ */
+function triggerActionKeysDown(kc, lower) {
+    if (kc === 87 || lower === 'w') { if (typeof world !== 'undefined' && world && world.character) world.character.tryThrow(); }
+    if (kc === 82 || lower === 'r') { if (typeof performRestart === 'function') performRestart(); }
+    if (kc === 66 || lower === 'b') { if (typeof openLeaderboard === 'function') openLeaderboard(); }
+    if (kc === 73 || lower === 'i') { if (typeof openInstructions === 'function') openInstructions(); }
+    if (kc === 79 || lower === 'o') { if (typeof openSettings === 'function') openSettings(); }
+    if (kc === 72 || lower === 'h') { if (typeof goHome === 'function') goHome(); }
+    if (kc === 70 || lower === 'f') { if (typeof toggleFullscreen === 'function') toggleFullscreen(); }
+}
+
+document.addEventListener('keydown', handleGlobalKeyDown);
+document.addEventListener('keyup', handleGlobalKeyUp);
 
 /**
  * Clears all gameplay-related key flags on the global keyboard state.

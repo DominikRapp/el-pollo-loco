@@ -86,17 +86,40 @@ function buildLevelTable(levelNumber, rows) {
 }
 
 /**
- * Builds an array of HTML pages: one for total and one per level (1..5).
+ * Builds an array of HTML pages by fetching and rendering.
  * @returns {Promise<string[]>} Array of HTML page snippets
  */
 async function buildLeaderboardPages() {
-    const pages = [];
-    const totalRows = await LeaderboardAPI.fetchTop10('total');
-    pages.push('<h3>Total</h3>' + buildTotalTable(totalRows));
-    for (let lvl = 1; lvl <= 5; lvl++) {
-        const rows = await LeaderboardAPI.fetchTop10('level', lvl);
-        pages.push('<h3>Level ' + lvl + '</h3>' + buildLevelTable(lvl, rows));
+    const data = await fetchLeaderboardData(5);
+    return renderLeaderboardPages(data);
+}
+
+/**
+ * Loads leaderboard data for total and 1..levelCount.
+ * @param {number} levelCount - Number of levels to fetch
+ * @returns {Promise<{total: object[], levels: object[][]}>}
+ */
+async function fetchLeaderboardData(levelCount) {
+    const total = await LeaderboardAPI.fetchTop10('total');
+    const levels = [];
+    for (let lvl = 1; lvl <= levelCount; lvl++) {
+        levels.push(await LeaderboardAPI.fetchTop10('level', lvl));
     }
+    return { total, levels };
+}
+
+/**
+ * Renders pages for total and per-level from provided data.
+ * @param {{total: object[], levels: object[][]}} data - Loaded leaderboard data
+ * @returns {string[]} Array of HTML page snippets
+ */
+function renderLeaderboardPages(data) {
+    const pages = [];
+    pages.push('<h3>Total</h3>' + buildTotalTable(data.total));
+    data.levels.forEach((rows, i) => {
+        const lvl = i + 1;
+        pages.push('<h3>Level ' + lvl + '</h3>' + buildLevelTable(lvl, rows));
+    });
     return pages;
 }
 

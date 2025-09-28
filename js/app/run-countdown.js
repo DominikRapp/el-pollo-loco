@@ -115,16 +115,18 @@ function finishCountdown(app, countdownElement, onDone) {
 }
 
 /**
- * Immediately stops any active countdown and hides the countdown element.
- * Also cancels a pending animation frame id stored at app.__cdRafId and stops countdown sounds (if available).
- * @param {object} app - App object with cdRunning, __cdRafId
+ * Immediately stops any active countdown, hides the UI, and stops sounds.
+ * @param {object} app - App object with cdRunning, cdTimer, __cdRafId
  * @returns {void}
  */
 function stopCountdown(app) {
     app.cdRunning = false;
+    clearExistingCountdownTimer(app);
     if (app.__cdRafId) cancelAnimationFrame(app.__cdRafId);
     app.__cdRafId = null;
     const el = document.getElementById('countdown');
-    if (el) el.classList.add('hidden');
+    if (el) el.style.display = 'none';
+    const sfxInstance = window.sfx;
+    if (sfxInstance) sfxInstance.stop('sys.countdown.tick');
     if (typeof stopCountdownSound === 'function') stopCountdownSound();
 }

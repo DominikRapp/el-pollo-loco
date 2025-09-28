@@ -1,17 +1,25 @@
 /**
- * Handles navigation back to the home/menu screen:
- * prevents default navigation, clears run data/overlays, and shows the main menu.
+ * Executes the transition back to the home/menu screen.
  * @param {object} app - The application context
- * @param {Event|MouseEvent} [event] - Optional triggering event to prevent default
  * @returns {void}
  */
-function handleGoHome(app, event) {
-    if (event) event.preventDefault();
+function performGoHome(app) {
     app.resetRunTotals();
     app.clearRunOverlayResults();
     app.resetOverlays();
     app.hideWinLoseOverlays();
     app.showMenu();
+}
+
+/**
+ * Handles the triggering event and routes to the home/menu transition.
+ * @param {object} app - The application context
+ * @param {Event|MouseEvent} [event] - Optional triggering event
+ * @returns {void}
+ */
+function handleGoHome(app, event) {
+    if (event) event.preventDefault();
+    performGoHome(app);
 }
 
 /**

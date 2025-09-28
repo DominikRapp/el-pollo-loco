@@ -44,6 +44,7 @@ class WorldFreezer {
      * @param {object} world
      */
     resetKeyboard(world) {
+        if (!world.keyboard) return;
         world.keyboard.LEFT = false;
         world.keyboard.RIGHT = false;
         world.keyboard.SPACE = false;

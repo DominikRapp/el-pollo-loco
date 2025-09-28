@@ -52,21 +52,8 @@ function formatMillisecondsAsClock(millisecondsValue) {
  * @returns {number} Total score points
  */
 function calculateScorePoints(countsObject = {}) {
-    const {
-        levelComplete = 0,
-        boss = 0,
-        chicken = 0,
-        chickenSmall = 0,
-        bottle = 0,
-        coin = 0
-    } = countsObject || {};
-    const totalPoints =
-        levelComplete * 10 +
-        boss * 5 +
-        chicken * 4 +
-        chickenSmall * 3 +
-        bottle * 2 +
-        coin * 1;
+    const { levelComplete = 0, boss = 0, chicken = 0, chickenSmall = 0, bottle = 0, coin = 0 } = countsObject || {};
+    const totalPoints = levelComplete * 10 + boss * 5 + chicken * 4 + chickenSmall * 3 + bottle * 2 + coin * 1;
     return totalPoints;
 }
 

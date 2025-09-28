@@ -7,19 +7,28 @@ function attachPlayerName(app) {
 }
 
 /**
- * Persists the player's name and tracks it in a deduplicated "used names" list.
- * @param {object} app - Application object (not used currently, passed for symmetry)
+ * Persists the player's name and updates the used-names list.
+ * @param {object} app - Application object (not used currently, kept for symmetry)
  * @param {string} name - Player name to persist
  * @returns {void}
  */
 function persistPlayerName(app, name) {
-    persistNameToLocalStorage(name);
-    const usedNames = readUsedNamesArray();
-    const key = normalizeNameKey(name);
-    if (!usedNames.includes(key)) {
-        usedNames.push(key);
-        writeUsedNamesArray(usedNames);
-    }
+  persistNameToLocalStorage(name);
+  updateUsedNamesList(name);
+}
+
+/**
+ * Updates the deduplicated used-names list in localStorage.
+ * @param {string} name - Player name to process
+ * @returns {void}
+ */
+function updateUsedNamesList(name) {
+  const usedNames = readUsedNamesArray();
+  const key = normalizeNameKey(name);
+  if (!usedNames.includes(key)) {
+    usedNames.push(key);
+    writeUsedNamesArray(usedNames);
+  }
 }
 
 /**

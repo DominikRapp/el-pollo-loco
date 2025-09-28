@@ -87,7 +87,7 @@ class App {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.keyboard = keyboard;
-        this.levels = [createLevel1, createLevel2, createLevel3, createLevel4, createLevel5];
+        this.levels = this.levelFactories.slice(0);
         this.currentLevelIndex = 0;
     }
 

@@ -34,16 +34,24 @@ function isWorldGameOver(app) {
 }
 
 /**
- * Handles transition into the Game Over state:
- * sets stop flag, stops timer, freezes world (if available), and shows UI.
+ * Enters the Game Over state and shows its UI.
  * @param {object} app - The application context
  * @returns {void}
  */
 function handleGameOver(app) {
-    app.stoppedForWinOrLose = true;
-    app.stopTimer();
-    if (app.world) app.world.canFreezeNow = true;
+    stopAndPrepareFreeze(app);
     showGameOver(app);
+}
+
+/**
+ * Stops the timer, marks stop flag, and primes world for freezing.
+ * @param {object} app - The application context
+ * @returns {void}
+ */
+function stopAndPrepareFreeze(app) {
+    app.stoppedForWinOrLose = true;
+    if (typeof app.stopTimer === 'function') app.stopTimer();
+    if (app.world) app.world.canFreezeNow = true;
 }
 
 /**
@@ -86,15 +94,12 @@ function areBottlesCleared(app) {
 }
 
 /**
- * Handles transition into the Victory state:
- * sets stop flag, stops timer, freezes world and shows the victory UI.
+ * Enters the Victory state, freezes world, and shows its UI.
  * @param {object} app - The application context
  * @returns {void}
  */
 function handleVictory(app) {
-    app.stoppedForWinOrLose = true;
-    app.stopTimer();
-    if (app.world) app.world.canFreezeNow = true;
+    stopAndPrepareFreeze(app);
     if (app.world && typeof app.world.freezeAll === 'function') app.world.freezeAll();
     showYouWin(app);
 }

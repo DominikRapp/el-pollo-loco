@@ -48,8 +48,7 @@ function suppressWinLoseAndHide(app) {
 }
 
 /**
- * Re-enables overlay display but only restores the action buttons for
- * the current state (GAMEOVER or VICTORY), if applicable.
+ * Re-enables overlay display and restores action buttons for the current state.
  * @param {object} app - The application context
  * @returns {void}
  */
@@ -57,12 +56,21 @@ function restoreWinLoseActionsOnly(app) {
     if (!app.suppressWinLoseOverlay) return;
     app.suppressWinLoseOverlay = false;
     if (app.state === GameState.GAMEOVER) {
-        const actions = document.getElementById('gameover-actions');
-        if (actions) { actions.classList.remove('hidden'); actions.style.display = ''; }
+        showElement(document.getElementById('gameover-actions'));
     } else if (app.state === GameState.VICTORY) {
-        const actions = document.getElementById('victory-actions');
-        if (actions) { actions.classList.remove('hidden'); actions.style.display = ''; }
+        showElement(document.getElementById('victory-actions'));
     }
+}
+
+/**
+ * Shows a given DOM element by removing "hidden" and clearing inline display.
+ * @param {HTMLElement|null} element - The element to show (no-op if null/undefined)
+ * @returns {void}
+ */
+function showElement(element) {
+    if (!element) return;
+    element.classList.remove('hidden');
+    element.style.display = '';
 }
 
 /**

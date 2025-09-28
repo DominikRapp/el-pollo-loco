@@ -27,22 +27,45 @@ function collectLevelCounts(app, completed) {
 }
 
 /**
- * Appends a finished level result to the run and updates aggregate totals.
- * @param {object} app - Game application object with runResults, totalCounts, totalTimeMs
- * @param {number} levelNumber - Level index/number
- * @param {number} timeMilliseconds - Time spent on the level in milliseconds
- * @param {{levelComplete?:number, boss?:number, chicken?:number, chickenSmall?:number, bottle?:number, coin?:number}} counts - Level counters
+ * Appends a finished level result and updates aggregate totals.
+ * @param {object} app
+ * @param {number} levelNumber
+ * @param {number} timeMilliseconds
+ * @param {{levelComplete?:number,boss?:number,chicken?:number,chickenSmall?:number,bottle?:number,coin?:number}} counts
  * @returns {void}
  */
 function addLevelResult(app, levelNumber, timeMilliseconds, counts) {
-    app.runResults.push({ level: levelNumber, timeMs: timeMilliseconds, counts });
-    app.totalTimeMs += Number(timeMilliseconds || 0);
-    app.totalCounts.levelComplete += Number(counts.levelComplete || 0);
-    app.totalCounts.boss += Number(counts.boss || 0);
-    app.totalCounts.chicken += Number(counts.chicken || 0);
-    app.totalCounts.chickenSmall += Number(counts.chickenSmall || 0);
-    app.totalCounts.bottle += Number(counts.bottle || 0);
-    app.totalCounts.coin += Number(counts.coin || 0);
+    pushRunResult(app, levelNumber, timeMilliseconds, counts);
+    accumulateTotals(app, timeMilliseconds, counts);
+}
+
+/**
+ * Pushes a single level result into the run list.
+ * @param {object} app
+ * @param {number} level
+ * @param {number} timeMs
+ * @param {object} counts
+ * @returns {void}
+ */
+function pushRunResult(app, level, timeMs, counts) {
+    app.runResults.push({ level, timeMs, counts });
+}
+
+/**
+ * Adds time and counters to the aggregate totals.
+ * @param {object} app
+ * @param {number} timeMs
+ * @param {{levelComplete?:number,boss?:number,chicken?:number,chickenSmall?:number,bottle?:number,coin?:number}} c
+ * @returns {void}
+ */
+function accumulateTotals(app, timeMs, c) {
+    app.totalTimeMs += Number(timeMs || 0);
+    app.totalCounts.levelComplete += Number(c.levelComplete || 0);
+    app.totalCounts.boss += Number(c.boss || 0);
+    app.totalCounts.chicken += Number(c.chicken || 0);
+    app.totalCounts.chickenSmall += Number(c.chickenSmall || 0);
+    app.totalCounts.bottle += Number(c.bottle || 0);
+    app.totalCounts.coin += Number(c.coin || 0);
 }
 
 /**

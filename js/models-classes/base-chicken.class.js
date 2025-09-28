@@ -103,23 +103,34 @@ class BaseChicken extends MovableObject {
     }
 
     /**
-     * Loads walking and dead images; sets initial frame.
+     * Loads walking and dead images by delegating to helpers.
      * @param {object} cfg
      */
     setImages(cfg) {
-        if (Array.isArray(cfg.walkImages) && cfg.walkImages.length > 0) {
-            this.IMAGES_WALKING = cfg.walkImages;
-        } else {
-            this.IMAGES_WALKING = [];
-        }
+        this.applyWalkImages(cfg);
+        this.applyDeadImage(cfg);
+    }
+
+    /**
+     * Applies and preloads walking images; sets initial frame.
+     * @param {object} cfg
+     */
+    applyWalkImages(cfg) {
+        const list = Array.isArray(cfg.walkImages) ? cfg.walkImages : [];
+        this.IMAGES_WALKING = list.length ? list : [];
+        if (!this.IMAGES_WALKING.length) return;
+        this.loadImage(this.IMAGES_WALKING[0]);
+        this.loadImages(this.IMAGES_WALKING);
+    }
+
+    /**
+     * Applies and preloads dead image.
+     * @param {object} cfg
+     */
+    applyDeadImage(cfg) {
         this.IMAGE_DEAD = typeof cfg.deadImage === 'string' ? cfg.deadImage : '';
-        if (this.IMAGES_WALKING.length > 0) {
-            this.loadImage(this.IMAGES_WALKING[0]);
-            this.loadImages(this.IMAGES_WALKING);
-        }
-        if (this.IMAGE_DEAD !== '') {
-            this.loadImages([this.IMAGE_DEAD]);
-        }
+        if (!this.IMAGE_DEAD) return;
+        this.loadImages([this.IMAGE_DEAD]);
     }
 
     /**

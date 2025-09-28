@@ -115,20 +115,34 @@ class WorldItems {
      * @param {object} world
      */
     checkBottlePickups(world) {
-        world.groundBottles = world.groundBottles.filter((pickup) => {
-            const collides = world.character.isColliding(pickup);
-            if (!collides) return true;
-            if (world.bottleCount < world.bottleMax) {
-                world.bottleCount++;
-                world.stats.bottle = (world.stats.bottle || 0) + 1;
-                const percent = (world.bottleCount / world.bottleMax) * 100;
-                world.bottleBar.setPercentage(percent);
-                if (window.sfx) window.sfx.play('obj.bottle.pick');
-                return false;
-            } else {
-                return true;
-            }
-        });
+        const list = world.groundBottles || [];
+        world.groundBottles = list.filter(p => this.keepOrConsumeBottle(world, p));
+    }
+
+    /**
+     * Decides whether a bottle remains or is consumed by the player.
+     * @param {object} world
+     * @param {object} pickup
+     * @returns {boolean} true to keep; false to remove
+     */
+    keepOrConsumeBottle(world, pickup) {
+        if (!world.character.isColliding(pickup)) return true;
+        if (world.bottleCount >= world.bottleMax) return true;
+        this.consumeBottle(world);
+        if (window.sfx) window.sfx.play('obj.bottle.pick');
+        return false;
+    }
+
+    /**
+     * Consumes a bottle: increments count/stats and updates UI.
+     * @param {object} world
+     * @returns {void}
+     */
+    consumeBottle(world) {
+        world.bottleCount++;
+        world.stats.bottle = (world.stats.bottle || 0) + 1;
+        const percent = (world.bottleCount / world.bottleMax) * 100;
+        world.bottleBar.setPercentage(percent);
     }
 
     /**

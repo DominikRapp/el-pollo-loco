@@ -9,11 +9,8 @@
  */
 
 /**
- * Global audio preferences API.
- * @type {{load: () => AudioSettings, save: (inputSettings?: Partial<AudioSettings>) => AudioSettings, applyToSfx: (sfxObject: any, optionalSettings?: Partial<AudioSettings>) => void, fromSfx: (sfxObject: any) => AudioSettings}}
- * @example
- * AudioPrefs.save({ master: 0.5, music: 0.3 });
- * AudioPrefs.applyToSfx(engine);
+ * Global audio preferences API (load/save/apply/from SFX).
+ * @type {{load: () => AudioSettings, save: (input?: Partial<AudioSettings>) => AudioSettings, applyToSfx: (sfx: any, opt?: Partial<AudioSettings>) => void, fromSfx: (sfx: any) => AudioSettings}}
  */
 let AudioPrefs = createAudioPrefsMain();
 
@@ -31,60 +28,94 @@ function createAudioPrefsMain() {
 }
 
 /**
- * Loads audio settings from storage and normalizes them.
+ * Loads audio settings from storage, completes defaults, then clamps to [0,1].
  * @returns {AudioSettings}
  */
 function audioPrefsLoad() {
-    const storedObject = storageReadJson(audioPrefsStorageKey());
-    return audioPrefsToSettings(storedObject);
+    const raw = storageReadJson(audioPrefsStorageKey());
+    const loose = audioPrefsToSettings(raw);
+    return audioPrefsNormalizeSettings(loose);
 }
 
 /**
- * Saves audio settings to storage after normalization.
- * @param {Partial<AudioSettings>} [inputSettings] - Values to persist; missing fields get defaults.
- * @returns {AudioSettings} The normalized settings that were saved.
- * @example
- * const saved = audioPrefsSave({ muted: true });
+ * Saves audio settings by merging with current settings, then normalizing.
+ * @param {Partial<AudioSettings>} [inputSettings]
+ * @returns {AudioSettings}
  */
 function audioPrefsSave(inputSettings) {
-    const normalizedSettings = audioPrefsNormalizeSettings(inputSettings || {});
-    storageWriteJson(audioPrefsStorageKey(), normalizedSettings);
-    return normalizedSettings;
+    const base = audioPrefsLoad();
+    const merged = { ...base, ...(inputSettings || {}) };
+    const normalized = audioPrefsNormalizeSettings(merged);
+    storageWriteJson(audioPrefsStorageKey(), normalized);
+    return normalized;
 }
 
 /**
- * Applies given or stored audio settings to an SFX engine/object.
- * @param {any} sfxObject - Target audio engine with methods like setMuted/setMaster/setBusVolume.
- * @param {Partial<AudioSettings>} [optionalSettings] - Settings to apply; if omitted, stored settings are used.
+ * Applies effective audio settings to an SFX engine.
+ * @param {any} sfxObject
+ * @param {Partial<AudioSettings>} [optionalSettings]
  * @returns {void}
  */
 function audioPrefsApplyToSfx(sfxObject, optionalSettings) {
     if (!sfxObject) return;
-    const effectiveSettings = optionalSettings ? audioPrefsNormalizeSettings(optionalSettings) : audioPrefsLoad();
-    sfxSetMuted(sfxObject, effectiveSettings.muted);
-    sfxSetMaster(sfxObject, effectiveSettings.master);
-    sfxApplyBusVolumes(sfxObject, effectiveSettings);
+    const settings = getEffectiveAudioSettings(optionalSettings);
+    applyAudioSettingsToSfx(sfxObject, settings);
 }
 
 /**
- * Reads current values from an SFX engine/object and returns them as settings.
- * @param {any} sfxObject - Source audio engine/object.
+ * Builds effective settings by merging saved prefs with overrides.
+ * @param {Partial<AudioSettings>} [overrides]
+ * @returns {AudioSettings}
+ */
+function getEffectiveAudioSettings(overrides) {
+    const merged = overrides ? { ...audioPrefsLoad(), ...overrides } : audioPrefsLoad();
+    return audioPrefsNormalizeSettings(merged);
+}
+
+/**
+ * Applies mute → master → bus volumes to SFX engine.
+ * @param {any} sfxObject
+ * @param {AudioSettings} settings
+ * @returns {void}
+ */
+function applyAudioSettingsToSfx(sfxObject, settings) {
+    sfxSetMuted(sfxObject, settings.muted);
+    sfxSetMaster(sfxObject, settings.master);
+    sfxApplyBusVolumes(sfxObject, settings);
+}
+
+/**
+ * Reads settings from an SFX engine and returns a normalized settings object.
+ * @param {any} sfxObject
  * @returns {AudioSettings}
  */
 function audioPrefsFromSfx(sfxObject) {
     if (!sfxObject) return audioPrefsLoad();
-    const defaultSettings = audioPrefsCreateDefaultSettings();
+    const snap = readSfxSnapshot(sfxObject);
+    const settings = buildSettingsFromSnapshot(snap);
+    return audioPrefsNormalizeSettings(settings);
+}
+
+/**
+ * Reads raw values from SFX engine (muted, master, per-bus).
+ * @param {any} sfxObject
+ * @returns {{muted:boolean, master:number, music:number, system:number, characters:number, objects:number}}
+ */
+function readSfxSnapshot(sfxObject) {
+    const base = audioPrefsCreateDefaultSettings();
     const muted = sfxReadMuted(sfxObject);
-    const master = sfxReadMaster(sfxObject, defaultSettings.master);
-    const volumes = sfxReadVolumes(sfxObject);
-    return {
-        muted: muted,
-        master: master,
-        music: volumes.music,
-        system: volumes.system,
-        characters: volumes.characters,
-        objects: volumes.objects
-    };
+    const master = sfxReadMaster(sfxObject, base.master);
+    const v = sfxReadVolumes(sfxObject);
+    return { muted, master, music: v.music, system: v.system, characters: v.characters, objects: v.objects };
+}
+
+/**
+ * Builds a settings object from a raw snapshot.
+ * @param {{muted:boolean, master:number, music:number, system:number, characters:number, objects:number}} snap
+ * @returns {AudioSettings}
+ */
+function buildSettingsFromSnapshot(snap) {
+    return { muted: snap.muted, master: snap.master, music: snap.music, system: snap.system, characters: snap.characters, objects: snap.objects };
 }
 
 /**
@@ -101,25 +132,42 @@ function audioPrefsStorageKey() {
  */
 function audioPrefsCreateDefaultSettings() {
     return {
-        muted: false,
-        master: 0.1,
-        music: 0.1,
-        system: 0.1,
-        characters: 0.1,
-        objects: 0.1
+        muted: getDefaultMuted(),
+        master: getDefaultVolume(),
+        music: getDefaultVolume(),
+        system: getDefaultVolume(),
+        characters: getDefaultVolume(),
+        objects: getDefaultVolume()
     };
 }
 
 /**
- * Clamps an input to the [0,1] range and coerces to number.
+ * Default muted state.
+ * @returns {boolean}
+ */
+function getDefaultMuted() {
+    return false;
+}
+
+/**
+ * Default volume for any bus.
+ * @returns {number}
+ */
+function getDefaultVolume() {
+    return 0.1;
+}
+
+/**
+ * Coerces any input to a finite number and clamps it to [0,1].
  * @param {unknown} inputValue
  * @returns {number}
  */
 function audioPrefsClampUnit(inputValue) {
-    const numericValue = Number(inputValue || 0);
-    if (numericValue < 0) return 0;
-    if (numericValue > 1) return 1;
-    return numericValue;
+    const v = Number.parseFloat(String(inputValue));
+    if (!Number.isFinite(v)) return 0;
+    if (v <= 0) return 0;
+    if (v >= 1) return 1;
+    return v;
 }
 
 /**
@@ -128,9 +176,8 @@ function audioPrefsClampUnit(inputValue) {
  * @returns {Object<string, any>}
  */
 function storageReadJson(storageKey) {
-    const rawJson = localStorage.getItem(storageKey);
-    if (!rawJson) return {};
-    try { return JSON.parse(rawJson); } catch { return {}; }
+    const raw = localStorage.getItem(storageKey);
+    return parseJsonSafe(raw);
 }
 
 /**
@@ -140,7 +187,27 @@ function storageReadJson(storageKey) {
  * @returns {void}
  */
 function storageWriteJson(storageKey, objectToWrite) {
-    localStorage.setItem(storageKey, JSON.stringify(objectToWrite));
+    const json = toJsonSafe(objectToWrite);
+    localStorage.setItem(storageKey, json);
+}
+
+/**
+ * Safely parses JSON into an object; empty object on failure.
+ * @param {string|null} raw
+ * @returns {Object<string, any>}
+ */
+function parseJsonSafe(raw) {
+    if (!raw) return {};
+    try { return JSON.parse(raw); } catch { return {}; }
+}
+
+/**
+ * Safely serializes a value to JSON; "{}" on failure.
+ * @param {any} value
+ * @returns {string}
+ */
+function toJsonSafe(value) {
+    try { return JSON.stringify(value ?? {}); } catch { return "{}"; }
 }
 
 /**
@@ -154,13 +221,14 @@ function getBooleanOr(value, fallbackValue) {
 }
 
 /**
- * Returns a number if the value is number, otherwise the fallback.
+ * Returns a finite number parsed from value; otherwise the fallback.
  * @param {unknown} value
  * @param {number} fallbackValue
  * @returns {number}
  */
 function getNumberOr(value, fallbackValue) {
-    return typeof value === 'number' ? value : fallbackValue;
+    const v = Number.parseFloat(String(value));
+    return Number.isFinite(v) ? v : fallbackValue;
 }
 
 /**
@@ -169,29 +237,32 @@ function getNumberOr(value, fallbackValue) {
  * @returns {AudioSettings}
  */
 function audioPrefsToSettings(sourceObject) {
-    const defaultSettings = audioPrefsCreateDefaultSettings();
-    const muted = getBooleanOr(sourceObject.muted, defaultSettings.muted);
-    const master = getNumberOr(sourceObject.master, defaultSettings.master);
-    const music = getNumberOr(sourceObject.music, defaultSettings.music);
-    const system = getNumberOr(sourceObject.system, defaultSettings.system);
-    const characters = getNumberOr(sourceObject.characters, defaultSettings.characters);
-    const objects = getNumberOr(sourceObject.objects, defaultSettings.objects);
-    return { muted, master, music, system, characters, objects };
+    const d = audioPrefsCreateDefaultSettings();
+    return {
+        muted: getBooleanOr(sourceObject.muted, d.muted),
+        master: getNumberOr(sourceObject.master, d.master),
+        music: getNumberOr(sourceObject.music, d.music),
+        system: getNumberOr(sourceObject.system, d.system),
+        characters: getNumberOr(sourceObject.characters, d.characters),
+        objects: getNumberOr(sourceObject.objects, d.objects)
+    };
 }
 
 /**
- * Normalizes a partial settings object: coerces booleans and clamps numbers to [0,1].
+ * Normalizes settings by merging defaults first, then clamping to [0,1].
  * @param {Partial<AudioSettings>} inputSettings
  * @returns {AudioSettings}
  */
 function audioPrefsNormalizeSettings(inputSettings) {
+    const base = audioPrefsCreateDefaultSettings();
+    const src = { ...base, ...(inputSettings || {}) };
     return {
-        muted: !!inputSettings.muted,
-        master: audioPrefsClampUnit(inputSettings.master),
-        music: audioPrefsClampUnit(inputSettings.music),
-        system: audioPrefsClampUnit(inputSettings.system),
-        characters: audioPrefsClampUnit(inputSettings.characters),
-        objects: audioPrefsClampUnit(inputSettings.objects)
+        muted: !!src.muted,
+        master: audioPrefsClampUnit(src.master),
+        music: audioPrefsClampUnit(src.music),
+        system: audioPrefsClampUnit(src.system),
+        characters: audioPrefsClampUnit(src.characters),
+        objects: audioPrefsClampUnit(src.objects)
     };
 }
 
@@ -202,7 +273,25 @@ function audioPrefsNormalizeSettings(inputSettings) {
  * @returns {boolean}
  */
 function canCallFunctionOnObject(targetObject, functionName) {
-    return !!targetObject && typeof targetObject[functionName] === 'function';
+    return isObjectValid(targetObject) && isFunctionCallable(targetObject[functionName]);
+}
+
+/**
+ * Checks if the provided value is a non-null object.
+ * @param {any} value
+ * @returns {boolean}
+ */
+function isObjectValid(value) {
+    return !!value && typeof value === 'object';
+}
+
+/**
+ * Checks if the provided value is a function.
+ * @param {any} value
+ * @returns {boolean}
+ */
+function isFunctionCallable(value) {
+    return typeof value === 'function';
 }
 
 /**
@@ -216,71 +305,87 @@ function sfxSetMuted(sfxObject, isMuted) {
 }
 
 /**
- * Sets master volume on an SFX engine/object if supported.
+ * Sets master volume after clamping to [0,1].
  * @param {any} sfxObject
- * @param {number} masterValue - Expected in range [0,1].
+ * @param {number} masterValue
  * @returns {void}
  */
 function sfxSetMaster(sfxObject, masterValue) {
-    if (canCallFunctionOnObject(sfxObject, 'setMaster')) sfxObject.setMaster(masterValue);
+    if (canCallFunctionOnObject(sfxObject, 'setMaster')) {
+        sfxObject.setMaster(audioPrefsClampUnit(masterValue));
+    }
 }
 
 /**
- * Sets a named bus volume on an SFX engine/object if supported.
+ * Sets a bus volume on SFX engine after clamping.
  * @param {any} sfxObject
  * @param {"music"|"system"|"characters"|"objects"|string} busName
- * @param {number} volumeValue - Expected in range [0,1].
+ * @param {number} volumeValue
  * @returns {void}
  */
 function sfxSetBusVolume(sfxObject, busName, volumeValue) {
-    if (canCallFunctionOnObject(sfxObject, 'setBusVolume')) sfxObject.setBusVolume(busName, volumeValue);
+    if (canCallFunctionOnObject(sfxObject, 'setBusVolume')) {
+        sfxObject.setBusVolume(busName, audioPrefsClampUnit(volumeValue));
+    }
 }
 
 /**
- * Applies per-bus volumes from a settings object to an SFX engine/object.
+ * Applies per-bus volumes to an SFX engine using known bus names.
  * @param {any} sfxObject
  * @param {AudioSettings} settingsObject
  * @returns {void}
  */
 function sfxApplyBusVolumes(sfxObject, settingsObject) {
-    sfxSetBusVolume(sfxObject, 'music', settingsObject.music);
-    sfxSetBusVolume(sfxObject, 'system', settingsObject.system);
-    sfxSetBusVolume(sfxObject, 'characters', settingsObject.characters);
-    sfxSetBusVolume(sfxObject, 'objects', settingsObject.objects);
+    if (!sfxObject || !settingsObject) return;
+    for (const bus of getKnownBusNames()) {
+        sfxSetBusVolume(sfxObject, bus, settingsObject[bus]);
+    }
 }
 
 /**
- * Reads muted state from an SFX engine/object, with localStorage fallback.
+ * Returns the canonical list of audio bus names.
+ * @returns {Array<"music"|"system"|"characters"|"objects">}
+ */
+function getKnownBusNames() {
+    return ['music', 'system', 'characters', 'objects'];
+}
+
+/**
+ * Reads muted state from SFX; falls absent, use saved prefs, then legacy key.
  * @param {any} sfxObject
  * @returns {boolean}
  */
 function sfxReadMuted(sfxObject) {
-    const hasMutedFlag = typeof sfxObject.muted === 'boolean';
-    if (hasMutedFlag) return !!sfxObject.muted;
+    if (typeof sfxObject?.muted === 'boolean') return !!sfxObject.muted;
+    const saved = audioPrefsLoad();
+    if (typeof saved.muted === 'boolean') return saved.muted;
     return localStorage.getItem('muted') === '1';
 }
 
 /**
- * Reads master volume from an SFX engine/object or returns a fallback.
+ * Reads master volume from SFX, falls back, then clamps to [0,1].
  * @param {any} sfxObject
  * @param {number} fallbackValue
  * @returns {number}
  */
 function sfxReadMaster(sfxObject, fallbackValue) {
-    return typeof sfxObject.master === 'number' ? sfxObject.master : fallbackValue;
+    const raw = (sfxObject && sfxObject.master);
+    const v = getNumberOr(raw, fallbackValue);
+    return audioPrefsClampUnit(v);
 }
 
 /**
- * Reads per-bus volumes from an SFX engine/object with defaults.
+ * Reads per-bus volumes from an SFX engine and normalizes them.
  * @param {any} sfxObject
  * @returns {{music:number, system:number, characters:number, objects:number}}
  */
 function sfxReadVolumes(sfxObject) {
-    const defaultSettings = audioPrefsCreateDefaultSettings();
-    const volumesObject = (sfxObject && sfxObject.volumes) || {};
-    const music = getNumberOr(volumesObject.music, defaultSettings.music);
-    const system = getNumberOr(volumesObject.system, defaultSettings.system);
-    const characters = getNumberOr(volumesObject.characters, defaultSettings.characters);
-    const objects = getNumberOr(volumesObject.objects, defaultSettings.objects);
-    return { music, system, characters, objects };
+    const base = audioPrefsCreateDefaultSettings();
+    const v = (sfxObject && sfxObject.volumes) || {};
+    return {
+        music: audioPrefsClampUnit(getNumberOr(v.music, base.music)),
+        system: audioPrefsClampUnit(getNumberOr(v.system, base.system)),
+        characters: audioPrefsClampUnit(getNumberOr(v.characters, base.characters)),
+        objects: audioPrefsClampUnit(getNumberOr(v.objects, base.objects))
+    };
 }

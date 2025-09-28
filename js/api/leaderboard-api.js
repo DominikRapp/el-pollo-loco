@@ -71,23 +71,24 @@ async function qualifiesForTopTen(kind, candidateEntry, levelIdentifier) {
 }
 
 /**
- * Submits an entry if it qualifies for the top 10.
- * @param {'total'|'level'} kind - Type of leaderboard
+ * Submits the entry only if it qualifies for Top 10.
+ * @param {'total'|'level'} kind - Leaderboard type
  * @param {object} candidateEntry - Entry data
- * @param {string} [levelIdentifier] - Level ID if kind is 'level'
- * @returns {Promise<{saved: boolean, rec: boolean, top: object[]}>}
- * Updated leaderboard information
+ * @param {string} [levelIdentifier] - Level ID for 'level'
+ * @returns {Promise<{saved: boolean, rec: boolean, top: object[]}>} 
+ * rec=true wenn qualifiziert; saved=true wenn gespeichert
  */
 async function submitIfQualifiesForTopTen(kind, candidateEntry, levelIdentifier) {
-    const createdAtMilliseconds = Date.now();
-    const timeFieldName = LeaderboardCore.getTimeFieldName(kind);
-    const timeValue = LeaderboardCore.resolveTimeValueForKind(kind, candidateEntry);
-    const pointsValue = LeaderboardCore.resolvePointsValue(candidateEntry);
-    const sortKey = LeaderboardCore.buildSortKey(pointsValue, timeValue, createdAtMilliseconds);
-    const payloadToSave = LeaderboardCore.buildSavedPayload(candidateEntry, pointsValue, timeFieldName, timeValue, createdAtMilliseconds, sortKey);
-    await getDatabaseReference(kind, levelIdentifier).push(payloadToSave);
-    const updatedTopTen = await fetchTopTenEntries(kind, levelIdentifier);
-    return { saved: true, rec: true, top: updatedTopTen };
+  const ok = await qualifiesForTopTen(kind, candidateEntry, levelIdentifier);
+  if (!ok) return { saved: false, rec: false, top: await fetchTopTenEntries(kind, levelIdentifier) };
+  const at = Date.now();
+  const tf = LeaderboardCore.getTimeFieldName(kind);
+  const tv = LeaderboardCore.resolveTimeValueForKind(kind, candidateEntry);
+  const pv = LeaderboardCore.resolvePointsValue(candidateEntry);
+  const sk = LeaderboardCore.buildSortKey(pv, tv, at);
+  const payload = LeaderboardCore.buildSavedPayload(candidateEntry, pv, tf, tv, at, sk);
+  await getDatabaseReference(kind, levelIdentifier).push(payload);
+  return { saved: true, rec: true, top: await fetchTopTenEntries(kind, levelIdentifier) };
 }
 
 /**

@@ -148,24 +148,23 @@ function buildTotalTableHtml(entries) {
 }
 
 /**
- * Builds the rows HTML for the total leaderboard table after sorting.
- * @param {object[]} entries - Total entries (unsorted)
- * @returns {string} Concatenated HTML for table rows
- */
-function buildTotalRowsHtml(entries) {
-    const sorted = sortByPointsTimeCreated(entries, 'totalTimeMs');
-    const parts = [];
-    sorted.forEach((entry, index) => parts.push(buildTotalRowHtml(entry, index)));
-    return parts.join('');
-}
-
-/**
  * Builds one row of the total leaderboard table.
  * @param {object} entry - Leaderboard entry
  * @param {number} index - Zero-based rank index
  * @returns {string} HTML string for a single row
  */
 function buildTotalRowHtml(entry, index) {
+    const d = mapTotalEntryToRowData(entry, index);
+    return totalLeaderboardRowTemplate(d);
+}
+
+/**
+ * Maps a total-entry object to the row template data shape.
+ * @param {object} entry - Leaderboard entry
+ * @param {number} index - Zero-based rank index
+ * @returns {{index:number,name:string,highestLevel:string,timeText:string,points:string,boss:string,chicken:string,chickenSmall:string,bottle:string,coin:string}}
+ */
+function mapTotalEntryToRowData(entry, index) {
     const name = entry?.name || 'Player';
     const highestLevel = (typeof entry?.highestLevel === 'number') ? entry.highestLevel : 0;
     const counts = entry?.counts || {};
@@ -176,9 +175,39 @@ function buildTotalRowHtml(entry, index) {
     const bottle = counts.bottle || 0;
     const coin = counts.coin || 0;
     const timeText = isPlaceholderEntry(entry) ? '00:00' : formatMillisecondsToMMSS(typeof entry?.totalTimeMs === 'number' ? entry.totalTimeMs : null);
-    const d = { index, name, highestLevel: formatNumberOrDash(highestLevel), timeText, points: formatNumberOrDash(points), boss: formatNumberOrDash(boss), chicken: formatNumberOrDash(chicken), chickenSmall: formatNumberOrDash(chickenSmall), bottle: formatNumberOrDash(bottle), coin: formatNumberOrDash(coin) };
-    return totalLeaderboardRowTemplate(d);
+    return { index, name, highestLevel: formatNumberOrDash(highestLevel), timeText, points: formatNumberOrDash(points), boss: formatNumberOrDash(boss), chicken: formatNumberOrDash(chicken), chickenSmall: formatNumberOrDash(chickenSmall), bottle: formatNumberOrDash(bottle), coin: formatNumberOrDash(coin) };
 }
+
+/**
+ * Builds one row of a level leaderboard table.
+ * @param {object} entry - Leaderboard entry
+ * @param {number} index - Zero-based rank index
+ * @returns {string} HTML string for a single row
+ */
+function buildLevelRowHtml(entry, index) {
+    const d = mapLevelEntryToRowData(entry, index);
+    return levelLeaderboardRowTemplate(d);
+}
+
+/**
+ * Maps a level-entry object to the row template data shape.
+ * @param {object} entry - Leaderboard entry
+ * @param {number} index - Zero-based rank index
+ * @returns {{index:number,name:string,timeText:string,points:string,boss:string,chicken:string,chickenSmall:string,bottle:string,coin:string}}
+ */
+function mapLevelEntryToRowData(entry, index) {
+    const name = entry?.name || 'Player';
+    const counts = entry?.counts || {};
+    const points = computePointsFromCounts(counts);
+    const boss = counts.boss || 0;
+    const chicken = counts.chicken || 0;
+    const chickenSmall = counts.chickenSmall || 0;
+    const bottle = counts.bottle || 0;
+    const coin = counts.coin || 0;
+    const timeText = isPlaceholderEntry(entry) ? '00:00' : formatMillisecondsToMMSS(typeof entry?.timeMs === 'number' ? entry.timeMs : null);
+    return { index, name, timeText, points: formatNumberOrDash(points), boss: formatNumberOrDash(boss), chicken: formatNumberOrDash(chicken), chickenSmall: formatNumberOrDash(chickenSmall), bottle: formatNumberOrDash(bottle), coin: formatNumberOrDash(coin) };
+}
+
 
 /**
  * Builds the full HTML for a single level's leaderboard table.

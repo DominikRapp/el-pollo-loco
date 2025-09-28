@@ -10,18 +10,34 @@ function showTimerElement(app, isVisible) {
     timerElement.style.display = isVisible ? 'block' : 'none';
 }
 
+
 /**
- * Updates the timer text each animation frame while the timer is running.
- * Uses app.formatMs to render elapsed time since app.timerStart.
+ * Updates the timer while running and schedules the next frame.
  * @param {object} app - The application context
  * @returns {void}
  */
 function runTimerLoop(app) {
     if (!app.timerRunning) return;
-    const timerElement = document.getElementById('hud-timer');
-    if (timerElement) {
-        timerElement.textContent = app.formatMs(Date.now() - app.timerStart);
-    }
+    updateTimerText(app);
+    scheduleNextTimerFrame(app);
+}
+
+/**
+ * Updates the HUD timer text using elapsed time since app.timerStart.
+ * @param {object} app - The application context
+ * @returns {void}
+ */
+function updateTimerText(app) {
+    const el = document.getElementById('hud-timer');
+    if (el) el.textContent = app.formatMs(Date.now() - app.timerStart);
+}
+
+/**
+ * Requests the next timer frame and loops via app.loopTimer().
+ * @param {object} app - The application context
+ * @returns {void}
+ */
+function scheduleNextTimerFrame(app) {
     requestAnimationFrame(function () { app.loopTimer(); });
 }
 

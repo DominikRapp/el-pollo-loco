@@ -91,27 +91,38 @@ function setNameError(nameError, message, visible) {
 }
 
 /**
- * Validates the player name against syntax and duplicate rules.
- * Writes validity to app state, updates error label and start button.
- * @param {object} app - The game/app instance
- * @param {HTMLInputElement|null} nameInput - Name input field
- * @param {HTMLElement|null} nameError - Error label element
- * @param {HTMLButtonElement|null} btnStart - Start button element
- * @returns {boolean} True if the name is valid
+ * Validates the name and applies state/UI updates.
+ * @param {object} app
+ * @param {HTMLInputElement|null} nameInput
+ * @param {HTMLElement|null} nameError
+ * @param {HTMLButtonElement|null} btnStart
+ * @returns {boolean}
  */
 function validateName(app, nameInput, nameError, btnStart) {
-    const value = (nameInput && nameInput.value ? nameInput.value : '').trim();
-    app.userName = value;
-    const basicOk = value.length >= 3 && value.length <= 16 && /^[a-z0-9_]+$/i.test(value);
+    const raw = nameInput && nameInput.value ? nameInput.value : '';
+    const res = computeNameValidation(raw);
+    app.userName = res.value;
+    app.nameValid = res.valid;
+    const show = app.showNameErrors ? !res.valid : false;
+    setNameError(nameError, app.showNameErrors ? (res.valid ? ' ' : res.message) : ' ', show);
+    updateStartButtonEnablement(btnStart, nameInput);
+    return res.valid;
+}
+
+/**
+ * Computes validity and message for a candidate name.
+ * @param {string} name
+ * @returns {{value:string, valid:boolean, message:string}}
+ */
+function computeNameValidation(name) {
+    const value = (name || '').trim();
+    const ok = value.length >= 3 && value.length <= 16 && /^[a-z0-9_]+$/i.test(value);
     const taken = value ? isNameTakenLocal(value) : false;
     const current = (localStorage.getItem('playerName') || '').toLowerCase();
     let message = '';
-    if (!basicOk) message = '3–16 characters, letters/numbers/_ only.';
+    if (!ok) message = '3–16 letters/numbers/_ only.';
     else if (taken && value.toLowerCase() !== current) message = 'Name ist bereits vergeben.';
-    app.nameValid = message === '';
-    setNameError(nameError, app.showNameErrors ? (app.nameValid ? ' ' : message) : ' ', app.showNameErrors ? !app.nameValid : false);
-    updateStartButtonEnablement(btnStart, nameInput);
-    return app.nameValid;
+    return { value, valid: message === '', message };
 }
 
 /**

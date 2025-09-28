@@ -37,29 +37,55 @@ function hideHudLevel(appInstance) {
 }
 
 /**
+ * Detects if the current browser is Firefox.
+ * @returns {boolean}
+ */
+function isFirefoxBrowser() {
+    return /firefox/i.test(navigator.userAgent);
+}
+
+/**
+ * Determines if the environment is mobile-like.
+ * @returns {boolean}
+ */
+function isMobileLikeContext() {
+    const isTouch = navigator.maxTouchPoints > 0;
+    const mqCoarse = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+    const smallViewport = window.innerWidth < 900 || window.innerHeight < 700;
+    return isTouch || mqCoarse || smallViewport;
+}
+
+/**
+ * Applies visibility to the mobile controls element.
+ * @param {HTMLElement} element
+ * @param {boolean} visible
+ * @param {boolean} forceFlex
+ * @returns {void}
+ */
+function applyVisibility(element, visible, forceFlex) {
+    element.classList.toggle('is-active', visible);
+    if (forceFlex) {
+        element.style.display = visible ? 'flex' : 'none';
+    } else {
+        element.style.removeProperty('display');
+    }
+}
+
+/**
  * Shows or hides the #mobile-controls wrapper.
- * - Always toggles the "is-active" class based on the desired visibility.
- * - In Firefox, visibility is additionally limited to “mobile-like” contexts
- *   (touch/coarse pointer or small viewport), and the inline style
- *   display is set to "flex" or "none".
- * @param {object} appInstance - Application instance (currently unused)
- * @param {boolean} isVisible - Desired visibility of the mobile controls
+ * Firefox limits visibility to mobile-like contexts.
+ * @param {object} appInstance
+ * @param {boolean} isVisible
  * @returns {void}
  */
 function setMobileControlsVisible(appInstance, isVisible) {
-    const element = document.getElementById('mobile-controls');
-    if (!element) return;
-    const isFirefox = /firefox/i.test(navigator.userAgent);
-    const wantsVisible = !!isVisible;
-    if (isFirefox) {
-        const isTouch = navigator.maxTouchPoints > 0;
-        const mqCoarse = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
-        const smallViewport = window.innerWidth < 900 || window.innerHeight < 700;
-        const isMobileLike = isTouch || mqCoarse || smallViewport;
-        const show = wantsVisible && isMobileLike;
-        element.classList.toggle('is-active', show);
-        element.style.display = show ? 'flex' : 'none';
+    const el = document.getElementById('mobile-controls');
+    if (!el) return;
+    const show = !!isVisible;
+    if (isFirefoxBrowser()) {
+        const mobile = isMobileLikeContext();
+        applyVisibility(el, show && mobile, true);
         return;
     }
-    element.classList.toggle('is-active', wantsVisible);
+    applyVisibility(el, show, false);
 }

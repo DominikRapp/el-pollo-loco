@@ -189,25 +189,36 @@ function hideWinImage(imageElement) {
  * Builds the victory summary, records the level result, and renders leaderboard views.
  * @param {object} app - Game application object
  * @param {HTMLElement} actionsElement - Actions container element
+ * @returns {void}
  */
 function submitWinResults(app, actionsElement) {
     const s = buildVictorySummary(app);
+    addLevelResultFromSummary(app, s);
     ensureVictoryResultsContainer(actionsElement);
     LeaderboardFlow.showLevelIntermediate({ containerId: 'victory-results', name: s.playerName, level: s.levelNumber, timeMs: s.timeMilliseconds, counts: s.levelCounts });
     LeaderboardFlow.showTotalFinal({ name: s.playerName, highestLevel: s.levelNumber, totalTimeMs: app.totalTimeMs, counts: app.totalCounts });
 }
 
 /**
- * Gathers player name, level number, elapsed time, and counts; also adds the level result to the run.
+ * Adds the level result to the run using a summary.
  * @param {object} app - Game application object
- * @returns {{playerName:string, levelNumber:number, timeMilliseconds:number, levelCounts:object}} Summary data
+ * @param {{levelNumber:number,timeMilliseconds:number,levelCounts:object}} s - Summary
+ * @returns {void}
+ */
+function addLevelResultFromSummary(app, s) {
+    app.addLevelResult(s.levelNumber, s.timeMilliseconds, s.levelCounts);
+}
+
+/**
+ * Builds victory summary data (no side effects).
+ * @param {object} app - Game application object
+ * @returns {{playerName:string, levelNumber:number, timeMilliseconds:number, levelCounts:object}}
  */
 function buildVictorySummary(app) {
     const playerName = app.userName || localStorage.getItem('playerName') || 'Player';
     const levelNumber = app.getCurrentLevelNumber();
     const timeMilliseconds = app.lastElapsedMs || 0;
     const levelCounts = app.collectLevelCounts(true);
-    app.addLevelResult(levelNumber, timeMilliseconds, levelCounts);
     return { playerName, levelNumber, timeMilliseconds, levelCounts };
 }
 

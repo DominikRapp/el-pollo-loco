@@ -14,39 +14,27 @@ class Level {
     bottles = [];
     coins = [];
     start = { characterX: 0 };
-    rules = {
-        enemyContactDamage: 20,
-        bossContactDamage: 20,
-        bossBottleDamage: 20
-    };
+    rules = { enemyContactDamage: 20, bossContactDamage: 20, bossBottleDamage: 20 };
     level_end_x = 2250;
 
     /**
      * Builds a level from its parts, applying defaults where not provided.
-     * @param {Array<MovableObject>} enemies - Enemy instances in the level.
-     * @param {Array<DrawableObject>} clouds - Cloud visuals for parallax/background.
-     * @param {Array<DrawableObject>} backgroundObjects - Background tiles/layers.
-     * @param {Array<Platform>} [platforms=[]] - Solid platforms the player can stand on.
-     * @param {Array<Barrel>} [barrels=[]] - Static barrels (obstacles/decoration).
-     * @param {Array<ThrowableObject|BottlePickup>} [bottles=[]] - Bottles present in the level.
-     * @param {Array<CoinPickup>} [coins=[]] - Coin pickups.
-     * @param {{characterX:number}} [start={characterX:0}] - Starting positions/config (at least characterX).
-     * @param {{enemyContactDamage?:number,bossContactDamage?:number,bossBottleDamage?:number}} [rules={}] - Overrides for damage rules.
      */
     constructor(
         enemies, clouds, backgroundObjects,
         platforms = [], barrels = [], bottles = [], coins = [],
-        start = { characterX: 0 },
-        rules = {}
+        start = { characterX: 0 }, rules = {}
     ) {
-        this.enemies = enemies;
-        this.clouds = clouds;
-        this.backgroundObjects = backgroundObjects;
-        this.platforms = platforms;
-        this.barrels = barrels;
-        this.bottles = bottles;
-        this.coins = coins;
-        this.start = start;
-        this.rules = { ...this.rules, ...rules };
+        initLevel(this, enemies, clouds, backgroundObjects, platforms, barrels, bottles, coins, start, rules);
     }
+}
+
+/**
+ * Initializes Level fields from given parts and merges rule overrides.
+ * @param {Level} self
+ */
+function initLevel(self, enemies, clouds, backgroundObjects, platforms = [], barrels = [], bottles = [], coins = [], start = { characterX: 0 }, rules = {}) {
+    const cfg = { enemies, clouds, backgroundObjects, platforms, barrels, bottles, coins, start };
+    Object.assign(self, cfg);
+    self.rules = { ...self.rules, ...rules };
 }

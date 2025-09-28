@@ -70,6 +70,7 @@ function disposeCurrentWorldIfAny(app) {
 function createLevelFromFactory(app, index) {
     app.currentLevelIndex = index;
     const factory = app.levelFactories[app.currentLevelIndex];
+    if (typeof factory !== 'function') throw new Error('Invalid level factory');
     const level = factory();
     return level;
 }
@@ -147,9 +148,7 @@ function updateHudLevel(app) {
  * @param {object} app - The game application context
  */
 function lockCharacterControl(app) {
-    if (app.world && app.world.character) {
-        app.world.character.canControl = false;
-    }
+    setCharacterControl(app, false);
 }
 
 /**
@@ -157,13 +156,10 @@ function lockCharacterControl(app) {
  */
 function playLevelMusic() {
     const musicId = 'music.level.loop';
-    if (window.sfx) window.sfx.musicTo(musicId, 400);
+    if (window.sfx && typeof window.sfx.musicTo === 'function') {
+        window.sfx.musicTo(musicId, 400);
+    }
 }
-
-/**
- * Callback invoked when the countdown completes.
- * @callback CountdownDone
- */
 
 /**
  * Starts a 3-second countdown, then enables control, timers, and loop watchers.
@@ -171,13 +167,9 @@ function playLevelMusic() {
  */
 function startAfterCountdown(app) {
     runCountdown(app, 3, function () {
-        if (app.world && app.world.character) app.world.character.canControl = true;
-        app.timerStart = Date.now();
-        app.timerRunning = true;
-        app.stoppedForWinOrLose = false;
-        app.showTimer(true);
-        app.loopTimer();
-        app.loopWinLoseWatch();
+        setCharacterControl(app, true);
+        startGameTimers(app);
+        startGameLoops(app);
     });
 }
 

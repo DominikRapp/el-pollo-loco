@@ -60,12 +60,13 @@ function to01FromPercent(n) {
 }
 
 /**
- * Renders the settings UI controls and wires interactive handlers.
- * @param {HTMLElement} content - The content container where settings are rendered
+ * Renders settings HTML and wires controls (mute + sliders).
+ * @param {HTMLElement} content
+ * @returns {void}
  */
 function renderSettingsControls(content) {
     const state = AudioPrefs.load();
-    renderSettingsContent(content, state);
+    content.innerHTML = settingsTemplate(state);
     const refs = getSettingsControlRefs(content);
     wireMuteToggle(refs);
     wireSliders(refs);
@@ -112,20 +113,22 @@ function saveAndApplyAudio(patch) {
 }
 
 /**
- * Wires the mute toggle button to flip global mute state and update the label.
- * @param {{btnMute: HTMLButtonElement}} refs - References including the mute button
- * @fires window#app-mute-changed
+ * Wires the Mute toggle inside settings and keeps it synced globally.
+ * @param {{btnMute: HTMLButtonElement}} refs
+ * @returns {void}
  */
 function wireMuteToggle(refs) {
-    if (!refs.btnMute) return;
-    function setMuteLabel() { refs.btnMute.textContent = isMuted() ? 'Mute: ON' : 'Mute: OFF'; }
-    refs.btnMute.addEventListener('click', function () {
+    const btn = refs.btnMute; if (!btn) return;
+    const sync = () => { const on = isMuted(); btn.textContent = on ? 'Mute: ON' : 'Mute: OFF'; btn.setAttribute('aria-pressed', on ? 'true' : 'false'); };
+    btn.addEventListener('click', () => {
         const next = !isMuted();
         setMuted(next);
         saveAndApplyAudio({ muted: next });
-        setMuteLabel();
+        window.dispatchEvent(new CustomEvent('app-mute-changed', { detail: { muted: next } }));
+        sync();
     });
-    window.addEventListener('app-mute-changed', setMuteLabel);
+    window.addEventListener('app-mute-changed', sync);
+    sync();
 }
 
 /**

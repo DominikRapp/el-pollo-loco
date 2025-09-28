@@ -45,14 +45,43 @@ function setGameStateToRunning(app) {
 
 /**
  * Creates a new world instance based on the currently selected level.
- * Uses the level factory at app.levels[app.currentLevelIndex].
  * @param {object} app - The game application context
  * @throws {Error} If the current level factory is missing or invalid
  */
 function createWorldFromCurrentLevel(app) {
     const makeLevel = app.levels[app.currentLevelIndex];
+    if (typeof makeLevel !== 'function') throw new Error('Invalid level factory');
     const level = makeLevel();
     app.world = new World(app.canvas, app.keyboard, level);
+}
+
+/**
+ * Enables or disables character control if character exists.
+ * @param {object} app - The game application context
+ * @param {boolean} isEnabled - Whether control should be enabled
+ */
+function setCharacterControl(app, isEnabled) {
+    if (app.world && app.world.character) app.world.character.canControl = isEnabled;
+}
+
+/**
+ * Starts game timers/flags and shows timer.
+ * @param {object} app - The game application context
+ */
+function startGameTimers(app) {
+    app.timerStart = Date.now();
+    app.timerRunning = true;
+    app.stoppedForWinOrLose = false;
+    app.showTimer(true);
+}
+
+/**
+ * Starts core game loops (timer + win/lose watch).
+ * @param {object} app - The game application context
+ */
+function startGameLoops(app) {
+    app.loopTimer();
+    app.loopWinLoseWatch();
 }
 
 /**
@@ -76,25 +105,13 @@ function lockCharacterControl(app) {
 }
 
 /**
- * Callback fired after the countdown finishes.
- * @callback CountdownDone
- */
-
-/**
  * Runs a 3-second countdown, then enables control, starts timers and loops.
- * Wraps game-start side effects to begin the actual gameplay.
  * @param {object} app - The game application context
  */
 function beginCountdownThenStart(app) {
     runCountdown(app, 3, function () {
-        if (app.world && app.world.character) {
-            app.world.character.canControl = true;
-        }
-        app.timerStart = Date.now();
-        app.timerRunning = true;
-        app.stoppedForWinOrLose = false;
-        app.showTimer(true);
-        app.loopTimer();
-        app.loopWinLoseWatch();
+        setCharacterControl(app, true);
+        startGameTimers(app);
+        startGameLoops(app);
     });
 }

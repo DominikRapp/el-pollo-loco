@@ -13,26 +13,24 @@ class CharacterHelper {
     }
 
     /**
-     * Handles the airborne animation state machine (jump frames → long-air).
-     * Returns whether an air-handling step ran this frame.
-     *
-     * @returns {boolean} True if air handling ran on this frame
+     * Handles airborne animation state machine (jump frames only).
+     * @returns {boolean} True if air handling ran this frame
      */
     handleAirAnimation() {
         if (this.resetAirStateIfGrounded()) return false;
         const now = Date.now();
-        this.tryAdvanceJumpFrame(now);
-        return true;
+        const advanced = this.tryAdvanceJumpFrame(now);
+        return advanced;
     }
 
     /**
-     * Resets air-related flags when the character is grounded.
-     *
-     * @returns {boolean} True if a reset occurred (i.e., character was grounded)
+     * Resets air-related flags when touching ground.
+     * @returns {boolean} True if reset happened (i.e., grounded)
      */
     resetAirStateIfGrounded() {
-        const o = this; // << vorher stand hier this.o
-        if (o.isAboveGround()) return false;
+        const o = this.o;
+        const above = typeof o.isAboveGround === 'function' ? o.isAboveGround() : !!o.isAboveGround;
+        if (above) return false;
         o.lastJumpFrameAt = 0;
         o.jumpOnceActive = false;
         o.jumpOnceIndex = 0;
@@ -40,39 +38,12 @@ class CharacterHelper {
     }
 
     /**
-     * Marks the start timestamp of being airborne if not set.
+     * Advances one jump frame at a fixed delay until last frame.
      * @param {number} now - Current time in ms
-     */
-    ensureAirborneStart(now) {
-        if (this.o.airborneStartedAt === 0) this.o.airborneStartedAt = now;
-    }
-
-    /**
-     * Switches to long-air pose after threshold; primes timing.
-     * @param {number} now - Current time in ms
-     * @returns {boolean} True if long-air activated this call
-     */
-    tryActivateLongAir(now) {
-        const o = this.o;
-        if (o.longAirActive) return false;
-        if (now - o.airborneStartedAt < o.longAirThresholdMs) return false;
-        const img = o.imageCache ? o.imageCache[o.LONG_AIR_IMAGE] : null;
-        if (!img) o.loadImages([o.LONG_AIR_IMAGE]);
-        o.img = img || o.img;
-        o.longAirActive = true;
-        o.lastJumpFrameAt = now;
-        return true;
-    }
-
-    /**
-     * Advances one jump frame after a fixed delay until the last frame.
-     * Updates the current sprite from the cache if available.
-     *
-     * @param {number} now - Current time in milliseconds
      * @returns {boolean} True if a frame was advanced
      */
     tryAdvanceJumpFrame(now) {
-        const o = this;
+        const o = this.o;
         if (now - o.lastJumpFrameAt < o.jumpFrameDelayMs) return false;
         const frames = o.IMAGES_JUMPING;
         const i = Math.min(o.jumpOnceIndex, frames.length - 1);

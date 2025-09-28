@@ -1,15 +1,22 @@
 /**
- * Begins the app start sequence. Shows a splash (if present), preloads assets,
- * and transitions to the intro once the splash fades out.
- * If the splash element is missing, it immediately starts the intro.
+ * Begins the app start sequence. Shows splash (if present), preloads assets,
+ * then transitions to the intro after fade-out or immediately if absent.
  * @param {object} app - The game application context
  */
 function startSequence(app) {
     const splashElement = document.getElementById('splash-start');
-    if (!splashElement) { startIntro(app); try { preloadGameAssets(); } catch { } return; }
+    if (!splashElement) { safePreloadGameAssets(); startIntro(app); return; }
     showSplashElement(splashElement);
-    try { preloadGameAssets(); } catch { }
+    safePreloadGameAssets();
     fadeOutSplashThenStart(app, splashElement);
+}
+
+/**
+ * Safely preloads all game assets (ignores errors).
+ * @returns {void}
+ */
+function safePreloadGameAssets() {
+    try { preloadGameAssets(); } catch { }
 }
 
 /**

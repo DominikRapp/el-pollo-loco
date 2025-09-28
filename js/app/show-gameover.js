@@ -174,17 +174,26 @@ function switchToMenuMusic() {
 }
 
 /**
- * Wires the Restart button to hide UI, clear intervals, reset energy, and restart the game.
- * @param {object} app - Game application object
- * @param {HTMLElement} actionsElement - Actions container element
+ * Wires the Restart button click handler.
+ * @param {object} app
+ * @param {HTMLElement} actionsElement
+ * @returns {void}
  */
 function wireGameOverRestartButton(app, actionsElement) {
     const restartButton = document.getElementById('btn-restart');
     if (!restartButton) return;
-    restartButton.onclick = function () {
-        actionsElement.classList.add('hidden');
-        IntervalTracker.clearAll();
-        app.carryOverEnergy = 100;
-        app.restartToLevel1();
-    };
+    restartButton.onclick = function () { handleGameOverRestart(app, actionsElement); };
+}
+
+/**
+ * Handles the Game Over restart action.
+ * @param {object} app
+ * @param {HTMLElement} actionsElement
+ * @returns {void}
+ */
+function handleGameOverRestart(app, actionsElement) {
+    actionsElement.classList.add('hidden');
+    IntervalTracker.clearAll();
+    app.carryOverEnergy = 100;
+    app.restartToLevel1();
 }

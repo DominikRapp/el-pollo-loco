@@ -88,26 +88,49 @@ function toggleFullscreen(event, root, ...buttons) {
 
 /**
  * Wires up fullscreen toggling for the app.
- * - Binds click handlers to all available fullscreen buttons (home, in-game, victory, inline).
- * - Subscribes to standard and prefixed fullscreen change/error events to keep UI in sync.
- * - Initializes the button state immediately.
+ * Single responsibility: kick off the wiring process.
  *
- * @param {object} app - Application context (currently unused; kept for API symmetry)
+ * @param {object} app - Application context (unused, kept for API symmetry)
  * @returns {void}
  */
-function wireFullscreenToggle(app) {
+function wireFullscreenToggle() {
+    const { root, btnHome, btnGo, btnVictory, btnInline } = getFullscreenElements();
+    attachFullscreenWiring(root, btnHome, btnGo, btnVictory, btnInline);
+}
+
+/**
+ * Collects all DOM elements used for fullscreen controls.
+ * Single responsibility: gather references.
+ *
+ * @returns {{root: HTMLElement|null, btnHome: HTMLElement|null, btnGo: HTMLElement|null, btnVictory: HTMLElement|null, btnInline: HTMLElement|null}}
+ */
+function getFullscreenElements() {
     const root = document.getElementById('game-root');
-    const btnHome = document.getElementById('btn-fullscreen-home');
-    const btnGo = document.getElementById('btn-fullscreen-go');
-    const btnVictory = document.getElementById('btn-fullscreen-victory');
-    const btnInline = document.getElementById('btn-fullscreen-inline');
+    return {
+        root,
+        btnHome: document.getElementById('btn-fullscreen-home'),
+        btnGo: document.getElementById('btn-fullscreen-go'),
+        btnVictory: document.getElementById('btn-fullscreen-victory'),
+        btnInline: document.getElementById('btn-fullscreen-inline')
+    };
+}
+
+/**
+ * Attaches event listeners to buttons and syncs UI on fullscreen state changes.
+ * Single responsibility: wire events + keep UI updated.
+ *
+ * @param {HTMLElement|null} root
+ * @param {HTMLElement|null} btnHome
+ * @param {HTMLElement|null} btnGo
+ * @param {HTMLElement|null} btnVictory
+ * @param {HTMLElement|null} btnInline
+ * @returns {void}
+ */
+function attachFullscreenWiring(root, btnHome, btnGo, btnVictory, btnInline) {
     if (!root) return;
     const handler = ev => toggleFullscreen(ev, root, btnHome, btnGo, btnVictory, btnInline);
     [btnHome, btnGo, btnVictory, btnInline].forEach(b => b && b.addEventListener('click', handler));
     const upd = () => updateFullscreenButtons(root, btnHome, btnGo, btnVictory, btnInline);
-    [
-        'fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange', 'msfullscreenchange',
-        'fullscreenerror', 'webkitfullscreenerror'
-    ].forEach(t => document.addEventListener(t, upd));
+    ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange', 'msfullscreenchange', 'fullscreenerror', 'webkitfullscreenerror'].forEach(t => document.addEventListener(t, upd));
     upd();
 }

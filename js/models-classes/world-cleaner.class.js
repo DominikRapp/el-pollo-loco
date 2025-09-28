@@ -10,17 +10,10 @@ class WorldCleaner {
      * @param {object} world - The current world/state object
      */
     cleanupRemoved(world) {
-        const keys = [
-            'throwableObjects',
-            'enemies',
-            'clouds',
-            'platforms',
-            'barrels',
-            'groundBottles',
-            'coinPickups'
-        ];
-        for (const k of keys) {
-            world[k] = this.keepOnlyActive(world[k]);
+        const keys = ['throwableObjects', 'clouds', 'platforms', 'barrels', 'groundBottles', 'coinPickups'];
+        for (const k of keys) world[k] = this.keepOnlyActive(world[k]);
+        if (world.level && Array.isArray(world.level.enemies)) {
+            world.level.enemies = this.keepOnlyActive(world.level.enemies);
         }
     }
 
