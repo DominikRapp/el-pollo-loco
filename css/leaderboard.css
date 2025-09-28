@@ -33,10 +33,11 @@
 /* Section headings inside leaderboard content */
 #leaderboard-content h3 {
     margin: 16px 0 8px;
-    font-size: 16px;
+    font-size: 40px;
     line-height: 1.2;
     color: var(--lb-accent);
     letter-spacing: .02em;
+    text-align: center;
 }
 
 /* Inline leaderboard row layout (name, level, points, time) */
@@ -99,7 +100,7 @@
     text-transform: uppercase;
     letter-spacing: .06em;
     font-weight: 700;
-    font-size: 12px;
+    font-size: 16px;
     border-bottom: 1px solid var(--lb-border);
     padding: 12px 14px;
 }

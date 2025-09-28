@@ -23,7 +23,7 @@ class WorldDrawer {
      * @param {object} world
      */
     updateCamera(world) {
-        world.camera_x = -world.character.x + 250;
+        world.camera_x = -world.character.x + 350;
     }
 
     /**

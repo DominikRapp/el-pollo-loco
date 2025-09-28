@@ -20,7 +20,8 @@
     pointer-events: none;
     z-index: 1200;
     line-height: .9;
-    font-weight: 900;
+    font-weight: 800;
+    font-family: 'Karla', Inter, 'Segoe UI', Roboto, Arial, system-ui, sans-serif;
     letter-spacing: -.02em;
     font-size: clamp(48px, calc(112px * var(--ui-scale)), 180px);
     -webkit-text-stroke: clamp(2px, 0.6vw, 6px) rgba(0, 0, 0, .7);

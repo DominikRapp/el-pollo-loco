@@ -35,7 +35,7 @@ function instructionsPagesTemplate() {
  */
 function settingsTemplate(st) {
     return `
-        <h3>Audio</h3>
+        <h2>Audio</h2>
         <div class="settings-group">
             <button id="btn-mute-toggle" class="btn">${st.muted ? 'Mute: ON' : 'Mute: OFF'}</button>
         </div>

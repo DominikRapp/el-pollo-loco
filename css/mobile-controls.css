@@ -10,9 +10,9 @@
 /* Root control scope: defines scalable custom properties (units adapt via --mc-scale) */
 #mobile-controls {
     --mc-scale: var(--ui-scale, min(100vw/1080, 100vh/720));
-    --mc-bottom: 56px;
-    --mc-left-inset: 40px;
-    --mc-right-inset: 40px;
+    --mc-bottom: 64px;
+    --mc-left-inset: 80px;
+    --mc-right-inset: 80px;
     --mc-btn: 92px;
     --mc-gap: 16px;
     --mc-press-scale: .92;

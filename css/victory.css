@@ -81,7 +81,7 @@
 /* Name cell: bold primary identifier with truncation */
 #victory-actions .lb-name {
     font-weight: 800;
-    font-size: 17px;
+    font-size: 18px;
     color: #1e1e1e;
     min-width: 0;
     overflow: hidden;
@@ -93,7 +93,7 @@
 #victory-actions .lb-level {
     justify-self: center;
     font-weight: 800;
-    font-size: 14px;
+    font-size: 16px;
     color: #1f1f1f;
     background: #ffdcb3;
     border: 1px solid rgba(0, 0, 0, .08);

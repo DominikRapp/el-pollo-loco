@@ -73,7 +73,7 @@
 #rotate-overlay p {
     margin: 0;
     font-weight: 600;
-    font-size: clamp(14px, 2.8vw, 18px);
+    font-size: clamp(16px, 2.8vw, 18px);
     color: rgba(255, 255, 255, .95);
 }
 

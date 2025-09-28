@@ -15,7 +15,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-around;
+    justify-content: space-evenly;
     gap: 16px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
     height: 640px;
@@ -26,10 +26,29 @@
 /* Overlay heading: bold, large, and legible with subtle shadow */
 .overlay-box h2 {
     margin: 0;
-    font-size: 40px;
+    font-size: 64px;
     font-weight: 700;
-    color: #332c0f;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, .4);
+    color: var(--lb-accent);
+}
+
+.overlay-gameover-btns-top {
+    display: flex;
+    gap: 40px;
+}
+
+.overlay-gameover-btns-bottom {
+    display: flex;
+    gap: 40px;
+}
+
+.overlay-youwin-btns-top {
+    display: flex;
+    gap: 40px;
+}
+
+.overlay-youwin-btns-bottom {
+    display: flex;
+    gap: 40px;
 }
 
 /* Close button: circular control anchored to the top-right corner */
@@ -79,7 +98,7 @@
     bottom: 14px;
     color: #fff;
     font-weight: 700;
-    font-size: 14px;
+    font-size: 16px;
 }
 
 /* Content area: padded, scrollable pane with neutral text styling */

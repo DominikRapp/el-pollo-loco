@@ -133,14 +133,14 @@
 }
 
 #hamburger-root {
-    top: calc(10px * var(--ui-scale, 1)) !important;
-    right: calc(10px * var(--ui-scale, 1)) !important;
+    top: calc(30px * var(--ui-scale, 1)) !important;
+    right: calc(30px * var(--ui-scale, 1)) !important;
     transform-origin: top right;
     transform: scale(var(--ui-scale, 1));
 }
 
 #hud-timer {
-    top: calc(12px * var(--ui-scale, 1));
+    top: calc(32px * var(--ui-scale, 1));
     transform-origin: top center;
     padding: calc(6px * var(--ui-scale, 1)) calc(10px * var(--ui-scale, 1));
     border-radius: calc(999px * var(--ui-scale, 1));
@@ -148,9 +148,9 @@
 }
 
 #hud-level {
-    bottom: calc(12px * var(--ui-scale, 1));
+    bottom: calc(32px * var(--ui-scale, 1));
     transform-origin: bottom center;
     padding: calc(6px * var(--ui-scale, 1)) calc(10px * var(--ui-scale, 1));
     border-radius: calc(999px * var(--ui-scale, 1));
-    font-size: calc(18px * var(--ui-scale, 1));
+    font-size: calc(24px * var(--ui-scale, 1));
 }

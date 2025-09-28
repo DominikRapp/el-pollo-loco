@@ -99,8 +99,8 @@ class World {
      */
     setupBars() {
         this.coinBar = new CoinBar();
-        this.coinBar.x = 10;
-        this.coinBar.y = 45;
+        this.coinBar.x = 30;
+        this.coinBar.y = 60;
         this.coinBar.setPercentage(0);
     }
 
@@ -109,8 +109,8 @@ class World {
      */
     setupBoss() {
         this.bossBar = new BossBar();
-        this.bossBar.x = this.canvas.width - this.bossBar.width - 10;
-        this.bossBar.y = 0;
+        this.bossBar.x = this.canvas.width - this.bossBar.width - 200;
+        this.bossBar.y = 20;
         this.boss = this.level.enemies.find(e => e instanceof Endboss) || null;
         if (this.boss) { this.bossBar.setPercentage(this.boss.energy); }
     }

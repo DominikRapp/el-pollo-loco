@@ -38,7 +38,7 @@ body {
 /* Links: accented color with clearer underline offset */
 a {
     color: var(--legal-accent);
-    text-underline-offset: 3px;
+    text-decoration: none;
 }
 
 /* Page container: centered column with max width and breathing room */
@@ -178,7 +178,7 @@ h2 {
 
 /* Small print: subdued text for disclaimers or footnotes */
 .small {
-    font-size: 14px;
+    font-size: 16px;
     color: var(--legal-muted);
 }
 

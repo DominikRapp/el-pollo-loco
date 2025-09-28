@@ -34,7 +34,7 @@
     margin: 0 auto;
     padding: 18px 20px;
     color: #333;
-    font-size: 16.96px;
+    font-size: 18px;
     line-height: 1.6;
 }
 
@@ -44,7 +44,8 @@
     line-height: 1.25;
     letter-spacing: .01em;
     color: #ff7a00;
-    font-size: 23.2px;
+    font-size: 40px;
+    text-align: center;
 }
 
 /* Subsection title (level 3): same accent color, slightly smaller */
@@ -62,7 +63,7 @@
     line-height: 1.25;
     letter-spacing: .01em;
     color: #222;
-    font-size: 17.6px;
+    font-size: 18px;
 }
 
 /* Paragraphs: relaxed spacing and softer color */
@@ -142,7 +143,7 @@
     align-items: center;
     justify-content: center;
     font-weight: 800;
-    font-size: 15.2px;
+    font-size: 16px;
 }
 
 /* Keyboard key style for inline shortcuts */
@@ -154,7 +155,7 @@
     border: 1px solid #dcdcdc;
     box-shadow: 0 2px 5px rgba(0, 0, 0, .08);
     font-weight: 600;
-    font-size: 15.2px;
+    font-size: 16px;
     color: #222;
     vertical-align: middle;
 }
@@ -165,7 +166,7 @@
     border-radius: 6px;
     background: #f5f5f5;
     border: 1px solid #e6e6e6;
-    font-size: 15.2px;
+    font-size: 16px;
     color: #1f1f1f;
 }
 
@@ -222,6 +223,8 @@
 #instructions-content .icon-row {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     flex-wrap: wrap;
+    text-align: center;
 }

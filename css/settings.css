@@ -27,13 +27,12 @@
     margin: 0 0 10px;
     font-size: 24px;
     letter-spacing: .02em;
-    color: #111;
 }
 
 /* Supporting paragraph text */
 #settings-content p {
     margin: 6px 0 18px;
-    font-size: 16.96px;
+    font-size: 18px;
     color: #444;
     max-width: 680px;
     text-align: center;
@@ -44,7 +43,7 @@
     display: block;
     margin: 8px 0 6px;
     font-weight: 600;
-    font-size: 16.96px;
+    font-size: 18px;
     color: #222;
 }
 
