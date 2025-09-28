@@ -269,45 +269,8 @@
     <script src="js/app/show-menu.js" defer></script>
     <script src="js/app/run-stats.js" defer></script>
     <script src="js/game.js" defer></script>
-    <script>
-        (function () {
-            const overlay = document.getElementById('rotate-overlay');
-            function isTouch() {
-                return window.matchMedia('(hover: none) and (pointer: coarse)').matches;
-            }
-            function isPortrait() {
-                return window.matchMedia('(orientation: portrait)').matches;
-            }
-            function updateRotateOverlay() {
-                const show = isTouch() && isPortrait();
-                overlay.style.display = show ? 'flex' : 'none';
-                overlay.setAttribute('aria-hidden', String(!show));
-            }
-            document.addEventListener('DOMContentLoaded', updateRotateOverlay);
-            window.addEventListener('resize', updateRotateOverlay);
-            window.addEventListener('orientationchange', updateRotateOverlay);
-        })();
-    </script>
-    <script>
-        (function () {
-            const isFirefox = /firefox/i.test(navigator.userAgent);
-            if (!isFirefox) return;
-            function applyScale() {
-                const baseW = 1080;
-                const baseH = 720;
-                const vw = window.innerWidth;
-                const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-                let s = vw / baseW;
-                const sh = vh / baseH;
-                if (sh < s) s = sh;
-                if (s > 1) s = 1;
-                document.documentElement.style.setProperty('--ui-scale', String(s));
-            }
-            applyScale();
-            window.addEventListener('resize', applyScale);
-            window.addEventListener('orientationchange', applyScale);
-        })();
-    </script>
+    <script src="js/rotate-overlay.js" defer onload="initRotateOverlay()"></script>
+    <script src="js/firefox.js" defer onload="initFirefoxScale()"></script>
 </body>
 
 </html>
