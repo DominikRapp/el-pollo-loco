@@ -82,7 +82,7 @@ function makeBoss2(levelEndX, speeds) {
     boss.alertSpeed = 0.9;
     boss.attackSpeed = speeds.bossAttack;
     boss.alertDistance = 540;
-    boss.attackDistance = 300;
+    boss.attackDistance = 425;
     return boss;
 }
 

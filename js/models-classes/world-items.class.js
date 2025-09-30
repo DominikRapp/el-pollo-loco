@@ -33,6 +33,8 @@ class WorldItems {
         world.bottleCount--;
         world.bottleBar.setPercentage((world.bottleCount / world.bottleMax) * 100);
         world.lastThrowTime = now;
+        c.tickHasInput = true;
+        c.handleInputActivity();
         if (window.sfx) window.sfx.play('character.throw');
     }
 

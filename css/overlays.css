@@ -10,23 +10,38 @@
 /* Main overlay container: card-like panel with depth and balanced spacing */
 .overlay-box {
     background: rgb(255, 213, 142);
-    border-radius: 16px;
-    padding: 20px 30px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: space-evenly;
     gap: 16px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-    height: 640px;
-    width: 960px;
+    width: calc(var(--base-w) * 1px);
+    height: calc(var(--base-h) * 1px);
+    transform: scale(var(--ui-scale));
+    transform-origin: center;
     position: relative;
+}
+
+.overlay-box {
+    position: absolute;
+    transform-origin: center;
+    padding-left: 30px;
+    padding-right: 30px;
+}
+
+.overlay-layer {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    z-index: 1300;
 }
 
 /* Overlay heading: bold, large, and legible with subtle shadow */
 .overlay-box h2 {
     margin: 0;
-    font-size: 64px;
+    font-size: 80px;
     font-weight: 700;
     color: var(--lb-accent);
 }
@@ -96,9 +111,9 @@
     position: absolute;
     left: 20px;
     bottom: 14px;
-    color: #fff;
+    color: black;
     font-weight: 700;
-    font-size: 16px;
+    font-size: 20px;
 }
 
 /* Content area: padded, scrollable pane with neutral text styling */
@@ -114,7 +129,7 @@
     padding: 18px;
     color: #333;
     font-weight: 400;
-    font-size: 16px;
+    font-size: 20px;
     line-height: 1.45;
     display: flex;
     flex-direction: column;

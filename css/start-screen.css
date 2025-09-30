@@ -36,7 +36,7 @@
     justify-content: center;
     opacity: 0.8;
     margin-top: 12px;
-    font-size: 16px;
+    font-size: 20px;
 }
 
 /* Hidden state for the entire start screen */
@@ -48,7 +48,7 @@
 #start-screen input,
 #name-step input {
     padding: 8px 12px;
-    font-size: 16px;
+    font-size: 24px;
     width: 220px;
 }
 
@@ -56,7 +56,7 @@
 #start-screen button,
 #name-step button {
     padding: 10px 16px;
-    font-size: 16px;
+    font-size: 40px;
     font-weight: 600;
     cursor: pointer;
 }
@@ -138,25 +138,6 @@
 }
 
 /* ==========================================================================
-   Responsive Tweaks for Legal Section
-   Purpose: Slightly tighter spacing and smaller buttons on small screens
-   ========================================================================== */
-
-@media (max-width: 640px) {
-
-    /* Container adjustments on small screens */
-    .home-legal {
-        gap: 8px;
-        font-size: 16px;
-    }
-
-    /* Smaller pill padding for compact layout */
-    .home-legal a {
-        padding: 6px 10px;
-    }
-}
-
-/* ==========================================================================
    Start Button (CTA)
    Purpose: Prominent, glossy call-to-action with interactive states
    Notes:
@@ -227,30 +208,6 @@
     background: linear-gradient(180deg, #d8d1b3 0%, #cbb480 35%, #b47a4f 65%, #8a5b3b 100%);
     border-color: rgba(255, 255, 255, .12);
     text-shadow: none;
-}
-
-/* ==========================================================================
-   Motion Preference
-   Purpose: Gentle pulsing glow animation only when motion is allowed
-   ========================================================================== */
-
-@media (prefers-reduced-motion: no-preference) {
-
-    /* Apply glow animation to enabled button */
-    #btn-start:not(:disabled) {
-        animation: startBtnGlow 2.6s ease-in-out infinite alternate;
-    }
-
-    /* Subtle glow pulse for the CTA */
-    @keyframes startBtnGlow {
-        0% {
-            box-shadow: 0 1px 0 rgba(255, 255, 255, .35) inset, 0 6px 16px rgba(0, 0, 0, .35), 0 0 0 2px rgba(255, 255, 255, .06) inset;
-        }
-
-        100% {
-            box-shadow: 0 1px 0 rgba(255, 255, 255, .45) inset, 0 8px 18px rgba(0, 0, 0, .42), 0 0 0 2px rgba(255, 241, 118, .18) inset;
-        }
-    }
 }
 
 /* ==========================================================================

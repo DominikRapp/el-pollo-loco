@@ -18,6 +18,13 @@
     height: 100% !important;
     transform: none !important;
     z-index: 1300;
+    min-width: max-content;
+}
+
+#terms-overlay,
+#privacy-overlay,
+#imprint-overlay {
+    background-image: url(../img/background.png);
 }
 
 /* ==========================================================================
@@ -47,10 +54,12 @@
 #instructions-overlay .overlay-box,
 #leaderboard-overlay .overlay-box,
 #settings-overlay .overlay-box {
-    width: 960px;
-    height: 640px;
+    width: 1080px;
+    height: 720px;
     transform: scale(var(--ui-scale));
     transform-origin: center;
+    padding-left: 30px;
+    padding-right: 30px;
 }
 
 /* Victory/Gameover overlay box: scaled to match UI scale */
@@ -58,6 +67,8 @@
 #victory-actions .overlay-box {
     transform: scale(var(--ui-scale));
     transform-origin: center;
+    padding-left: 30px;
+    padding-right: 30px;
 }
 
 /* ==========================================================================

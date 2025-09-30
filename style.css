@@ -43,7 +43,7 @@ body {
 /* Gradient-styled hero title with dimensional effects */
 .home-title {
     font-family: 'Rye', Georgia, 'Times New Roman', serif;
-    font-size: clamp(42px, 9vw, 110px);
+    font-size: 110px;
     line-height: 1;
     letter-spacing: 2px;
     text-transform: uppercase;
@@ -52,7 +52,6 @@ body {
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-
     text-shadow:
         0.5px 0.5px 0 #5b2b12,
         1px 1px 0 #5b2b12,

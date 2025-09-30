@@ -23,7 +23,7 @@
 
 /* Fixed-size box that holds the instructions UI */
 .instructions-box {
-    position: relative;
+    position: absolute;
     width: 960px;
     height: 640px;
 }
@@ -34,7 +34,7 @@
     margin: 0 auto;
     padding: 18px 20px;
     color: #333;
-    font-size: 18px;
+    font-size: 24px;
     line-height: 1.6;
 }
 
@@ -54,7 +54,7 @@
     line-height: 1.25;
     letter-spacing: .01em;
     color: #ff7a00;
-    font-size: 20px;
+    font-size: 32px;
 }
 
 /* Minor heading (level 4): neutral color for hierarchy */
@@ -63,7 +63,7 @@
     line-height: 1.25;
     letter-spacing: .01em;
     color: #222;
-    font-size: 18px;
+    font-size: 24px;
 }
 
 /* Paragraphs: relaxed spacing and softer color */
@@ -155,19 +155,9 @@
     border: 1px solid #dcdcdc;
     box-shadow: 0 2px 5px rgba(0, 0, 0, .08);
     font-weight: 600;
-    font-size: 16px;
+    font-size: 24px;
     color: #222;
     vertical-align: middle;
-}
-
-/* Inline code style */
-#instructions-content code {
-    padding: 1.6px 5.6px;
-    border-radius: 6px;
-    background: #f5f5f5;
-    border: 1px solid #e6e6e6;
-    font-size: 16px;
-    color: #1f1f1f;
 }
 
 /* Code block style with scroll for overflow */

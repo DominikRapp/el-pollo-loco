@@ -54,23 +54,6 @@
     transition: transform 600ms ease, opacity 600ms ease;
     z-index: 1200;
     pointer-events: none;
-    max-width: 75vw;
-    max-height: 75vh;
-}
-
-/* Countdown overlay: fixed to viewport and responsive sizing */
-#countdown {
-    position: fixed !important;
-    inset: 0;
-    width: 100% !important;
-    height: 100% !important;
-    transform: none !important;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    font-size: clamp(40px, calc(96px * var(--ui-scale)), 160px);
-    pointer-events: none;
-    z-index: 1300;
 }
 
 /* Start screen: centered content with brand background */

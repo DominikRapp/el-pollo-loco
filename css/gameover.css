@@ -24,7 +24,7 @@
 /* Primary action buttons within the overlay */
 #gameover-actions button {
     padding: 12px 20px;
-    font-size: 16px;
+    font-size: 32px;
     font-weight: 700;
     cursor: pointer;
     border: none;
@@ -79,7 +79,7 @@
 /* Player name: strong weight with truncation for long names */
 #gameover-actions .lb-name {
     font-weight: 800;
-    font-size: 18px;
+    font-size: 20px;
     color: #1e1e1e;
     min-width: 0;
     overflow: hidden;
@@ -91,7 +91,7 @@
 #gameover-actions .lb-level {
     justify-self: center;
     font-weight: 800;
-    font-size: 16px;
+    font-size: 20px;
     color: #1f1f1f;
     background: #ffdcb3;
     border: 1px solid rgba(0, 0, 0, .08);
@@ -104,7 +104,7 @@
 #gameover-actions .lb-points {
     justify-self: center;
     font-weight: 900;
-    font-size: 18px;
+    font-size: 20px;
     color: #ff7a00;
     letter-spacing: .02em;
 }
@@ -113,7 +113,7 @@
 #gameover-actions .lb-time {
     justify-self: end;
     font-weight: 700;
-    font-size: 16px;
+    font-size: 20px;
     color: #2a2a2a;
     font-variant-numeric: tabular-nums;
     display: inline-flex;

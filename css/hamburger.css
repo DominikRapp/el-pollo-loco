@@ -25,8 +25,8 @@
 #hamburger-button {
     all: unset;
     cursor: pointer;
-    width: 44px;
-    height: 44px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
     display: flex;
@@ -44,8 +44,8 @@
 /* Three stacked bars representing the hamburger icon */
 .hamburger-bar {
     position: absolute;
-    width: 22px;
-    height: 3px;
+    width: 30px;
+    height: 4px;
     background: black;
     border-radius: 2px;
     transition: transform 0.2s ease, opacity 0.2s ease, top 0.2s ease, bottom 0.2s ease;
@@ -53,21 +53,21 @@
 
 /* Bar positions */
 .hamburger-bar.top {
-    top: 14px;
+    top: 21px;
 }
 
 .hamburger-bar.middle {
-    top: 20px;
+    top: 28px;
 }
 
 .hamburger-bar.bottom {
-    top: 26px;
+    top: 35px;
 }
 
 /* Open state: morph into an “X” by rotating top/bottom and hiding middle */
 #hamburger-button.open .hamburger-bar.top {
     transform: rotate(45deg);
-    top: 20px;
+    top: 28px;
 }
 
 #hamburger-button.open .hamburger-bar.middle {
@@ -76,13 +76,13 @@
 
 #hamburger-button.open .hamburger-bar.bottom {
     transform: rotate(-45deg);
-    top: 20px;
+    top: 28px;
 }
 
 /* Dropdown panel positioned under the button */
 #hamburger-menu {
     position: absolute;
-    top: 52px;
+    top: 65px;
     right: 0;
     background: rgba(245, 158, 11, 0.95);
     border-radius: 12px;
@@ -98,7 +98,7 @@
     text-decoration: none;
     color: #fffbea;
     font-weight: 700;
-    font-size: 16px;
+    font-size: 18px;
     padding: 8px 10px;
     border-radius: 8px;
     display: block;
@@ -117,7 +117,7 @@
     z-index: 1000;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 30px;
 }
 
 /* Shared base styles for circular inline buttons */
@@ -126,8 +126,8 @@
 #btn-mute-inline {
     all: unset;
     cursor: pointer;
-    width: 44px;
-    height: 44px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
     display: flex;
@@ -140,25 +140,12 @@
 /* Hover/active feedback for inline buttons */
 #btn-fullscreen-inline:hover,
 #btn-mute-inline:hover {
-    filter: brightness(0.98);
+    background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
 }
 
 #btn-fullscreen-inline:active,
 #btn-mute-inline:active {
     transform: translateY(1px);
-}
-
-/* Fullscreen button: icon + gradient background (icon layer first) */
-#btn-fullscreen-inline {
-    background-image: url('../img/fullscreen/fullscreen-on.png'), linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
-    background-repeat: no-repeat, no-repeat;
-    background-position: center, center;
-    background-size: 60% 60%, 100% 100%;
-}
-
-/* Fullscreen ON state (exit icon) */
-#btn-fullscreen-inline.is-on {
-    background-image: url('../img/fullscreen/fullscreen-exit.png'), linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
 }
 
 /* Show fullscreen icon in its original colors via background-image */
@@ -173,19 +160,6 @@
 /* Swap to exit icon when fullscreen is active */
 #btn-fullscreen-inline.is-on::after {
     background-image: url('../img/fullscreen/fullscreen-exit.png');
-}
-
-/* Mute button: icon + gradient background (icon layer first) */
-#btn-mute-inline {
-    background-image: url('../img/sound/unmute.png'), linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
-    background-repeat: no-repeat, no-repeat;
-    background-position: center, center;
-    background-size: 60% 60%, 100% 100%;
-}
-
-/* Muted state (mute icon) */
-#btn-mute-inline.is-muted {
-    background-image: url('../img/sound/mute.png'), linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
 }
 
 /* Show mute icon in its original colors via background-image */
