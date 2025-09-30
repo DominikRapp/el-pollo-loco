@@ -42,7 +42,7 @@ class ThrowableObject extends MovableObject {
         this.loadImages(this.IMAGES_SPLASH);
         this.x = x;
         this.y = y;
-        this.speedX = 9.5 * direction;
+        this.speedX = 8.5 * direction;
         this.acceleration = 1.0;
         this.throw();
         this.startRotation();

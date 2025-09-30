@@ -60,9 +60,9 @@ function buildBackgroundObjects4(chunkWidth) {
         new BackgroundObject('img/5_background/layers/2_second_layer/1.png', chunkWidth * 6),
         new BackgroundObject('img/5_background/layers/1_first_layer/1.png', chunkWidth * 6),
         new BackgroundObject('img/5_background/layers/air.png', chunkWidth * 7),
-        new BackgroundObject('img/5_background/layers/3_third_layer/1.png', chunkWidth * 7),
-        new BackgroundObject('img/5_background/layers/2_second_layer/1.png', chunkWidth * 7),
-        new BackgroundObject('img/5_background/layers/1_first_layer/1.png', chunkWidth * 7)
+        new BackgroundObject('img/5_background/layers/3_third_layer/2.png', chunkWidth * 7),
+        new BackgroundObject('img/5_background/layers/2_second_layer/2.png', chunkWidth * 7),
+        new BackgroundObject('img/5_background/layers/1_first_layer/2.png', chunkWidth * 7),
     ];
 }
 
@@ -89,8 +89,8 @@ function makeBoss4(levelEndX, speeds) {
     boss.walkSpeed = speeds.bossWalk;
     boss.alertSpeed = 1.1;
     boss.attackSpeed = speeds.bossAttack;
-    boss.alertDistance = 580;
-    boss.attackDistance = 475;
+    boss.alertDistance = 720;
+    boss.attackDistance = 720;
     return boss;
 }
 
