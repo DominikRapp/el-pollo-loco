@@ -89,8 +89,8 @@ class Character extends MovableObject {
     snorePeriodMs = 1800;
     jumpFrameDelayMs = 40;
     lastJumpFrameAt = 0;
-    idleStartDelaySec = 15;
-    idleFrameDelayMs = 250;
+    idleStartDelaySec = 3;
+    idleFrameDelayMs = 300;
     lastIdleFrameAt = 0;
     jumpOnceIndex = 0;
     jumpOnceActive = false;
